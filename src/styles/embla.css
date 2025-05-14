@@ -1,0 +1,147 @@
+.embla {
+  padding-top: 20px;
+  --slide-height: 19rem;
+  --slide-spacing: 0rem;
+  --slide-size: 45%;
+  background: #f5ebe0;
+  box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
+}
+.embla__viewport {
+  overflow: hidden;
+}
+.embla__container {
+  display: flex;
+  touch-action: pan-y pinch-zoom;
+  margin-left: calc(var(--slide-spacing) * -1);
+}
+.embla__slide {
+  transform: translate3d(0, 0, 0);
+  flex: 0 0 45%;
+  min-width: 0;
+  padding-left: var(--slide-spacing);
+  margin-bottom: 10px;
+}
+.embla__slide__card {
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+.embla__slide__image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.embla__slide__title {
+  position: absolute;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.embla__controls {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 2.4rem;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+.embla__buttons {
+  position: absolute;
+  display: flex;
+  left: 0;
+  top: 0;
+  gap: 0.4rem;
+}
+.embla__button {
+  -webkit-tap-highlight-color: rgba(var(--text-high-contrast-rgb-value), 0.5);
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  touch-action: manipulation;
+  display: inline-flex;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: inset 0 0 0 0.1rem var(--detail-medium-contrast);
+  width: 2.4rem;
+  height: 2.4rem;
+  z-index: 1;
+  border-radius: 50%;
+  color: var(--text-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.embla__button:disabled {
+  color: var(--detail-high-contrast);
+}
+.embla__button__svg {
+  width: 35%;
+  height: 35%;
+}
+.embla__title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  white-space: nowrap;
+}
+.embla__dots {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 0.4rem;
+  padding-right: 10px;
+}
+.embla__dot {
+  -webkit-tap-highlight-color: rgba(var(--text-high-contrast-rgb-value), 0.5);
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  touch-action: manipulation;
+  display: inline-flex;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  margin: 0 -4px;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.embla__dot:after {
+  background-color: #d3d3d3; /**/
+  box-shadow: inset 0 0 0 0.1rem var(--detail-medium-contrast);
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  content: "";
+}
+.embla__dot--selected:after {
+  background-color: #333; /* 강조 색상 */
+  box-shadow: inset 0 0 0 0.2rem var(--text-body);
+}
+.embla__slide__number {
+  backface-visibility: hidden;
+}

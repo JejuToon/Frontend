@@ -1,0 +1,21 @@
+.embla-drag {
+  --slide-height: 19rem;
+  --slide-spacing: 1rem;
+  --slide-size: 30%;
+  padding-right: 16px;
+}
+
+.embla-drag__viewport {
+}
+
+.embla-drag__container {
+  display: flex;
+  touch-action: pan-y pinch-zoom;
+}
+
+.embla-drag__slide {
+  transform: translate3d(0, 0, 0);
+  flex: 0 0 var(--slide-size);
+  min-width: 0;
+  padding-left: 16px;
+}
