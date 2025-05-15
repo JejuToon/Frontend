@@ -216,7 +216,11 @@ export default function SearchScreen() {
         ))}
       </ChipContainer>
 
-      <BottomSheet position={sheetPos} onToggle={handleSheetToggle}>
+      <BottomSheet
+        position={sheetPos}
+        onToggle={handleSheetToggle}
+        onChangePosition={setSheetPos}
+      >
         <LocBoxWrapper>
           <LocationBox onClick={locate} />
         </LocBoxWrapper>
