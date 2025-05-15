@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
-import Header from "../components/Header";
 import {
   FaArrowLeft,
-  FaFileAudio,
   FaPlay,
   FaGear,
   FaRotate,
   FaPause,
 } from "react-icons/fa6";
+import {
+  IoVolumeMute,
+  IoVolumeLow,
+  IoVolumeMedium,
+  IoVolumeHigh,
+  IoPlayBack,
+  IoPlayForward,
+} from "react-icons/io5";
 import { fontOptions } from "../constants/fonts";
 import scripts from "../mocks/scriptInfo";
 import Loader from "../components/Loader";
+import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useFontFace } from "../hooks/useFontFace";
+import { useChoiceHandler } from "../hooks/useChoiceHandler";
 
 const talePagesInfo = scripts[0];
 const talePagesRe = scripts[1];
@@ -22,12 +31,14 @@ interface Choice {
   next: number;
 }
 
+const volumeLevels = [0, 0.33, 0.66, 1];
+
 export default function TaleScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const tale = location.state?.tale;
   const from = location.state?.from;
-  const ttsConfig = location.state?.ttsConfig || { volume: 1, rate: 1 };
+  const ttsConfig = location.state?.ttsConfig || { volumeLevel: 2, rate: 1 };
   const selectedFontName = location.state?.selectedFontName;
   const font = fontOptions.find((f) => f.name === selectedFontName);
 
@@ -38,19 +49,29 @@ export default function TaleScreen() {
     talePages = talePagesInfo;
   }
 
-  const [page, setPage] = useState(0);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
-  const [showControlBar, setShowControlBar] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [volume, setVolume] = useState(ttsConfig.volume);
-  const [rate, setRate] = useState(ttsConfig.rate);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [rating, setRating] = useState(0); // 별점
+  const [volumeLevel, setVolumeLevel] = useState(ttsConfig.volumeLevel); // 0 ~ 3
+  const volume = volumeLevels[volumeLevel];
 
   // 로딩 테스트
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+
+  const [page, setPage] = useState(0);
+  const currentPage = talePages[page];
+  const [showControlBar, setShowControlBar] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [rate, setRate] = useState(ttsConfig.rate);
+  const [rating, setRating] = useState(0); // 별점
+
+  const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
+    currentPage.audioUrl,
+    volume,
+    rate,
+    isLoading
+  );
+  const FontFace = useFontFace(font);
+  const { showChoiceModal, setShowChoiceModal, handleChoice } =
+    useChoiceHandler(setPage);
 
   // 로딩 테스트
   useEffect(() => {
@@ -66,11 +87,6 @@ export default function TaleScreen() {
   const current = talePages[page];
   const hasChoices = current.choices && current.choices.length > 0;
 
-  const handleChoice = (choice: Choice) => {
-    setPage(choice.next);
-    setShowChoiceModal(false);
-  };
-
   const handlePrev = () => {
     if (page > 0) setPage(page - 1);
   };
@@ -79,84 +95,63 @@ export default function TaleScreen() {
     if (page < talePages.length - 1) setPage(page + 1);
   };
 
-  const handleReplay = () => {
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play();
+  const handleVolumeIconClick = () => {
+    setVolumeLevel((prev) => (prev + 1) % volumeLevels.length);
+  };
+
+  const renderVolumeIcon = () => {
+    switch (volumeLevel) {
+      case 0:
+        return <IoVolumeMute />;
+      case 1:
+        return <IoVolumeLow />;
+      case 2:
+        return <IoVolumeMedium />;
+      case 3:
+      default:
+        return <IoVolumeHigh />;
     }
   };
 
-  const handleClose = () => {
+  const handleComplete = () => {
     setShowCompleteModal(false);
     navigate("/search", { state: { selectedMarker: tale } });
   };
 
   const handleGoToLibrary = () => {
+    const storedTale = localStorage.getItem("myTales");
+    const parsedTale = storedTale ? JSON.parse(storedTale) : [];
+    parsedTale.push(tale);
+    localStorage.setItem("myTales", JSON.stringify(parsedTale));
+
+    const storedCharacter = localStorage.getItem("myCharacters");
+    const parsedCharacter = storedCharacter ? JSON.parse(storedCharacter) : [];
+    //parsedCharacter.push();
+    //localStorage.setItem("myCharacter", JSON.stringify(parsedCharacter));
+
     setShowCompleteModal(false);
     navigate("/lib", { state: { selectedTab: "tale" } });
   };
 
-  const toggleAudio = () => {
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play();
-    } else {
-      audio.pause();
-    }
+  const handleDecreaseRate = () => {
+    setRate((prev) => Math.max(0.5, Math.round((prev - 0.1) * 10) / 10));
+  };
+
+  const handleIncreaseRate = () => {
+    setRate((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10));
   };
 
   useEffect(() => {
-    if (isLoading) return;
     if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
+      audio.volume = volumeLevels[volumeLevel];
     }
-
-    const newAudio = new Audio(current.audioUrl || "");
-    newAudio.volume = volume;
-    newAudio.playbackRate = rate;
-    newAudio.play().catch((err) => {
-      console.warn("Audio play error:", err);
-    });
-    setAudio(newAudio);
-
-    return () => {
-      newAudio.pause();
-      newAudio.currentTime = 0;
-    };
-  }, [page, isLoading]);
-
-  useEffect(() => {
-    if (!audio) return;
-
-    const handlePlay = () => setIsAudioPlaying(true);
-    const handlePause = () => setIsAudioPlaying(false);
-    const handleEnded = () => setIsAudioPlaying(false);
-
-    audio.addEventListener("play", handlePlay);
-    audio.addEventListener("pause", handlePause);
-    audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("play", handlePlay);
-      audio.removeEventListener("pause", handlePause);
-      audio.removeEventListener("ended", handleEnded);
-    };
-  }, [audio]);
-
-  useEffect(() => {
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [volume]);
+  }, [volumeLevel]);
 
   useEffect(() => {
     if (audio) {
       audio.playbackRate = rate;
     }
   }, [rate]);
-
-  const FontFace = font ? createFontFace(font) : null;
 
   // 로딩 테스트
   if (isLoading) return <Loader />;
@@ -205,19 +200,27 @@ export default function TaleScreen() {
             <TitleText>{tale?.title || "설화"}</TitleText>
 
             <IconButton>
-              <FaRotate onClick={handleReplay} />
+              <FaRotate onClick={replay} />
             </IconButton>
             <IconButton>
-              {isAudioPlaying ? (
-                <>
-                  <FaPause onClick={toggleAudio} />
-                </>
+              {audio && !audio.paused ? (
+                <FaPause onClick={toggleAudio} />
               ) : (
-                <>
-                  <FaPlay onClick={toggleAudio} />
-                </>
+                <FaPlay onClick={toggleAudio} />
               )}
             </IconButton>
+            <IconButton onClick={handleVolumeIconClick}>
+              {renderVolumeIcon()}
+            </IconButton>
+            <RateControl>
+              <IconButton>
+                <IoPlayBack onClick={handleDecreaseRate} />
+              </IconButton>
+              <RateValue>{rate.toFixed(1)}</RateValue>
+              <IconButton>
+                <IoPlayForward onClick={handleIncreaseRate} />
+              </IconButton>
+            </RateControl>
           </ControlBar>
         </ControlBarWrapper>
       )}
@@ -280,7 +283,7 @@ export default function TaleScreen() {
               </ul>
             </Section>
             <ButtonContainer>
-              <CloseButton onClick={handleClose}>닫기</CloseButton>
+              <CloseButton onClick={handleComplete}>닫기</CloseButton>
               <LibButton onClick={handleGoToLibrary}>
                 내 설화 보러가기
               </LibButton>
@@ -291,15 +294,6 @@ export default function TaleScreen() {
     </Screen>
   );
 }
-
-const createFontFace = (font: any) => createGlobalStyle`
-  @font-face {
-    font-family: '${font.name}';
-    src: url(${font.fontFile}) format('truetype');
-    font-weight: normal;
-    font-style: normal;
-  }
-`;
 
 const Screen = styled.main<{ $isVisible: boolean }>`
   display: flex;
@@ -328,10 +322,22 @@ const ControlBar = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   z-index: 52;
+`;
+
+const RateControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const RateValue = styled.span`
+  font-size: 16px;
+  width: 40px;
+  text-align: center;
 `;
 
 const TitleText = styled.h1`

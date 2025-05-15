@@ -1,7 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+import { useMapLoader } from "../hooks/useMapLoader";
+import { useSelectedMarker } from "../hooks/useSelectedMarker";
+import { useCurrentLocation } from "../hooks/useCurrentLocation";
+import { useCategoryFilter } from "../hooks/useCategoryFilter";
 import Chip from "../components/Chip";
 import LocationBox from "../components/LocationBox";
 import BottomSheet from "../components/BottomSheet";
@@ -10,19 +13,13 @@ import styled from "styled-components";
 import tales from "../mocks/taleInfo";
 import { FaBars } from "react-icons/fa6";
 import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
 
 // 예시 좌표 데이터
 const nearbyTales = tales.slice(0, 2);
 const ALL_MARKERS = tales;
 
 const DEFAULT_CENTER = { lat: 33.4996, lng: 126.5312 };
-
-const jejuBounds = {
-  north: 35.25,
-  south: 32.4,
-  east: 122.7,
-  west: 124.3,
-};
 
 interface MarkerData {
   id: number;
@@ -32,12 +29,6 @@ interface MarkerData {
   description?: string;
   thumbnailUrl?: string;
 }
-
-const LIBRARIES: ("places" | "geometry" | "visualization")[] = [
-  "places",
-  "geometry",
-  "visualization",
-];
 
 const allCategories = ["전체", "개척담", "인물담", "연애담", "신앙담"];
 const extraChips = ["근처", "맞춤 추천"];
@@ -49,47 +40,34 @@ export default function SearchScreen() {
   const initMarker = (location.state as any)?.selectedMarker as
     | MarkerData
     | undefined;
-
   const initialCategory = (location.state as any)?.selectedCategory as
     | string
     | undefined;
 
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries: LIBRARIES,
-  });
-  /*
-  places - 장소 검색 및 자동완성
-  geometry - 거리 계산, 경계 내 포함 여부
-  visualization = 히트맵, 클러스터링, 데이터 시각화
-  */
-
-  // 선택된 카테고리들
-  const [selectedCats, setSelectedCats] = useState<string[]>(
-    initialCategory ? [initialCategory] : ["전체"]
-  );
-  // 바텀시트 상태
-  const [sheetPos, setSheetPos] = useState<"collapsed" | "half" | "full">(
-    "collapsed"
-  );
-  // 선택된 마커 정보
-  const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(
-    initMarker ?? null
-  );
-  // 현재 위치 좌표
-  const [currentLocation, setCurrentLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-
+  const { isLoaded, loadError } = useMapLoader();
   const mapRef = useRef<google.maps.Map | null>(null);
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
     map.panTo(DEFAULT_CENTER);
   }, []);
 
+  const { currentLocation, locate } = useCurrentLocation(mapRef);
+  const { selectedMarker, setSelectedMarker, sheetPos, setSheetPos } =
+    useSelectedMarker(initMarker);
+  const { selectedCats, toggleCategory, filteredMarkers } =
+    useCategoryFilter(initialCategory);
+
+  const [selectedExtraChips, setSelectedExtraChips] = useState<string[]>([]);
+  const [keyword, setKeyword] = useState("");
+
   useEffect(() => {
     if (initMarker) {
+      setSelectedMarker(initMarker);
+
+      if (initMarker.category) {
+        toggleCategory(initMarker.category);
+      }
+
       setTimeout(() => {
         mapRef.current?.panTo({ lat: 33.3126, lng: 126.5312 });
         mapRef.current?.setZoom(9.7);
@@ -102,62 +80,21 @@ export default function SearchScreen() {
         setSheetPos("full");
       }, 300);
     }
-  }, [initMarker]);
+  }, [initMarker, initialCategory]);
 
-  // 현재 위치(currentLocation)로 이동
-  const handleLocate = useCallback(() => {
-    if (!navigator.geolocation || !mapRef.current) return;
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      const { latitude: lat, longitude: lng } = coords;
-
-      //임시 현재 좌표 설정
-      const temp = { lat: 33.5072, lng: 126.4907 };
-    });
-  }, []);
-
-  const toggleCategory = (cat: string) => {
-    setSelectedCats((prev) => {
-      let next = [...prev];
-
-      if (cat === "전체") {
-        // 전체를 토글할 때 모든 카테고리 활성화 또는 비활성화
-        const allExceptAll = allCategories.filter((c) => c !== "전체");
-        const isAllSelected = allExceptAll.every((c) => prev.includes(c));
-        return isAllSelected ? [] : ["전체", ...allExceptAll];
-      } else {
-        // 전체를 제외한 카테고리 토글 처리
-        const withoutAll = prev.filter((c) => c !== "전체");
-        if (withoutAll.includes(cat)) {
-          next = withoutAll.filter((c) => c !== cat);
-        } else {
-          next = [...withoutAll, cat];
-        }
-
-        const allExceptAll = allCategories.filter((c) => c !== "전체");
-        const isAllNowSelected = allExceptAll.every((c) => next.includes(c));
-
-        return isAllNowSelected ? ["전체", ...allExceptAll] : next;
-      }
-    });
-  };
+  useEffect(() => {
+    console.log(111);
+  }, [selectedMarker]);
 
   const toggleExtraChip = (chip: string) => {
-    if (chip === "근처") {
-      // 거리순 정렬 로직 (예: currentLocation 기준으로 sorted tales)
-      console.log("근처 적용");
-    } else if (chip === "맞춤 추천") {
-      console.log("사용자 맞춤 추천 적용");
-    }
+    setSelectedExtraChips((prev) =>
+      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+    );
   };
 
   const handleTaleClick = (tale: MarkerData) => {
     navigate("/character", { state: { tale, from: "search" } });
   };
-
-  // 선택된 카테코리에 해당하는 마커만 필터링
-  const filteredMarkers = ALL_MARKERS.filter(
-    (m) => selectedCats.includes("전체") || selectedCats.includes(m.category!)
-  );
 
   // 마커 클릭시 해당 마커를 선택하고 바텀시트 "half" 열기
   const onMarkerClick = (m: MarkerData) => {
@@ -176,8 +113,10 @@ export default function SearchScreen() {
     else setSheetPos("collapsed");
   };
 
-  const showDefaultSections =
-    selectedCats.includes("전체") || selectedCats.length === 0;
+  const handleCloseClick = () => {
+    setSelectedMarker(null);
+    console.log("닫기 버튼 클릭");
+  };
 
   // 카테고리별 필터링
   const talesByCategory = (category: string) =>
@@ -188,13 +127,17 @@ export default function SearchScreen() {
 
   return (
     <Screen>
-      <Header left={<h1>탐색</h1>} center={null} right={null} />
       <SearchHeader>
         <SearchBox>
           <Icon>
             <FaBars />
           </Icon>
-          <SearchInput type="text" placeholder="검색" />
+          <SearchInput
+            type="text"
+            placeholder="설화 검색"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
         </SearchBox>
       </SearchHeader>
 
@@ -205,10 +148,6 @@ export default function SearchScreen() {
           zoom={12}
           onLoad={onMapLoad}
           options={{
-            restriction: {
-              latLngBounds: jejuBounds,
-              strictBounds: true,
-            },
             mapTypeControl: false,
             fullscreenControl: false,
             streetViewControl: false,
@@ -228,14 +167,27 @@ export default function SearchScreen() {
             />
           ))}
 
+          {selectedMarker &&
+            !filteredMarkers.find((m) => m.id === selectedMarker.id) && (
+              <Marker
+                position={selectedMarker.position}
+                title={selectedMarker.title}
+                onClick={() => onMarkerClick(selectedMarker)}
+                animation={
+                  selectedMarker?.id === selectedMarker.id
+                    ? window.google.maps.Animation.BOUNCE
+                    : undefined
+                }
+              />
+            )}
+
           {currentLocation && (
             <Marker
               position={currentLocation}
               title="내 위치"
               icon={{
                 url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-                scaledSize: new google.maps.Size(40, 40), // 크기 조절(optional)
-                anchor: new google.maps.Point(20, 20),
+                scaledSize: new google.maps.Size(40, 40),
               }}
             />
           )}
@@ -256,7 +208,7 @@ export default function SearchScreen() {
         {extraChips.map((chip) => (
           <Chip
             key={chip}
-            selected={false} // 필요 시 별도 상태로 관리 가능
+            selected={selectedExtraChips.includes(chip)}
             onToggle={() => toggleExtraChip(chip)}
           >
             {chip}
@@ -266,8 +218,21 @@ export default function SearchScreen() {
 
       <BottomSheet position={sheetPos} onToggle={handleSheetToggle}>
         <LocBoxWrapper>
-          <LocationBox onClick={handleLocate} />
+          <LocationBox onClick={locate} />
         </LocBoxWrapper>
+
+        {sheetPos !== "collapsed" &&
+          !selectedMarker &&
+          selectedCats.length === 0 &&
+          !selectedCats.includes("전체") &&
+          selectedExtraChips.length === 0 && (
+            <EmptyState
+              imageUrl="/assets/empty_icon.png"
+              title="선택된 설화가 없습니다"
+              description="지도를 클릭하거나 카테고리를 선택해보세요."
+              navigateOnDescriptionClick={false}
+            />
+          )}
 
         {sheetPos !== "collapsed" && selectedMarker && (
           <CardSection>
@@ -278,38 +243,21 @@ export default function SearchScreen() {
                 description={selectedMarker.description ?? ""}
                 thumbnailUrl={selectedMarker.thumbnailUrl ?? ""}
                 onClick={() => handleTaleClick(selectedMarker)}
+                onCloseClick={() => handleCloseClick()}
               />
             </TaleList>
           </CardSection>
         )}
-        {showDefaultSections ? (
-          <>
-            <Section>
-              <SectionHeader>
-                <h3>현재 위치와 가까운 설화</h3>
-                <SeeAllBtn onClick={() => navigate("/search")}>&gt;</SeeAllBtn>
-              </SectionHeader>
-              <TaleList>
-                {nearbyTales.map((t) => (
-                  <TaleCard
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    thumbnailUrl={t.thumbnailUrl}
-                    onClick={() => handleTaleClick(t)}
-                  />
-                ))}
-              </TaleList>
-            </Section>
 
-            <Section>
+        {selectedCats
+          .filter((cat) => cat !== "전체")
+          .map((cat) => (
+            <Section key={cat}>
               <SectionHeader>
-                <h3>추천 설화</h3>
-                <SeeAllBtn onClick={() => console.log("클릭")}>&gt;</SeeAllBtn>
+                <h3>{cat}</h3>
               </SectionHeader>
               <TaleList>
-                {tales.slice(2, 5).map((t) => (
+                {talesByCategory(cat).map((t) => (
                   <TaleCard
                     key={t.id}
                     id={t.id}
@@ -321,29 +269,46 @@ export default function SearchScreen() {
                 ))}
               </TaleList>
             </Section>
-          </>
-        ) : (
-          <>
-            {selectedCats.map((cat) => (
-              <Section key={cat}>
-                <SectionHeader>
-                  <h2>{cat}</h2>
-                </SectionHeader>
-                <TaleList>
-                  {talesByCategory(cat).map((t) => (
-                    <TaleCard
-                      key={t.id}
-                      id={t.id}
-                      title={t.title}
-                      description={t.description}
-                      thumbnailUrl={t.thumbnailUrl}
-                      onClick={() => handleTaleClick(t)}
-                    />
-                  ))}
-                </TaleList>
-              </Section>
-            ))}
-          </>
+          ))}
+
+        {selectedExtraChips.includes("근처") && (
+          <Section>
+            <SectionHeader>
+              <h3>현재 위치와 가까운 설화</h3>
+            </SectionHeader>
+            <TaleList>
+              {nearbyTales.map((t) => (
+                <TaleCard
+                  key={t.id}
+                  id={t.id}
+                  title={t.title}
+                  description={t.description}
+                  thumbnailUrl={t.thumbnailUrl}
+                  onClick={() => handleTaleClick(t)}
+                />
+              ))}
+            </TaleList>
+          </Section>
+        )}
+
+        {selectedExtraChips.includes("맞춤 추천") && (
+          <Section>
+            <SectionHeader>
+              <h3>추천 설화</h3>
+            </SectionHeader>
+            <TaleList>
+              {tales.slice(2, 5).map((t) => (
+                <TaleCard
+                  key={t.id}
+                  id={t.id}
+                  title={t.title}
+                  description={t.description}
+                  thumbnailUrl={t.thumbnailUrl}
+                  onClick={() => handleTaleClick(t)}
+                />
+              ))}
+            </TaleList>
+          </Section>
         )}
       </BottomSheet>
     </Screen>
@@ -369,8 +334,6 @@ const SearchHeader = styled.div`
   align-items: center;
   justify-content: center;
   background: transparent;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   z-index: 10;
 `;
 
@@ -456,11 +419,4 @@ const TaleList = styled.div`
   flex-direction: column;
   gap: 12px;
   padding: 0 16px;
-`;
-
-const SeeAllBtn = styled.button`
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
 `;

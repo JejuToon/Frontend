@@ -1,23 +1,33 @@
 import React, { ReactNode } from "react";
-import "../styles/Tab.css";
+import styled from "styled-components";
 
 interface TabProps {
-  /** 활성화 여부 */
   isActive: boolean;
-  /** 클릭 핸들러 */
   onClick?: () => void;
-  /** 탭 레이블(내용) */
   children: ReactNode;
 }
 
 export default function Tab({ isActive, onClick, children }: TabProps) {
   return (
-    <button
-      type="button"
-      className={isActive ? "tab tab--active" : "tab"}
-      onClick={onClick}
-    >
+    <StyledTab $active={isActive} onClick={onClick}>
       {children}
-    </button>
+    </StyledTab>
   );
 }
+
+const StyledTab = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: ${({ $active }) => ($active ? "#000" : "#666")};
+  border-bottom-color: ${({ $active }) => ($active ? "#000" : "transparent")};
+  cursor: pointer;
+
+  &:hover {
+    color: #000;
+  }
+`;

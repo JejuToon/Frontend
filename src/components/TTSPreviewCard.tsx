@@ -61,7 +61,6 @@ const Card = styled.div`
   color: #333;
   border-radius: 20px;
   padding: 8px 12px;
-  margin-bottom: 10px;
   width: 100%;
   box-sizing: border-box;
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);

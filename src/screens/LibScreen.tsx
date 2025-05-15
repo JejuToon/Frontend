@@ -8,6 +8,8 @@ import Tabs, { TabItem } from "../components/Tabs";
 import { useAuth } from "../hooks/useAuth";
 import tales from "../mocks/taleInfo";
 import characters from "../mocks/characterInfo";
+import EmptyState from "../components/EmptyState";
+import { TbMapSearch } from "react-icons/tb";
 
 interface MarkerData {
   id: number;
@@ -18,13 +20,21 @@ interface MarkerData {
   thumbnailUrl?: string;
 }
 
+interface CharacterCardProps {
+  name: string;
+  data: string;
+  avatarUrl: string;
+}
+
 const TAB_ITEMS: TabItem[] = [
   { label: "설화", value: "tale" },
   { label: "캐릭터", value: "character" },
 ];
 
-const myTales = tales.slice(3, 5);
-const myCharacters = characters.slice();
+//const myTales: MarkerData[] = tales.slice(3, 5);
+//localStorage.setItem("myTales", JSON.stringify(myTales));
+const myCharacters: CharacterCardProps[] = characters.slice();
+localStorage.setItem("myCharacters", JSON.stringify(myCharacters));
 
 // 예시 선택지
 interface Choice {
@@ -37,10 +47,17 @@ export default function LibScreen() {
 
   const [tab, setTab] = useState<"tale" | "character">("tale");
   const navigate = useNavigate();
+  const [myTales, setMyTales] = useState<MarkerData[]>([]);
 
   const handleTaleClick = (tale: MarkerData) => {
     navigate("/setup", { state: { tale, from: "lib" } });
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem("myTales");
+    const parsed = stored ? JSON.parse(stored) : [];
+    setMyTales(parsed);
+  }, []);
 
   return (
     <LibScreenContainer>
@@ -68,19 +85,31 @@ export default function LibScreen() {
           </LibTabs>
 
           {tab === "tale" ? (
-            <TaleList>
-              {myTales.map((t) => (
-                <TaleCard
-                  key={t.id}
-                  id={t.id}
-                  title={t.title}
-                  description={t.description}
-                  thumbnailUrl={t.thumbnailUrl}
-                  onClick={() => handleTaleClick(t)}
+            myTales.length > 0 ? (
+              <TaleList>
+                {myTales.map((t) => (
+                  <TaleCard
+                    key={t.id}
+                    id={t.id}
+                    title={t.title}
+                    description={t.description}
+                    thumbnailUrl={t.thumbnailUrl}
+                    onClick={() => handleTaleClick(t)}
+                  />
+                ))}
+              </TaleList>
+            ) : (
+              <EmptyStateGrid>
+                <EmptyState
+                  icon={<TbMapSearch />}
+                  title="저장된 설화가 없어요"
+                  description="설화를 감상해 보세요"
+                  linkUrl="/search"
+                  navigateOnDescriptionClick={true}
                 />
-              ))}
-            </TaleList>
-          ) : (
+              </EmptyStateGrid>
+            )
+          ) : myCharacters.length > 0 ? (
             <CharacterGrid>
               {myCharacters.map((c, idx) => (
                 <CharacterCard
@@ -91,6 +120,16 @@ export default function LibScreen() {
                 />
               ))}
             </CharacterGrid>
+          ) : (
+            <EmptyStateGrid>
+              <EmptyState
+                icon={<TbMapSearch />}
+                title="저장된 캐릭터가 없어요"
+                description="설화를 감상하고 캐릭터를 만들어 보세요"
+                linkUrl="/search"
+                navigateOnDescriptionClick={true}
+              />
+            </EmptyStateGrid>
           )}
         </>
       )}
@@ -159,4 +198,11 @@ const CharacterGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding: 16px;
+`;
+
+const EmptyStateGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  padding: 150px;
 `;

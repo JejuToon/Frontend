@@ -6,6 +6,14 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { useAuth } from "../hooks/useAuth";
 import TTSPreviewCard from "../components/TTSPreviewCard";
 import TTSChip from "../components/TTSChip";
+import {
+  IoVolumeMute,
+  IoVolumeLow,
+  IoVolumeMedium,
+  IoVolumeHigh,
+  IoPlayBack,
+  IoPlayForward,
+} from "react-icons/io5";
 
 import { fontOptions } from "../constants/fonts";
 
@@ -14,6 +22,8 @@ const sampleScript =
 const fontScript1 = "이곳은 신들의 발자취가 깃든 제주,";
 const fontScript2 = "바람 속에 전설이 머무는 섬입니다.";
 
+const volumeLevels = [0, 0.33, 0.66, 1];
+
 export default function TaleSetupScreen() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,7 +31,8 @@ export default function TaleSetupScreen() {
   const from = location.state?.from;
   console.log(tale);
 
-  const [volume, setVolume] = useState(0.5);
+  const [volumeLevel, setVolumeLevel] = useState(2); // 0~3
+  const volume = volumeLevels[volumeLevel];
   const [rate, setRate] = useState(1);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(
     null
@@ -29,7 +40,7 @@ export default function TaleSetupScreen() {
   const [currentlyPlayingUrl, setCurrentlyPlayingUrl] = useState<string | null>(
     null
   );
-  const [selectedTTSIndex, setSelectedTTSIndex] = useState<number | null>(0);
+  const [selectedTTSIndex, setSelectedTTSIndex] = useState(0);
   const [selectedFontName, setSelectedFontName] = useState(fontOptions[0].name);
 
   const handlePlayRequest = (audio: HTMLAudioElement, audioUrl: string) => {
@@ -53,6 +64,28 @@ export default function TaleSetupScreen() {
     };
   };
 
+  const renderVolumeIcon = () => {
+    switch (volumeLevel) {
+      case 0:
+        return <IoVolumeMute />;
+      case 1:
+        return <IoVolumeLow />;
+      case 2:
+        return <IoVolumeMedium />;
+      case 3:
+      default:
+        return <IoVolumeHigh />;
+    }
+  };
+
+  const handleDecreaseRate = () => {
+    setRate((prev) => Math.max(0.5, Math.round((prev - 0.1) * 10) / 10));
+  };
+
+  const handleIncreaseRate = () => {
+    setRate((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10));
+  };
+
   console.log(from);
   const handleButtonClick = () => {
     if (tale) {
@@ -61,7 +94,7 @@ export default function TaleSetupScreen() {
           tale,
           from: from,
           ttsConfig: {
-            volume,
+            volumeLevel,
             rate,
           },
           selectedTTSIndex,
@@ -116,24 +149,54 @@ export default function TaleSetupScreen() {
         </Section>
 
         <Section>
-          <Label>음량</Label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
-          />
+          <Section>
+            <Vol>
+              <Label>음량</Label>
+              <IconButton>{renderVolumeIcon()}</IconButton>
+            </Vol>
+
+            <TTSSelectContainer>
+              <TTSChip
+                key={0}
+                icon={<IoVolumeMute />}
+                name={"음소거"}
+                selected={volumeLevel === 0}
+                onClick={() => setVolumeLevel(0)}
+              />
+              <TTSChip
+                key={1}
+                icon={<IoVolumeLow />}
+                name={"1단계"}
+                selected={volumeLevel === 1}
+                onClick={() => setVolumeLevel(1)}
+              />
+              <TTSChip
+                key={2}
+                icon={<IoVolumeMedium />}
+                name={"2단계"}
+                selected={volumeLevel === 2}
+                onClick={() => setVolumeLevel(2)}
+              />
+              <TTSChip
+                key={3}
+                icon={<IoVolumeHigh />}
+                name={"3단계"}
+                selected={volumeLevel === 3}
+                onClick={() => setVolumeLevel(3)}
+              />
+            </TTSSelectContainer>
+          </Section>
+
           <Label>속도</Label>
-          <input
-            type="range"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={rate}
-            onChange={(e) => setRate(Number(e.target.value))}
-          />
+          <RateControl>
+            <IconButton>
+              <IoPlayBack onClick={handleDecreaseRate} />
+            </IconButton>
+            <RateValue>{rate.toFixed(1)}</RateValue>
+            <IconButton>
+              <IoPlayForward onClick={handleIncreaseRate} />
+            </IconButton>
+          </RateControl>
         </Section>
 
         <Section>
@@ -220,13 +283,46 @@ const Content = styled.div`
 const TTSContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 `;
 
 const TTSSelectContainer = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 10px;
+`;
+
+const Vol = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+`;
+
+const RateControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const IconButton = styled.button`
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+`;
+
+const RateValue = styled.span`
+  font-size: 16px;
+  width: 40px;
+  text-align: center;
 `;
 
 const Label = styled.label`

@@ -1,5 +1,6 @@
 import React from "react";
 import Tab from "./Tab";
+import styled from "styled-components";
 
 export interface TabItem {
   /** 탭에 표시할 이름 */
@@ -19,7 +20,7 @@ interface TabsProps {
 
 export default function Tabs({ items, current, onChange }: TabsProps) {
   return (
-    <nav className="tabs">
+    <Nav>
       {items.map((item) => (
         <Tab
           key={item.value}
@@ -29,6 +30,12 @@ export default function Tabs({ items, current, onChange }: TabsProps) {
           {item.label}
         </Tab>
       ))}
-    </nav>
+    </Nav>
   );
 }
+
+const Nav = styled.nav`
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin: 0 16px;
+`;
