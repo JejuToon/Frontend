@@ -4,7 +4,7 @@ import styled from "styled-components";
 interface ChipProps {
   children: ReactNode;
   selected: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
 }
 
 export default function Chip({ children, selected, onToggle }: ChipProps) {
@@ -15,7 +15,6 @@ export default function Chip({ children, selected, onToggle }: ChipProps) {
   );
 }
 
-// styled-components
 const ChipButton = styled.button<{ $selected: boolean }>`
   padding: 6px 12px;
   border-radius: 16px;
@@ -26,5 +25,6 @@ const ChipButton = styled.button<{ $selected: boolean }>`
   white-space: nowrap;
   margin: 0 4px;
   transition: all 0.2s ease;
-  box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
+
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px 0px;
 `;

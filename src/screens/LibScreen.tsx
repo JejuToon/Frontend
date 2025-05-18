@@ -6,19 +6,10 @@ import TaleCard from "../components/TaleCard";
 import CharacterCard from "../components/CharacterCard";
 import Tabs, { TabItem } from "../components/Tabs";
 import { useAuth } from "../hooks/useAuth";
-import tales from "../mocks/taleInfo";
-import characters from "../mocks/characterInfo";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
 
-interface MarkerData {
-  id: number;
-  position: { lat: number; lng: number };
-  category?: string;
-  title?: string;
-  description?: string;
-  thumbnailUrl?: string;
-}
+import { TaleContent } from "../types/tale";
 
 interface CharacterCardProps {
   name: string;
@@ -31,32 +22,38 @@ const TAB_ITEMS: TabItem[] = [
   { label: "캐릭터", value: "character" },
 ];
 
-//const myTales: MarkerData[] = tales.slice(3, 5);
-//localStorage.setItem("myTales", JSON.stringify(myTales));
-const myCharacters: CharacterCardProps[] = characters.slice();
-localStorage.setItem("myCharacters", JSON.stringify(myCharacters));
-
-// 예시 선택지
-interface Choice {
-  text: string;
-  next: number;
-}
-
 export default function LibScreen() {
   const { user } = useAuth();
 
   const [tab, setTab] = useState<"tale" | "character">("tale");
   const navigate = useNavigate();
-  const [myTales, setMyTales] = useState<MarkerData[]>([]);
+  const [myTales, setMyTales] = useState<TaleContent[]>([]);
+  const [myCharacters, setMyCharacters] = useState<CharacterCardProps[]>([]);
 
-  const handleTaleClick = (tale: MarkerData) => {
-    navigate("/setup", { state: { tale, from: "lib" } });
+  const handleTaleClick = (tale: TaleContent) => {
+    console.log("설화 리플레이");
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("myTales");
-    const parsed = stored ? JSON.parse(stored) : [];
-    setMyTales(parsed);
+    try {
+      const storedTale = localStorage.getItem("myTales");
+      const parsedTale = storedTale ? JSON.parse(storedTale) : [];
+      setMyTales(parsedTale);
+    } catch (e) {
+      console.error("myTales JSON 파싱 실패:", e);
+      setMyTales([]);
+    }
+
+    try {
+      const storedCharacter = localStorage.getItem("myCharacters");
+      const parsedCharacter = storedCharacter
+        ? JSON.parse(storedCharacter)
+        : [];
+      setMyCharacters(parsedCharacter);
+    } catch (e) {
+      console.error("myCharacters JSON 파싱 실패:", e);
+      setMyCharacters([]);
+    }
   }, []);
 
   return (
@@ -66,9 +63,7 @@ export default function LibScreen() {
       {!user ? (
         <LoginPrompt>
           <p>저장된 설화와 캐릭터를 보려면 로그인</p>
-          <LoginButton onClick={() => navigate("/auth")}>
-            로그인하기
-          </LoginButton>
+          <LoginButton onClick={() => navigate("/auth")}>로그인</LoginButton>
         </LoginPrompt>
       ) : (
         <>
@@ -93,7 +88,7 @@ export default function LibScreen() {
                     id={t.id}
                     title={t.title}
                     description={t.description}
-                    thumbnailUrl={t.thumbnailUrl}
+                    thumbnailUrl={t.thumbnail}
                     onClick={() => handleTaleClick(t)}
                   />
                 ))}
@@ -114,9 +109,9 @@ export default function LibScreen() {
               {myCharacters.map((c, idx) => (
                 <CharacterCard
                   key={idx}
-                  name={c.name}
-                  data={c.data}
-                  avatarUrl={c.avatarUrl}
+                  name={c.name || "이름 없음"}
+                  data={c.data || "정보 없음"}
+                  avatarUrl={c.avatarUrl || ""}
                 />
               ))}
             </CharacterGrid>
@@ -156,8 +151,8 @@ const LoginPrompt = styled.div`
 const LoginButton = styled.button`
   margin-top: 16px;
   padding: 12px 24px;
-  background-color: #f5f4fa;
-  color: white;
+  background: #e2e8f0;
+  color: black;
   font-size: 16px;
   border: none;
   border-radius: 8px;

@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
 import LocationBox from "../components/LocationBox";
-import TaleCard from "../components/TaleCard";
-import TaleCardSimple from "../components/TaleCardSimple";
 import tales from "../mocks/taleInfo";
 import { FaPlus } from "react-icons/fa6";
 import Loader from "../components/Loader";
+import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
+import { useSelectedCategoryStore } from "../stores/useSelectedCategoryStore";
+import { useExtraChipsStore } from "../stores/useExtraChipsStore";
 
 import EmblaCarousel from "../components/EmblaCarousel";
 import EmblaCarouselDragFree from "../components/EmblaCarouselDragFree";
@@ -16,6 +17,8 @@ import "../styles/embla.css";
 import "../styles/emblaDrag.css";
 const OPTIONS: EmblaOptionsType = { loop: true };
 const carouselTales = tales.slice(0, 5);
+
+import { TaleContent } from "../types/tale";
 
 const category1 = "assets/images/category/category1.png";
 const category2 = "assets/images/category/category2.png";
@@ -29,17 +32,8 @@ const categories = [
   { key: "신앙담", label: "신앙담", imageUrl: category4 },
 ];
 
-interface MarkerData {
-  id: number;
-  position?: { lat: number; lng: number };
-  category?: string;
-  title?: string;
-  description?: string;
-  thumbnailUrl?: string;
-}
-
-const nearbyTales = tales.slice(0, 4);
-const recommendedTales = tales.slice(3, 7);
+const nearbyTales: TaleContent[] = tales.slice(0, 4);
+const recommendedTales: TaleContent[] = tales.slice(3, 7);
 
 export default function HomeScreen() {
   // 로딩 테스트
@@ -58,10 +52,13 @@ export default function HomeScreen() {
   }, []);
 
   const navigate = useNavigate();
+  const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
+  const { initializeCategory } = useSelectedCategoryStore();
+  const { setExtraChips } = useExtraChipsStore();
 
   const nextButtonRef = useRef<(() => void) | null>(null);
   const isReady = useRef(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAutoScroll = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -79,12 +76,27 @@ export default function HomeScreen() {
     };
   }, []);
 
-  const handleTaleClick = (tale: MarkerData) => {
-    navigate("/search", { state: { selectedMarker: tale } });
+  const nearbyButtonClick = () => {
+    setExtraChips(["근처"]);
+    initializeCategory([]);
+    setSheetPos("collapsed");
+    navigate("/search");
+  };
+
+  const handleTaleClick = (tale: TaleContent) => {
+    setSelectedMarker(tale);
+    setSheetPos("collapsed");
+
+    initializeCategory(tale.categories);
+
+    navigate("/search");
   };
 
   const handleCategoryClick = (categoryKey: string) => {
-    navigate("/search", { state: { selectedCategory: categoryKey } });
+    initializeCategory([categoryKey]);
+    setSelectedMarker(null);
+    setSheetPos("collapsed");
+    navigate("/search");
   };
 
   // 로딩 테스트
@@ -92,11 +104,13 @@ export default function HomeScreen() {
 
   return (
     <Container $isVisible={isVisible}>
-      <Header
-        left={<h1>홈</h1>}
-        center={null}
-        right={<LocationBox onClick={() => console.log("위치 갱신")} />}
-      />
+      <Wrapper>
+        <Header
+          left={<h1>홈</h1>}
+          center={null}
+          right={<LocationBox onClick={() => console.log("위치 갱신")} />}
+        />
+      </Wrapper>
 
       <MainSection>
         <EmblaCarousel
@@ -114,7 +128,7 @@ export default function HomeScreen() {
       <Section>
         <SectionHeader>
           <h3>현재 위치와 가까운 설화</h3>
-          <SeeAllBtn onClick={() => navigate("/search")}>&gt;</SeeAllBtn>
+          <SeeAllBtn onClick={() => nearbyButtonClick()}>&gt;</SeeAllBtn>
         </SectionHeader>
         <EmblaCarouselDragFree
           slides={nearbyTales}
@@ -159,7 +173,6 @@ export default function HomeScreen() {
   );
 }
 
-// styled-components
 const Container = styled.div<{ $isVisible: boolean }>`
   display: flex;
   flex-direction: column;
@@ -168,6 +181,10 @@ const Container = styled.div<{ $isVisible: boolean }>`
   transition: opacity 0.6s ease;
   overflow-y: auto;
   padding-bottom: 60px; // 바텀탭 높이
+`;
+
+const Wrapper = styled.div`
+  z-index: 10;
 `;
 
 const MainSection = styled.div`
@@ -196,13 +213,6 @@ const SeeAllBtn = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
-`;
-
-const TaleList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 16px;
 `;
 
 const CategoryGrid = styled.div`

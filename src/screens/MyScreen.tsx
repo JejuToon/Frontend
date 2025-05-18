@@ -55,7 +55,7 @@ const LoginButton = styled.button`
   align-self: center; // 수직 방향에서 가운데 정렬
   padding: 14px 0;
   margin: 6px;
-  background: #f5f4fa;
+  background: #e2e8f0;
   color: black;
   border: none;
   border-radius: 8px;
@@ -65,13 +65,6 @@ const LoginButton = styled.button`
   &:hover {
     opacity: 0.9;
   }
-`;
-
-const AvatarPlaceholder = styled.div`
-  width: 96px;
-  height: 96px;
-  border-radius: 48px;
-  background: rgba(128, 0, 128, 0.2);
 `;
 
 const MyList = styled.ul`

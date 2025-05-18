@@ -1,4 +1,4 @@
-const charThumb = "assets/images/CharThumb.png";
+const charThumb = "/assets/images/CharThumb.png";
 
 const characters = [
   { name: "character1", data: "data1", avatarUrl: charThumb },

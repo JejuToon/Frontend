@@ -3,16 +3,12 @@ import { EmblaOptionsType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import TaleCardSimple from "../components/TaleCardSimple";
 
-interface Slide {
-  id: number;
-  title: string;
-  thumbnailUrl: string;
-}
+import { TaleContent } from "../types/tale";
 
 type PropType = {
-  slides: Slide[];
+  slides: TaleContent[];
   options?: EmblaOptionsType;
-  onTaleClick?: (tale: Slide) => void;
+  onTaleClick?: (tale: TaleContent) => void;
 };
 
 const EmblaCarouselDragFree: React.FC<PropType> = (props) => {
@@ -27,7 +23,7 @@ const EmblaCarouselDragFree: React.FC<PropType> = (props) => {
             <div className="embla-drag__slide" key={slide.id}>
               <TaleCardSimple
                 title={slide.title}
-                thumbnailUrl={slide.thumbnailUrl}
+                thumbnailUrl={slide.thumbnail}
                 onClick={() => onTaleClick?.(slide)}
               />
             </div>

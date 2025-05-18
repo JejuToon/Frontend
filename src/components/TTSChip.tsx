@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 interface TTSChipProps {
   profileUrl?: string;
-  icon?: React.ReactNode; // 🔄 아이콘 지원 추가
+  icon?: React.ReactNode;
   name: string;
   selected?: boolean;
   onClick?: () => void;
@@ -23,7 +23,9 @@ export default function TTSChip({
     <ChipContainer $selected={selected} onClick={onClick}>
       {hasIcon && <IconWrapper>{icon}</IconWrapper>}
       {!hasIcon && hasProfile && <Profile src={profileUrl} alt="Profile" />}
-      <Name>{name}</Name>
+      <NameField>
+        <Name>{name}</Name>
+      </NameField>
     </ChipContainer>
   );
 }
@@ -34,7 +36,6 @@ const ChipContainer = styled.div<{ $selected: boolean }>`
   background-color: #f5f4fa;
   color: #333;
   border-radius: 50px;
-  padding: 0 8px 0 0; // 오른쪽만 padding
   width: fit-content;
   max-width: 100%;
   min-height: 40px;
@@ -50,8 +51,6 @@ const Profile = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin-left: 0;
-  margin-right: 8px;
   flex-shrink: 0;
 `;
 
@@ -63,14 +62,20 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   margin-left: 0;
-  margin-right: 8px;
   border-radius: 50%;
   background-color: #e0dcf8;
   flex-shrink: 0;
+`;
+
+const NameField = styled.div`
+  display: flex;
+  text-align: center;
+  justify-content: center;
 `;
 
 const Name = styled.span`
   font-size: 14px;
   line-height: 1.4;
   word-break: break-word;
+  padding: 8px;
 `;

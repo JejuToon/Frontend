@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import styled, { createGlobalStyle } from "styled-components";
-import { useNavigate, useLocation } from "react-router-dom";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
   FaPlay,
@@ -20,11 +20,12 @@ import { fontOptions } from "../constants/fonts";
 import scripts from "../mocks/scriptInfo";
 import Loader from "../components/Loader";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
-import { useFontFace } from "../hooks/useFontFace";
 import { useChoiceHandler } from "../hooks/useChoiceHandler";
+import { useStoryStore } from "../stores/useStoryStore";
+import { FontFaceStyle } from "../components/FontFaceStyle";
+import { parseAudioPath } from "../utils/parseAudioPath";
 
 const talePagesInfo = scripts[0];
-const talePagesRe = scripts[1];
 
 interface Choice {
   text: string;
@@ -34,22 +35,17 @@ interface Choice {
 const volumeLevels = [0, 0.33, 0.66, 1];
 
 export default function TaleScreen() {
-  const location = useLocation();
+  const { ttsConfig, selectedTale, fontConfig, selectedCharacterImage } =
+    useStoryStore();
+
   const navigate = useNavigate();
-  const tale = location.state?.tale;
-  const from = location.state?.from;
-  const ttsConfig = location.state?.ttsConfig || { volumeLevel: 2, rate: 1 };
-  const selectedFontName = location.state?.selectedFontName;
-  const font = fontOptions.find((f) => f.name === selectedFontName);
+  const tale = selectedTale;
+  const font = fontOptions.find((f) => f.name === fontConfig.fontName);
 
-  let talePages;
-  if (from === "lib") {
-    talePages = talePagesRe;
-  } else if (from === "search") {
-    talePages = talePagesInfo;
-  }
-
-  const [volumeLevel, setVolumeLevel] = useState(ttsConfig.volumeLevel); // 0 ~ 3
+  const [volumeLevel, setVolumeLevel] = useState(() => {
+    const idx = volumeLevels.findIndex((v) => v === ttsConfig.volume);
+    return idx === -1 ? 2 : idx;
+  });
   const volume = volumeLevels[volumeLevel];
 
   // 로딩 테스트
@@ -57,19 +53,26 @@ export default function TaleScreen() {
   const [isVisible, setIsVisible] = useState(false);
 
   const [page, setPage] = useState(0);
+  const talePages = talePagesInfo;
   const currentPage = talePages[page];
+  const audioUrl = parseAudioPath(
+    selectedTale?.title || "",
+    ttsConfig.voiceIndex,
+    page + 1
+  );
+
   const [showControlBar, setShowControlBar] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [rate, setRate] = useState(ttsConfig.rate);
-  const [rating, setRating] = useState(0); // 별점
+  const [rating, setRating] = useState(0); //별점
 
   const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
-    currentPage.audioUrl,
+    audioUrl ? audioUrl : currentPage.audioUrl,
     volume,
     rate,
     isLoading
   );
-  const FontFace = useFontFace(font);
+
   const { showChoiceModal, setShowChoiceModal, handleChoice } =
     useChoiceHandler(setPage);
 
@@ -77,7 +80,6 @@ export default function TaleScreen() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoading(false);
-      // 본문이 보여질 때 약간 딜레이 후 페이드 인
       setTimeout(() => setIsVisible(true), 100);
     }, 1000);
 
@@ -115,7 +117,7 @@ export default function TaleScreen() {
 
   const handleComplete = () => {
     setShowCompleteModal(false);
-    navigate("/search", { state: { selectedMarker: tale } });
+    navigate("/search");
   };
 
   const handleGoToLibrary = () => {
@@ -126,11 +128,15 @@ export default function TaleScreen() {
 
     const storedCharacter = localStorage.getItem("myCharacters");
     const parsedCharacter = storedCharacter ? JSON.parse(storedCharacter) : [];
-    //parsedCharacter.push();
-    //localStorage.setItem("myCharacter", JSON.stringify(parsedCharacter));
+    parsedCharacter.push({
+      name: selectedTale?.title,
+      data: "testSaved",
+      avatarUrl: selectedCharacterImage,
+    });
+    localStorage.setItem("myCharacters", JSON.stringify(parsedCharacter));
 
     setShowCompleteModal(false);
-    navigate("/lib", { state: { selectedTab: "tale" } });
+    navigate("/lib");
   };
 
   const handleDecreaseRate = () => {
@@ -162,7 +168,7 @@ export default function TaleScreen() {
         <Image src={current.imageUrl} alt="이야기 이미지" />
       </ImageContainer>
 
-      {FontFace && <FontFace />}
+      {font && <FontFaceStyle font={font} />}
       <TextSection>
         <TextContainer $font={font}>{current.text}</TextContainer>
 
@@ -244,10 +250,7 @@ export default function TaleScreen() {
               완료
             </NavButton>
           ) : (
-            <NavButton
-              onClick={handleNext}
-              disabled={hasChoices && from === "search"}
-            >
+            <NavButton onClick={handleNext} disabled={hasChoices}>
               다음
             </NavButton>
           )}
@@ -283,7 +286,7 @@ export default function TaleScreen() {
               </ul>
             </Section>
             <ButtonContainer>
-              <CloseButton onClick={handleComplete}>닫기</CloseButton>
+              <CloseButton onClick={handleComplete}>홈으로</CloseButton>
               <LibButton onClick={handleGoToLibrary}>
                 내 설화 보러가기
               </LibButton>
@@ -435,7 +438,7 @@ const NavButtons = styled.div`
   position: relative;
   display: flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: #fff;
   border-top: 1px solid #e0e0e0;
 `;
@@ -511,7 +514,7 @@ const Star = styled.span<{ $active: boolean }>`
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: center;
-  gap: 12px; // ✅ 버튼 사이 여백
+  gap: 12px;
   margin-top: 24px;
   flex-wrap: wrap;
 `;

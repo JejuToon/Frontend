@@ -50,7 +50,7 @@ export default function TaleCard({
 const Section = styled.div`
   position: relative;
   border-radius: 8px;
-  background: #fff;
+  background: #e2e8f0;
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
   overflow: hidden;
 `;

@@ -1,11 +1,11 @@
-const taleThumb = "assets/images/TaleThumb.png";
-const testAudioUrl = "assets/audios/watsonSample.wav";
+const taleThumb = "/assets/images/TaleThumb.png";
+const testAudioUrl = "/assets/audios/watsonSample.wav";
 
 const scripts = [
   [
     {
       imageUrl: taleThumb,
-      text: "아주 오래전, 세상이 지금처럼 만들어지기 전. 하늘과 땅의 경계가 아직 분명하지 않던 시절, 커다란 몸집과 굉장한 힘을 지닌 한 여신이 탐라에 살고 있었습니다. 그녀의 이름은 설문 대 할망. 하늘보다 키가 크고, 바다보다 넓은 품을 가진 존재였습니다. 사람들은 그녀를 섬을 만든 할망, 생명을 불어넣은 어머니, 모든 것의 시작이자 끝이라 불렀습니다.",
+      text: "아주 오래전, 세상이 지금처럼 만들어지기 전. 하늘과 땅의 경계가 아직 분명하지 않던 시절, 커다란 몸집과 굉장한 힘을 지닌 한 여신이 탐라에 살고 있었습니다. 그녀의 이름은 설문대할망. 하늘보다 키가 크고, 바다보다 넓은 품을 가진 존재였습니다. 사람들은 그녀를 섬을 만든 할망, 생명을 불어넣은 어머니, 모든 것의 시작이자 끝이라 불렀습니다.",
       audioUrl: "/assets/audios/seolmun/seolmun1.wav",
     },
     {

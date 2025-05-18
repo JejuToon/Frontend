@@ -6,7 +6,7 @@ import laundryGothic from "../assets/fonts/LaundryGothicR.ttf";
 export const fontOptions = [
   {
     label: "기본 폰트",
-    name: "AppDefault",
+    name: "default",
     fontFile: "",
     style: "sans-serif",
   },

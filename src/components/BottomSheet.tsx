@@ -92,7 +92,7 @@ const SheetContainer = styled.div<{ $position: Position }>`
         `;
       case "full":
         return css`
-          height: 78%;
+          height: 75%;
         `;
     }
   }}

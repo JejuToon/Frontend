@@ -12,23 +12,19 @@ import {
 } from "./EmblaCarouselArrowButtons";
 import { DotButton, useDotButton } from "./EmblaCarouselDotButton";
 
+import { TaleContent } from "../types/tale";
+
 const TWEEN_FACTOR_BASE = 0.52;
 
 const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
 
-type Slide = {
-  id: number;
-  title: string;
-  thumbnailUrl: string;
-};
-
 type PropType = {
-  slides: Slide[];
+  slides: TaleContent[];
   options?: EmblaOptionsType;
   onNextRef?: (fn: () => void) => void;
   onUserInteraction?: () => void;
-  onSlideClick?: (slide: Slide) => void;
+  onSlideClick?: (slide: TaleContent) => void;
 };
 
 const EmblaCarousel: React.FC<PropType> = ({
@@ -127,6 +123,13 @@ const EmblaCarousel: React.FC<PropType> = ({
 
   return (
     <div className="embla">
+      <div
+        className="embla__background__blur"
+        style={{
+          backgroundImage: `url(${currentSlide?.thumbnail})`,
+        }}
+      ></div>
+      <div className="embla__background__white"></div>
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container">
           {slides.map((slide) => (
@@ -137,7 +140,7 @@ const EmblaCarousel: React.FC<PropType> = ({
                 style={{ cursor: "pointer" }}
               >
                 <img
-                  src={slide.thumbnailUrl}
+                  src={slide.thumbnail}
                   alt={slide.title}
                   className="embla__slide__image"
                 />

@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled, { createGlobalStyle } from "styled-components";
 import Header from "../components/Header";
 import { FaArrowLeft } from "react-icons/fa6";
 import { useAuth } from "../hooks/useAuth";
+import { useStoryStore } from "../stores/useStoryStore";
 import TTSPreviewCard from "../components/TTSPreviewCard";
 import TTSChip from "../components/TTSChip";
+import { FontFaceStyle } from "../components/FontFaceStyle";
 import {
   IoVolumeMute,
   IoVolumeLow,
@@ -16,9 +18,9 @@ import {
 } from "react-icons/io5";
 
 import { fontOptions } from "../constants/fonts";
+import { TTSInfo } from "../constants/ttsInfo";
 
-const sampleScript =
-  "이곳은 신들의 발자취가 깃든 제주, 바람 속에 전설이 머무는 섬입니다.";
+const sampleScript = "제주도에는 약 1만 8천여 개의 설화가 전해져 내려오고 있어";
 const fontScript1 = "이곳은 신들의 발자취가 깃든 제주,";
 const fontScript2 = "바람 속에 전설이 머무는 섬입니다.";
 
@@ -26,22 +28,24 @@ const volumeLevels = [0, 0.33, 0.66, 1];
 
 export default function TaleSetupScreen() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const tale = location.state?.tale;
-  const from = location.state?.from;
-  console.log(tale);
+  const { ttsConfig, fontConfig, setTTSConfig, setFontConfig } =
+    useStoryStore();
 
-  const [volumeLevel, setVolumeLevel] = useState(2); // 0~3
+  const [volumeLevel, setVolumeLevel] = useState(() =>
+    volumeLevels.indexOf(ttsConfig.volume)
+  );
   const volume = volumeLevels[volumeLevel];
-  const [rate, setRate] = useState(1);
+  const [rate, setRate] = useState(ttsConfig.rate);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(
     null
   );
   const [currentlyPlayingUrl, setCurrentlyPlayingUrl] = useState<string | null>(
     null
   );
-  const [selectedTTSIndex, setSelectedTTSIndex] = useState(0);
-  const [selectedFontName, setSelectedFontName] = useState(fontOptions[0].name);
+  const [selectedTTSIndex, setSelectedTTSIndex] = useState(
+    ttsConfig.voiceIndex
+  );
+  const [selectedFontName, setSelectedFontName] = useState(fontConfig.fontName);
 
   const handlePlayRequest = (audio: HTMLAudioElement, audioUrl: string) => {
     if (currentAudio && currentAudio !== audio) {
@@ -86,31 +90,28 @@ export default function TaleSetupScreen() {
     setRate((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10));
   };
 
-  console.log(from);
   const handleButtonClick = () => {
-    if (tale) {
-      navigate("/tale", {
-        state: {
-          tale,
-          from: from,
-          ttsConfig: {
-            volumeLevel,
-            rate,
-          },
-          selectedTTSIndex,
-          selectedFontName,
-        },
-      });
-    }
+    setTTSConfig({
+      voiceIndex: selectedTTSIndex,
+      rate,
+      volume: volumeLevels[volumeLevel],
+    });
+    setFontConfig({
+      fontName: selectedFontName,
+    });
+
+    navigate("/tale/play");
   };
 
   return (
     <Screen>
-      <Header
-        left={<FaArrowLeft onClick={() => navigate(-1)} />}
-        center={<h1>설화 설정</h1>}
-        right={null}
-      />
+      <HeaderWrapper>
+        <Header
+          left={<FaArrowLeft onClick={() => navigate(-1)} />}
+          center={<h1>설화 설정</h1>}
+          right={null}
+        />
+      </HeaderWrapper>
 
       <Content>
         <Wrapper></Wrapper>
@@ -119,32 +120,33 @@ export default function TaleSetupScreen() {
         <Section>
           <Label>미리 듣기</Label>
           <TTSContainer>
-            <TTSPreviewCard
-              profileUrl="/assets/images/watsonImage.png"
-              message={sampleScript}
-              audioUrl="/assets/audios/watsonSample.wav"
-              volume={volume}
-              rate={rate}
-              onPlayRequest={(audio) =>
-                handlePlayRequest(audio, "/assets/audios/watsonSample.wav")
-              }
-              isPlaying={
-                currentlyPlayingUrl === "/assets/audios/watsonSample.wav"
-              }
-            ></TTSPreviewCard>
-            <TTSPreviewCard
-              profileUrl="/assets/images/marieImage.png"
-              message={sampleScript}
-              audioUrl="/assets/audios/marieSample.wav"
-              volume={volume}
-              rate={rate}
-              onPlayRequest={(audio) =>
-                handlePlayRequest(audio, "/assets/audios/marieSample.wav")
-              }
-              isPlaying={
-                currentlyPlayingUrl === "/assets/audios/marieSample.wav"
-              }
-            ></TTSPreviewCard>
+            {TTSInfo.map((tts, index) => (
+              <TTSPreviewCard
+                key={index}
+                profileUrl={tts.profileUrl}
+                message={sampleScript}
+                audioUrl={tts.audioUrl}
+                volume={volume}
+                rate={rate}
+                onPlayRequest={(audio) =>
+                  handlePlayRequest(audio, tts.audioUrl)
+                }
+                isPlaying={currentlyPlayingUrl === tts.audioUrl}
+              />
+            ))}
+
+            <Label>TTS 선택</Label>
+            <TTSSelectContainer>
+              {TTSInfo.map((tts, index) => (
+                <TTSChip
+                  key={index}
+                  profileUrl={tts.profileUrl}
+                  name={tts.label}
+                  selected={selectedTTSIndex === index}
+                  onClick={() => setSelectedTTSIndex(index)}
+                />
+              ))}
+            </TTSSelectContainer>
           </TTSContainer>
         </Section>
 
@@ -199,26 +201,6 @@ export default function TaleSetupScreen() {
           </RateControl>
         </Section>
 
-        <Section>
-          <Label>TTS 선택</Label>
-          <TTSSelectContainer>
-            <TTSChip
-              key={0}
-              profileUrl="/assets/images/watsonImage.png"
-              name={"왓슨"}
-              selected={selectedTTSIndex === 0}
-              onClick={() => setSelectedTTSIndex(0)}
-            />
-            <TTSChip
-              key={1}
-              profileUrl="/assets/images/marieImage.png"
-              name={"마리"}
-              selected={selectedTTSIndex === 1}
-              onClick={() => setSelectedTTSIndex(1)}
-            />
-          </TTSSelectContainer>
-        </Section>
-
         <h2>글 설정</h2>
         <Section>
           <Label>폰트 선택</Label>
@@ -229,15 +211,16 @@ export default function TaleSetupScreen() {
                 name={font.label}
                 selected={selectedFontName === font.name}
                 onClick={() => setSelectedFontName(font.name)}
-              />
+              ></TTSChip>
             ))}
           </TTSSelectContainer>
+
           {fontOptions.map((font) => {
             if (font.name !== selectedFontName) return null;
 
             return (
               <React.Fragment key={font.name}>
-                <FontFace font={font} />
+                <FontFaceStyle font={font} />
                 <FontPreview
                   $font={font}
                   $selected={selectedFontName === font.name}
@@ -261,6 +244,15 @@ const Screen = styled.main`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
+`;
+
+const HeaderWrapper = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 1px solid #eee;
 `;
 
 const Wrapper = styled.div``;
@@ -276,6 +268,7 @@ const Content = styled.div`
   padding: 10px;
   flex: 1;
   display: flex;
+  overflow-y: auto;
   flex-direction: column;
   gap: 16px;
 `;
@@ -330,17 +323,22 @@ const Label = styled.label`
 `;
 
 const Footer = styled.footer`
-  flex: 0 0 60px;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: white;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
 `;
 
 const NextButton = styled.button`
   width: 70%;
   height: 44px;
-  background: #7f3dff;
+  background: #4b5563;
 
   color: white;
   font-weight: bold;

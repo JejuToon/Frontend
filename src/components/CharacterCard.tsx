@@ -14,7 +14,10 @@ export default function CharacterCard({
 }: CharacterCardProps) {
   return (
     <Card>
-      <Avatar src={avatarUrl} alt={name} />
+      <ImageContainer>
+        <Avatar src={avatarUrl} alt={name} />
+      </ImageContainer>
+
       <Info>
         <Name>{name}</Name>
         <Data>{data}</Data>
@@ -23,8 +26,10 @@ export default function CharacterCard({
   );
 }
 
-// styled-components
 const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 200px; /* 전체 높이 고정 */
   background: #fff;
   border: 1px solid #eee;
   border-radius: 8px;
@@ -34,10 +39,19 @@ const Card = styled.div`
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
 `;
 
-const Avatar = styled.img`
+const ImageContainer = styled.div`
+  flex: 1 1 auto; // 남은 공간 차지
+  position: relative;
   width: 100%;
-  height: 150px;
-  object-fit: cover;
+`;
+
+const Avatar = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 `;
 
 const Info = styled.div`

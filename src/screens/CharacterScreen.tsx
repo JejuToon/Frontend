@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import Tab from "../components/Tab";
 import { FaArrowLeft } from "react-icons/fa6";
 import Tabs, { TabItem } from "../components/Tabs";
 import ItemCard from "../components/ItemCard";
 import Header from "../components/Header";
+import { useStoryStore } from "../stores/useStoryStore";
 
-const char0 = "assets/images/character/char0.png";
-const hat1 = "assets/images/item/hat1.png";
-const hat2 = "assets/images/item/hat2.png";
+const char0 = "/assets/images/character/char0.png";
+const hat1 = "/assets/images/item/hat1.png";
+const hat2 = "/assets/images/item/hat2.png";
 
 const TAB_ITEMS: TabItem[] = [
   { label: "모자", value: "item1" },
@@ -32,8 +32,8 @@ const DIY_DATA: Record<string, DIYItem[]> = {
 };
 
 export default function CharacterScreen() {
-  const location = useLocation();
-  const tale = location.state?.tale;
+  const { setCharacterImage } = useStoryStore();
+  const { selectedTale } = useStoryStore();
 
   const [tab, setTab] = useState<string>(TAB_ITEMS[0].value);
   const [selected, setSelected] = useState<Record<string, number | null>>({});
@@ -41,9 +41,8 @@ export default function CharacterScreen() {
   const items = DIY_DATA[tab] || [];
 
   const handleButtonClick = () => {
-    if (tale) {
-      navigate("/setup", { state: { tale, from: "search" } });
-    }
+    setCharacterImage(char0);
+    navigate("/tale/setup");
   };
 
   return (
@@ -146,7 +145,7 @@ const Footer = styled.footer`
 const NextButton = styled.button`
   width: 70%;
   height: 44px;
-  background: #7f3dff;
+  background: #4b5563;
   color: white;
   border: none;
   font-weight: bold;
