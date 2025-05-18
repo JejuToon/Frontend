@@ -6,9 +6,12 @@ import LocationBox from "../components/LocationBox";
 import tales from "../mocks/taleInfo";
 import { FaPlus } from "react-icons/fa6";
 import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
+import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
-import { useSelectedCategoryStore } from "../stores/useSelectedCategoryStore";
-import { useExtraChipsStore } from "../stores/useExtraChipsStore";
+import { useFilterChipsStore } from "../stores/useFilterChipsStore";
+import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
+import { useAllTalesStore } from "../stores/useAllTalesStore";
 
 import EmblaCarousel from "../components/EmblaCarousel";
 import EmblaCarouselDragFree from "../components/EmblaCarouselDragFree";
@@ -16,7 +19,6 @@ import { EmblaOptionsType } from "embla-carousel";
 import "../styles/embla.css";
 import "../styles/emblaDrag.css";
 const OPTIONS: EmblaOptionsType = { loop: true };
-const carouselTales = tales.slice(0, 5);
 
 import { TaleContent } from "../types/tale";
 
@@ -32,33 +34,60 @@ const categories = [
   { key: "신앙담", label: "신앙담", imageUrl: category4 },
 ];
 
-const nearbyTales: TaleContent[] = tales.slice(0, 4);
 const recommendedTales: TaleContent[] = tales.slice(3, 7);
 
 export default function HomeScreen() {
-  // 로딩 테스트
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
 
-  // 로딩 테스트
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-      // 본문이 보여질 때 약간 딜레이 후 페이드 인
-      setTimeout(() => setIsVisible(true), 100);
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, []);
+  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
+  const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
+  const { allTales, fetchAllTalesData } = useAllTalesStore();
 
   const navigate = useNavigate();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
-  const { initializeCategory } = useSelectedCategoryStore();
-  const { setExtraChips } = useExtraChipsStore();
+  const { initializeCategory, setExtras } = useFilterChipsStore();
 
   const nextButtonRef = useRef<(() => void) | null>(null);
   const isReady = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      setTimeout(() => setIsVisible(true), 100);
+    }, 1000);
+
+    fetchAllTalesData(0);
+    fetchAllTalesData(1);
+
+    const getLocation = async () => {
+      const status = await fetchCurrentLocation(mapRef.current);
+      if (status === "denied") {
+        setShowLocationModal(true);
+      }
+    };
+    getLocation();
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (currentLocation) {
+      fetchNearbyTalesData(currentLocation.lat, currentLocation.lng);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    if (allTales.length >= 5) {
+      const shuffled = [...allTales].sort(() => Math.random() - 0.5);
+      setCarouselTales(shuffled.slice(0, 5));
+    }
+  }, [allTales]);
 
   const startAutoScroll = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -66,7 +95,7 @@ export default function HomeScreen() {
       if (nextButtonRef.current && isReady.current) {
         nextButtonRef.current();
       }
-    }, 4000); // 4초마다 실행
+    }, 4000);
   };
 
   useEffect(() => {
@@ -77,18 +106,16 @@ export default function HomeScreen() {
   }, []);
 
   const nearbyButtonClick = () => {
-    setExtraChips(["근처"]);
+    setExtras(["근처"]);
     initializeCategory([]);
     setSheetPos("collapsed");
-    navigate("/search");
+    navigate("/search", { state: { fromHomeNearby: true } });
   };
 
   const handleTaleClick = (tale: TaleContent) => {
     setSelectedMarker(tale);
     setSheetPos("collapsed");
-
     initializeCategory(tale.categories);
-
     navigate("/search");
   };
 
@@ -99,7 +126,6 @@ export default function HomeScreen() {
     navigate("/search");
   };
 
-  // 로딩 테스트
   if (isLoading) return <Loader />;
 
   return (
@@ -108,7 +134,16 @@ export default function HomeScreen() {
         <Header
           left={<h1>홈</h1>}
           center={null}
-          right={<LocationBox onClick={() => console.log("위치 갱신")} />}
+          right={
+            <LocationBox
+              onClick={async () => {
+                const status = await fetchCurrentLocation(null); // 또는 mapRef 있으면 전달
+                if (status === "denied") {
+                  setShowLocationModal(true);
+                }
+              }}
+            />
+          }
         />
       </Wrapper>
 
@@ -120,7 +155,7 @@ export default function HomeScreen() {
             nextButtonRef.current = fn;
             isReady.current = true;
           }}
-          onUserInteraction={startAutoScroll} //사용자 조작시 타이머 재시작
+          onUserInteraction={startAutoScroll}
           onSlideClick={(t) => handleTaleClick(t)}
         />
       </MainSection>
@@ -128,13 +163,21 @@ export default function HomeScreen() {
       <Section>
         <SectionHeader>
           <h3>현재 위치와 가까운 설화</h3>
-          <SeeAllBtn onClick={() => nearbyButtonClick()}>&gt;</SeeAllBtn>
+          <SeeAllBtn onClick={nearbyButtonClick}>&gt;</SeeAllBtn>
         </SectionHeader>
-        <EmblaCarouselDragFree
-          slides={nearbyTales}
-          options={{ dragFree: true, containScroll: "trimSnaps" }}
-          onTaleClick={(t) => handleTaleClick(t)}
-        ></EmblaCarouselDragFree>
+        {nearbyTales.length > 0 ? (
+          <EmblaCarouselDragFree
+            slides={nearbyTales}
+            options={{ dragFree: true, containScroll: "trimSnaps" }}
+            onTaleClick={(t) => handleTaleClick(t)}
+          />
+        ) : (
+          <EmptyState
+            imageUrl="/assets/empty_icon.png"
+            title="주변 설화를 찾을 수 없어요"
+            description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
+          />
+        )}
       </Section>
 
       <Section>
@@ -145,12 +188,11 @@ export default function HomeScreen() {
             onClick={() => console.log("추천 폼으로 이동")}
           />
         </SectionHeader>
-
         <EmblaCarouselDragFree
           slides={recommendedTales}
           options={{ dragFree: true, containScroll: "trimSnaps" }}
           onTaleClick={(t) => handleTaleClick(t)}
-        ></EmblaCarouselDragFree>
+        />
       </Section>
 
       <Section>
@@ -169,6 +211,20 @@ export default function HomeScreen() {
           ))}
         </CategoryGrid>
       </Section>
+
+      {showLocationModal && (
+        <ModalOverlay onClick={() => setShowLocationModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <p>위치 권한이 차단되어 있어 설화를 추천할 수 없습니다.</p>
+            <p>
+              브라우저 설정에서 위치 권한을 <strong>허용</strong>해 주세요.
+            </p>
+            <CloseButton onClick={() => setShowLocationModal(false)}>
+              확인
+            </CloseButton>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Container>
   );
 }
@@ -180,7 +236,38 @@ const Container = styled.div<{ $isVisible: boolean }>`
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   transition: opacity 0.6s ease;
   overflow-y: auto;
-  padding-bottom: 60px; // 바텀탭 높이
+  padding-bottom: 60px;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+`;
+
+const ModalContent = styled.div`
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 300px;
+`;
+
+const CloseButton = styled.button`
+  margin-top: 16px;
+  padding: 8px 16px;
+  background-color: #4b5563;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 `;
 
 const Wrapper = styled.div`

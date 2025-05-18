@@ -5,14 +5,14 @@ import { FaArrowLeft, FaPlay } from "react-icons/fa6";
 import Chip from "../components/Chip";
 import { useStoryStore } from "../stores/useStoryStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
-import { useSelectedCategoryStore } from "../stores/useSelectedCategoryStore";
+import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 import { TaleDetailResponse } from "../types/tale";
 import { fetchTaleDetail } from "../api/tale";
 
 export default function TaleDetailScreen() {
   const navigate = useNavigate();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
-  const { initializeCategory } = useSelectedCategoryStore();
+  const { initializeCategory } = useFilterChipsStore();
   const { selectedTale } = useStoryStore();
   const [descExpanded, setDescExpanded] = useState(false);
   const [originExpanded, setOriginExpanded] = useState(false);

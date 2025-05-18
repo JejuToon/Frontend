@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useMapLoader } from "../hooks/useMapLoader";
 
 import Chip from "../components/Chip";
@@ -13,15 +13,23 @@ import { FaBars } from "react-icons/fa6";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
-import { useSelectedCategoryStore } from "../stores/useSelectedCategoryStore";
 import { useStoryStore } from "../stores/useStoryStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
 import { useCategoryTalesStore } from "../stores/useCategoryTalesStore";
 import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
-import { useExtraChipsStore } from "../stores/useExtraChipsStore";
+import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 
 import { TaleContent } from "../types/tale";
+
+const CATEGORY_MARKER_ICON =
+  "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
+
+const EXTRA_MARKER_ICON =
+  "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+
+const CURRENT_LOCATION_ICON =
+  "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
 
 const DEFAULT_CENTER = { lat: 33.4996, lng: 126.5312 };
 
@@ -32,6 +40,9 @@ const extraChips = ["근처", "맞춤 추천"];
 
 export default function SearchScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromHomeNearby = (location.state as any)?.fromHomeNearby;
+
   const { setTale } = useStoryStore();
 
   const { isLoaded, loadError } = useMapLoader();
@@ -41,41 +52,39 @@ export default function SearchScreen() {
     map.panTo(DEFAULT_CENTER);
   }, []);
 
-  const { allTales, allTalesLoading, fetchAllTalesData, allTalesPage } =
-    useAllTalesStore();
-  const { talesByCategory, loadingByCategory, fetchTalesForCategory } =
-    useCategoryTalesStore();
-  const { nearbyTales, nearbyTalesLoading, fetchNearbyTalesData } =
-    useNearbyTalesStore();
-  const {
-    selectedExtraChips,
-    toggleExtraChip,
-    setExtraChips,
-    clearExtraChips,
-  } = useExtraChipsStore();
-
+  const { allTales, fetchAllTalesData } = useAllTalesStore();
+  const { talesByCategory, fetchTalesForCategory } = useCategoryTalesStore();
+  const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
   const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
   const { selectedMarker, setSelectedMarker, sheetPos, setSheetPos } =
     useSelectedMarkerStore();
 
-  const { selectedCats, toggleCategory, isAllSelected } =
-    useSelectedCategoryStore();
+  const {
+    selectedCategories,
+    selectedExtras,
+    toggleCategory,
+    toggleExtra,
+    isAllCategorySelected,
+  } = useFilterChipsStore();
 
   const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
-    console.log("초기 렌더링");
-
+    if (fromHomeNearby && selectedExtras.includes("근처")) {
+      setTimeout(() => {
+        setSheetPos("full");
+      }, 300);
+    }
     if (selectedMarker) {
       setTimeout(() => {
         setSheetPos("half");
         mapRef.current?.panTo({
-          lat: selectedMarker.location[0].latitude,
+          lat: selectedMarker.location[0].latitude - 0.2,
           lng: selectedMarker.location[0].longitude,
         });
         mapRef.current?.setZoom(9.7);
       }, 300);
-    } else if (selectedCats.length > 0) {
+    } else if (selectedCategories.length > 0) {
       setTimeout(() => {
         setSheetPos("full");
       }, 300);
@@ -91,44 +100,35 @@ export default function SearchScreen() {
   }, [selectedMarker]);
 
   useEffect(() => {
-    const shouldFetchAll = isAllSelected();
+    const shouldFetchAll = isAllCategorySelected();
 
     if (shouldFetchAll && allTales.length === 0) {
-      console.log("모든 카테고리 선택됨 → 전체 설화 불러오기");
       fetchAllTalesData(0);
     } else {
-      selectedCats.forEach((cat) => {
+      selectedCategories.forEach((cat) => {
         const alreadyFetched = talesByCategory[cat]?.length > 0;
         if (!alreadyFetched) {
-          console.log(`카테고리 "${cat}" 선택됨 → 설화 목록 로딩`);
           fetchTalesForCategory(cat, 0);
         }
       });
     }
-  }, [selectedCats]);
+  }, [selectedCategories]);
 
   useEffect(() => {
     const handleNearbyFetch = async () => {
-      if (!selectedExtraChips.includes("근처")) return;
-
-      if (!currentLocation) {
-        console.log("현재 위치가 없음 fetch 요청 중...");
-        await fetchCurrentLocation(mapRef.current);
-      }
-
+      if (!selectedExtras.includes("근처")) return;
+      if (!currentLocation) await fetchCurrentLocation(mapRef.current);
       const { lat, lng } =
         useCurrentLocationStore.getState().currentLocation || {};
       if (lat && lng) {
         fetchNearbyTalesData(lat, lng);
-
         setTimeout(() => {
           setSheetPos("full");
         }, 300);
       }
     };
-
     handleNearbyFetch();
-  }, [selectedExtraChips, currentLocation]);
+  }, [selectedExtras, currentLocation]);
 
   const handleTaleClick = (tale: TaleContent) => {
     setTale(tale);
@@ -158,9 +158,31 @@ export default function SearchScreen() {
     setSelectedMarker(null);
   };
 
-  const filteredMarkers: TaleContent[] = isAllSelected()
-    ? allTales
-    : selectedCats.flatMap((cat) => talesByCategory[cat] || []);
+  const filteredMarkers: TaleContent[] = useMemo(() => {
+    const rawList = isAllCategorySelected()
+      ? allTales
+      : selectedCategories.flatMap((cat) => talesByCategory[cat] || []);
+
+    const uniqueMap = new Map<number, TaleContent>();
+    for (const tale of rawList) {
+      if (!uniqueMap.has(tale.id)) {
+        uniqueMap.set(tale.id, tale);
+      }
+    }
+    return Array.from(uniqueMap.values());
+  }, [selectedCategories, allTales, talesByCategory]);
+
+  const allMarkers: TaleContent[] = useMemo(() => {
+    const combined = selectedExtras.includes("근처")
+      ? [...filteredMarkers, ...nearbyTales]
+      : [...filteredMarkers];
+
+    const uniqueMap = new Map<number, TaleContent>();
+    for (const tale of combined) {
+      uniqueMap.set(tale.id, tale);
+    }
+    return Array.from(uniqueMap.values());
+  }, [filteredMarkers, nearbyTales, selectedExtras]);
 
   if (loadError) return <div>Map load failed…</div>;
   if (!isLoaded) return <Loader />;
@@ -192,44 +214,47 @@ export default function SearchScreen() {
             mapTypeControl: false,
             fullscreenControl: false,
             streetViewControl: false,
+            cameraControl: false,
           }}
         >
-          {filteredMarkers.map((t) => (
-            <Marker
-              key={t.id}
-              position={{
-                lat: t.location[0]?.latitude ?? DEFAULT_CENTER.lat,
-                lng: t.location[0]?.longitude ?? DEFAULT_CENTER.lng,
-              }}
-              title={t.title}
-              onClick={() => onMarkerClick(t)}
-              animation={
-                selectedMarker?.id === t.id
-                  ? window.google.maps.Animation.BOUNCE
-                  : undefined
-              }
-            />
-          ))}
+          {/* 활성화된 마커 표시*/}
+          {allMarkers.map((tale) => {
+            const isNearbyMatched =
+              selectedExtras.includes("근처") &&
+              nearbyTales.some((t) => t.id === tale.id);
+            const isCategoryMatched =
+              selectedCategories.length > 0 &&
+              tale.categories?.some((cat) => selectedCategories.includes(cat));
+            const isSelected = selectedMarker?.id === tale.id;
 
-          {selectedMarker &&
-            !filteredMarkers.find((t) => t.id === selectedMarker.id) && (
+            // 우선순위: selectedExtras > selectedCategories > 기본
+            const markerIcon = isNearbyMatched
+              ? EXTRA_MARKER_ICON
+              : isCategoryMatched
+              ? CATEGORY_MARKER_ICON
+              : CATEGORY_MARKER_ICON; // 기본값
+
+            return (
               <Marker
+                key={tale.id}
                 position={{
-                  lat:
-                    selectedMarker.location[0]?.latitude ?? DEFAULT_CENTER.lat,
-                  lng:
-                    selectedMarker.location[0]?.longitude ?? DEFAULT_CENTER.lng,
+                  lat: tale.location[0]?.latitude ?? DEFAULT_CENTER.lat,
+                  lng: tale.location[0]?.longitude ?? DEFAULT_CENTER.lng,
                 }}
-                title={selectedMarker.title}
-                onClick={() => onMarkerClick(selectedMarker)}
+                title={tale.title}
+                icon={{
+                  url: markerIcon,
+                  scaledSize: new google.maps.Size(40, 40),
+                }}
                 animation={
-                  selectedMarker?.id === selectedMarker.id
-                    ? window.google.maps.Animation.BOUNCE
-                    : undefined
+                  isSelected ? window.google.maps.Animation.BOUNCE : undefined
                 }
+                onClick={() => onMarkerClick(tale)}
               />
-            )}
+            );
+          })}
 
+          {/* 내 위치 마커 표시 */}
           {currentLocation && (
             <Marker
               position={currentLocation}
@@ -245,13 +270,13 @@ export default function SearchScreen() {
 
       <ChipContainer>
         <Chip
-          selected={isAllSelected()}
+          selected={isAllCategorySelected()}
           onToggle={() => {
-            if (isAllSelected()) {
+            if (isAllCategorySelected()) {
               allCategories.forEach((cat) => toggleCategory(cat));
             } else {
               allCategories.forEach((cat) => {
-                if (!selectedCats.includes(cat)) toggleCategory(cat);
+                if (!selectedCategories.includes(cat)) toggleCategory(cat);
               });
             }
           }}
@@ -262,8 +287,9 @@ export default function SearchScreen() {
         {allCategories.map((cat) => (
           <Chip
             key={cat}
-            selected={selectedCats.includes(cat)}
+            selected={selectedCategories.includes(cat)}
             onToggle={() => toggleCategory(cat)}
+            variant="category"
           >
             {cat}
           </Chip>
@@ -272,8 +298,9 @@ export default function SearchScreen() {
         {extraChips.map((chip) => (
           <Chip
             key={chip}
-            selected={selectedExtraChips.includes(chip)}
-            onToggle={() => toggleExtraChip(chip)}
+            selected={selectedExtras.includes(chip)}
+            onToggle={() => toggleExtra(chip)}
+            variant="extra"
           >
             {chip}
           </Chip>
@@ -291,9 +318,9 @@ export default function SearchScreen() {
 
         {sheetPos !== "collapsed" &&
           !selectedMarker &&
-          selectedCats.length === 0 &&
-          !selectedCats.includes("전체") &&
-          selectedExtraChips.length === 0 && (
+          selectedCategories.length === 0 &&
+          !selectedCategories.includes("전체") &&
+          selectedExtras.length === 0 && (
             <EmptyState
               imageUrl="/assets/empty_icon.png"
               title="선택된 설화가 없습니다"
@@ -317,7 +344,7 @@ export default function SearchScreen() {
           </CardSection>
         )}
 
-        {selectedCats.map((cat) => {
+        {selectedCategories.map((cat) => {
           const talesInCategory = talesByCategory[cat] || [];
 
           if (talesInCategory.length === 0) return null;
@@ -343,7 +370,7 @@ export default function SearchScreen() {
           );
         })}
 
-        {selectedExtraChips.includes("근처") && (
+        {selectedExtras.includes("근처") && (
           <Section>
             <SectionHeader>
               <h3>현재 위치와 가까운 설화</h3>
@@ -363,7 +390,7 @@ export default function SearchScreen() {
           </Section>
         )}
 
-        {selectedExtraChips.includes("맞춤 추천") && (
+        {selectedExtras.includes("맞춤 추천") && (
           <Section>
             <SectionHeader>
               <h3>추천 설화</h3>

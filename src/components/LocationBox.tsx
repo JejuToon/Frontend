@@ -1,20 +1,48 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FaLocationDot } from "react-icons/fa6";
+import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
+import { reverseGeocode } from "../utils/reverseGeocode";
 
 interface LocationBoxProps {
   onClick?: () => void;
-  label?: string;
+  label?: string; // 외부에서 직접 label을 주면 우선 사용
 }
 
-export default function LocationBox({
-  onClick,
-  label = "현재 위치",
-}: LocationBoxProps) {
+export default function LocationBox({ onClick, label }: LocationBoxProps) {
+  const { currentLocation } = useCurrentLocationStore();
+  const [resolvedLabel, setResolvedLabel] = useState("위치 정보 없음");
+
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (label) {
+        setResolvedLabel(label); // 외부에서 전달된 label이 있으면 그걸 사용
+        return;
+      }
+
+      if (!currentLocation) {
+        setResolvedLabel("위치 정보 없음");
+        return;
+      }
+
+      const result = await reverseGeocode(
+        currentLocation.lat,
+        currentLocation.lng
+      );
+      if (result) {
+        setResolvedLabel(result);
+      } else {
+        setResolvedLabel("위치 정보 없음");
+      }
+    };
+
+    fetchAddress();
+  }, [currentLocation, label]);
+
   return (
     <Button onClick={onClick}>
       <FaLocationDot />
-      <Label>{label}</Label>
+      <Label>{resolvedLabel}</Label>
     </Button>
   );
 }
@@ -29,10 +57,6 @@ const Button = styled.button`
   border-radius: 20px;
   background: #fff;
   cursor: pointer;
-`;
-
-const Icon = styled.span`
-  font-size: 16px;
 `;
 
 const Label = styled.span`
