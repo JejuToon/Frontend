@@ -20,11 +20,6 @@ export const useCurrentLocationStore = create<CurrentLocationStore>((set) => ({
   async fetchCurrentLocation(mapRef) {
     if (!navigator.geolocation) return "error";
 
-    // 테스트용 위치
-    const location = DEFAULT_CENTER;
-    set({ currentLocation: location });
-    return "ok";
-
     // 권한 확인 (권한 API가 지원되는 경우에만)
     try {
       if ("permissions" in navigator && navigator.permissions.query) {
@@ -43,11 +38,12 @@ export const useCurrentLocationStore = create<CurrentLocationStore>((set) => ({
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
-          const location = { lat: coords.latitude, lng: coords.longitude };
+          //const location = { lat: coords.latitude, lng: coords.longitude };
 
+          // 테스트용 위치
+          const location = DEFAULT_CENTER;
           // 상태 업데이트
           set({ currentLocation: location });
-
           // 지도 이동
           if (mapRef) {
             mapRef.panTo(location);

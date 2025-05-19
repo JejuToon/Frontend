@@ -1,6 +1,13 @@
 import React from "react";
+import { colors } from "../constants/colors";
 import { NavLink } from "react-router-dom";
-import { FaHouse, FaMap, FaBook, FaUser } from "react-icons/fa6";
+import {
+  TbMapSearch,
+  TbHome,
+  TbCameraPin,
+  TbBook,
+  TbUser,
+} from "react-icons/tb";
 import styled from "styled-components";
 
 export default function BottomTabs() {
@@ -10,7 +17,7 @@ export default function BottomTabs() {
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
-              <FaHouse />
+              <TbHome />
             </IconWrapper>
             <Label>홈</Label>
           </Tab>
@@ -21,9 +28,20 @@ export default function BottomTabs() {
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
-              <FaMap />
+              <TbMapSearch />
             </IconWrapper>
             <Label>탐색</Label>
+          </Tab>
+        )}
+      </StyledNavLink>
+
+      <StyledNavLink to="/ar">
+        {({ isActive }) => (
+          <Tab className={isActive ? "active" : ""}>
+            <IconWrapper>
+              <TbCameraPin />
+            </IconWrapper>
+            <Label>AR</Label>
           </Tab>
         )}
       </StyledNavLink>
@@ -32,7 +50,7 @@ export default function BottomTabs() {
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
-              <FaBook />
+              <TbBook />
             </IconWrapper>
             <Label>설화</Label>
           </Tab>
@@ -43,7 +61,7 @@ export default function BottomTabs() {
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
-              <FaUser />
+              <TbUser />
             </IconWrapper>
             <Label>정보</Label>
           </Tab>
@@ -80,11 +98,11 @@ const Tab = styled.div`
   padding: 2px;
 
   &.active {
-    color: #027ec2;
+    color: ${colors.ORANGE_500};
   }
 
   &.active svg {
-    color: #027ec2;
+    color: ${colors.ORANGE_500};
   }
 `;
 

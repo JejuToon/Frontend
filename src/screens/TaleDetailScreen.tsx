@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { colors } from "../constants/colors";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlay } from "react-icons/fa6";
@@ -51,7 +52,7 @@ export default function TaleDetailScreen() {
       return;
     }
 
-    navigate("/tale/character");
+    navigate("/tale/setup");
   };
 
   const handleCategoryClick = (categoryKey: string) => {

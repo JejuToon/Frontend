@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { FaLocationDot } from "react-icons/fa6";
+import { TbCurrentLocation } from "react-icons/tb";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { reverseGeocode } from "../utils/reverseGeocode";
 
@@ -41,7 +41,7 @@ export default function LocationBox({ onClick, label }: LocationBoxProps) {
 
   return (
     <Button onClick={onClick}>
-      <FaLocationDot />
+      <TbCurrentLocation />
       <Label>{resolvedLabel}</Label>
     </Button>
   );
@@ -51,7 +51,7 @@ export default function LocationBox({ onClick, label }: LocationBoxProps) {
 const Button = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 6px 12px;
   border: 1px solid #ddd;
   border-radius: 20px;

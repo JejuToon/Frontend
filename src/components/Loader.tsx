@@ -1,27 +1,42 @@
 import React from "react";
 import Lottie from "lottie-react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import loadingAnimation from "../assets/loading.json";
 
-export default function Loader() {
+interface LoaderProps {
+  type?: "full" | "inline";
+}
+
+export default function Loader({ type = "full" }: LoaderProps) {
   return (
-    <Overlay>
+    <Wrapper $type={type}>
       <Lottie
         animationData={loadingAnimation}
         loop
         autoplay
-        style={{ width: 120, height: 120 }}
+        style={{
+          width: type === "inline" ? 60 : 120,
+          height: type === "inline" ? 60 : 120,
+        }}
       />
-    </Overlay>
+    </Wrapper>
   );
 }
 
-const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.7);
+const Wrapper = styled.div<{ $type: "full" | "inline" }>`
+  ${(props) =>
+    props.$type === "full"
+      ? css`
+          position: fixed;
+          inset: 0;
+          background: rgba(255, 255, 255, 0.7);
+          z-index: 9999;
+        `
+      : css`
+          position: relative;
+          background: transparent;
+        `}
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
 `;

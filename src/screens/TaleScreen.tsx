@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { colors } from "../constants/colors";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
@@ -115,25 +116,11 @@ export default function TaleScreen() {
     }
   };
 
-  const handleComplete = () => {
-    setShowCompleteModal(false);
-    navigate("/search");
-  };
-
   const handleGoToLibrary = () => {
     const storedTale = localStorage.getItem("myTales");
     const parsedTale = storedTale ? JSON.parse(storedTale) : [];
     parsedTale.push(tale);
     localStorage.setItem("myTales", JSON.stringify(parsedTale));
-
-    const storedCharacter = localStorage.getItem("myCharacters");
-    const parsedCharacter = storedCharacter ? JSON.parse(storedCharacter) : [];
-    parsedCharacter.push({
-      name: selectedTale?.title,
-      data: "testSaved",
-      avatarUrl: selectedCharacterImage,
-    });
-    localStorage.setItem("myCharacters", JSON.stringify(parsedCharacter));
 
     setShowCompleteModal(false);
     navigate("/lib");
@@ -260,10 +247,10 @@ export default function TaleScreen() {
       {showCompleteModal && (
         <ModalOverlay>
           <ModalContent>
-            <h2>이 이야기는 어땠나요?</h2>
+            <h2>이 설화는 어땠나요?</h2>
 
             <Section>
-              <strong>이야기 만족도</strong>
+              <strong>설화 만족도</strong>
               <StarRating>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <Star
@@ -277,19 +264,27 @@ export default function TaleScreen() {
               </StarRating>
             </Section>
 
-            <Section>
-              <strong>근처 추천 장소</strong>
-              <ul>
-                <li>산방산 (0.8km)</li>
-                <li>제주 오름 박물관 (1.2km)</li>
-                <li>설문대할망 동상 (1.5km)</li>
-              </ul>
-            </Section>
+            <Section></Section>
             <ButtonContainer>
-              <CloseButton onClick={handleComplete}>홈으로</CloseButton>
+              <CloseButton
+                onClick={() => {
+                  setShowCompleteModal(false);
+                  navigate("/search");
+                }}
+              >
+                홈으로
+              </CloseButton>
+
               <LibButton onClick={handleGoToLibrary}>
                 내 설화 보러가기
               </LibButton>
+              <ARButton
+                onClick={() => {
+                  navigate("/ar");
+                }}
+              >
+                AR로 보기
+              </ARButton>
             </ButtonContainer>
           </ModalContent>
         </ModalOverlay>
@@ -530,6 +525,14 @@ const CloseButton = styled.button`
 
   &:hover {
     background: #888;
+  }
+`;
+
+const ARButton = styled(CloseButton)`
+  background: #7f3dff;
+
+  &:hover {
+    background: #6a2eea;
   }
 `;
 

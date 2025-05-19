@@ -2,6 +2,7 @@ import React from "react";
 import { EmblaOptionsType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import TaleCardSimple from "../components/TaleCardSimple";
+import { FaPlay } from "react-icons/fa6";
 
 import { TaleContent } from "../types/tale";
 

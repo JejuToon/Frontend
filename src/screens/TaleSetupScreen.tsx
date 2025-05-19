@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { colors } from "../constants/colors";
 import { useNavigate } from "react-router-dom";
 import styled, { createGlobalStyle } from "styled-components";
 import Header from "../components/Header";
@@ -114,9 +115,6 @@ export default function TaleSetupScreen() {
       </HeaderWrapper>
 
       <Content>
-        <Wrapper></Wrapper>
-        <h2>TTS 설정</h2>
-
         <Section>
           <Label>미리 듣기</Label>
           <TTSContainer>
@@ -151,43 +149,37 @@ export default function TaleSetupScreen() {
         </Section>
 
         <Section>
-          <Section>
-            <Vol>
-              <Label>음량</Label>
-              <IconButton>{renderVolumeIcon()}</IconButton>
-            </Vol>
-
-            <TTSSelectContainer>
-              <TTSChip
-                key={0}
-                icon={<IoVolumeMute />}
-                name={"음소거"}
-                selected={volumeLevel === 0}
-                onClick={() => setVolumeLevel(0)}
-              />
-              <TTSChip
-                key={1}
-                icon={<IoVolumeLow />}
-                name={"1단계"}
-                selected={volumeLevel === 1}
-                onClick={() => setVolumeLevel(1)}
-              />
-              <TTSChip
-                key={2}
-                icon={<IoVolumeMedium />}
-                name={"2단계"}
-                selected={volumeLevel === 2}
-                onClick={() => setVolumeLevel(2)}
-              />
-              <TTSChip
-                key={3}
-                icon={<IoVolumeHigh />}
-                name={"3단계"}
-                selected={volumeLevel === 3}
-                onClick={() => setVolumeLevel(3)}
-              />
-            </TTSSelectContainer>
-          </Section>
+          <Label>음량</Label>
+          <TTSSelectContainer>
+            <TTSChip
+              key={0}
+              icon={<IoVolumeMute />}
+              name={"음소거"}
+              selected={volumeLevel === 0}
+              onClick={() => setVolumeLevel(0)}
+            />
+            <TTSChip
+              key={1}
+              icon={<IoVolumeLow />}
+              name={"1단계"}
+              selected={volumeLevel === 1}
+              onClick={() => setVolumeLevel(1)}
+            />
+            <TTSChip
+              key={2}
+              icon={<IoVolumeMedium />}
+              name={"2단계"}
+              selected={volumeLevel === 2}
+              onClick={() => setVolumeLevel(2)}
+            />
+            <TTSChip
+              key={3}
+              icon={<IoVolumeHigh />}
+              name={"3단계"}
+              selected={volumeLevel === 3}
+              onClick={() => setVolumeLevel(3)}
+            />
+          </TTSSelectContainer>
 
           <Label>속도</Label>
           <RateControl>
@@ -201,7 +193,6 @@ export default function TaleSetupScreen() {
           </RateControl>
         </Section>
 
-        <h2>글 설정</h2>
         <Section>
           <Label>폰트 선택</Label>
           <TTSSelectContainer>
@@ -255,22 +246,20 @@ const HeaderWrapper = styled.div`
   border-bottom: 1px solid #eee;
 `;
 
-const Wrapper = styled.div``;
-
 const Section = styled.section`
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 20px;
+  padding: 16px;
+  border-bottom: 10px solid ${colors.BEIGE_300};
 `;
 
 const Content = styled.div`
-  padding: 10px;
   flex: 1;
   display: flex;
   overflow-y: auto;
   flex-direction: column;
-  gap: 16px;
 `;
 
 const TTSContainer = styled.div`
@@ -282,14 +271,6 @@ const TTSContainer = styled.div`
 const TTSSelectContainer = styled.div`
   display: flex;
   gap: 12px;
-  margin-bottom: 10px;
-`;
-
-const Vol = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
 `;
 
 const RateControl = styled.div`
@@ -348,15 +329,6 @@ const NextButton = styled.button`
 
   &:active {
     opacity: 0.8;
-  }
-`;
-
-const FontFace = createGlobalStyle<{ font: any }>`
-  @font-face {
-    font-family: ${(props) => props.font.name};
-    src: url(${(props) => props.font.fontFile}) format('truetype');
-    font-weight: normal;
-    font-style: normal;
   }
 `;
 

@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { FaTimes, FaRegCompass } from "react-icons/fa"; // 예시 아이콘
+import CustomButton from "./CustomButton";
+import { colors } from "../constants/colors";
 
 interface TaleCardProps {
   id: number;
@@ -9,6 +11,7 @@ interface TaleCardProps {
   thumbnailUrl?: string;
   onClick: () => void;
   onCloseClick?: () => void;
+  children?: React.ReactNode;
 }
 
 export default function TaleCard({
@@ -18,6 +21,7 @@ export default function TaleCard({
   thumbnailUrl,
   onClick,
   onCloseClick,
+  children,
 }: TaleCardProps) {
   return (
     <Section>
@@ -34,14 +38,22 @@ export default function TaleCard({
 
       <CardBody onClick={onClick}>
         <Thumbnail src={thumbnailUrl} alt={`Tale ${id}`} />
-        <TextContainer>
-          <Title>{title}</Title>
-          <Description>{description}</Description>
-          <IconField>
-            <FaRegCompass />
-            <span>위치 기반 설화</span>
-          </IconField>
-        </TextContainer>
+        <Content>
+          <TextContainer>
+            <Title>{title}</Title>
+            <Description>{description}</Description>
+          </TextContainer>
+
+          {children && (
+            <ChildrenContainer
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              {children}
+            </ChildrenContainer>
+          )}
+        </Content>
       </CardBody>
     </Section>
   );
@@ -50,7 +62,7 @@ export default function TaleCard({
 const Section = styled.div`
   position: relative;
   border-radius: 8px;
-  background: #e2e8f0;
+  background: #fff;
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
   overflow: hidden;
 `;
@@ -58,7 +70,7 @@ const Section = styled.div`
 const CardBody = styled.div`
   display: flex;
   align-items: center;
-  padding: 6px 6px;
+  padding: 6px;
   cursor: pointer;
 `;
 
@@ -85,17 +97,21 @@ const Thumbnail = styled.img`
   object-fit: cover;
 `;
 
-const TextContainer = styled.div`
+const Content = styled.div`
   flex: 1;
+  justify-content: space-between;
   margin-left: 12px;
   display: flex;
   flex-direction: column;
+  min-height: 100px;
 `;
+
+const TextContainer = styled.div``;
 
 const Title = styled.h3`
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.4;
   color: #222;
 `;
@@ -105,17 +121,18 @@ const Description = styled.p`
   font-size: 14px;
   line-height: 1.5;
   color: #555;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 최대 줄 수: 2줄 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const IconField = styled.div`
-  margin-top: 8px;
+const ChildrenContainer = styled.div`
+  gap: 8px;
   display: flex;
-  align-items: center;
-  font-size: 12px;
-  color: #777;
-  gap: 6px;
-
-  svg {
-    font-size: 14px;
-  }
+  padding-top: 8px;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding-right: 4px;
 `;

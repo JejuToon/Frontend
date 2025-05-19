@@ -13,6 +13,9 @@ interface FilterStore {
   setExtras: (extras: string[]) => void;
   clearFilters: () => void;
   isAllCategorySelected: () => boolean;
+  selectAllCategories: () => void;
+  clearAllCategories: () => void;
+  clearAllExtras: () => void;
 }
 
 export const useFilterChipsStore = create<FilterStore>((set, get) => ({
@@ -72,4 +75,8 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
     const { selectedCategories } = get();
     return allCategories.every((c) => selectedCategories.includes(c));
   },
+
+  selectAllCategories: () => set({ selectedCategories: allCategories }),
+  clearAllCategories: () => set({ selectedCategories: [] }),
+  clearAllExtras: () => set({ selectedExtras: [] }),
 }));

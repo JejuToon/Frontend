@@ -25,7 +25,6 @@ export default function TaleCardSimple({
   );
 }
 
-// styled-components 정의
 const Card = styled.div`
   background: #fff;
   border-radius: 12px;
@@ -34,7 +33,6 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   margin-top: 4px;
-  box-shadow: 0px 5px 10px rgba(50, 50, 50, 0.1);
   margin-bottom: 3px;
 
   transition: transform 0.2s;
@@ -44,6 +42,11 @@ const Card = styled.div`
 `;
 
 const ImageBox = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   width: 100%;
   aspect-ratio: 1/1;
   overflow: hidden;
@@ -53,16 +56,16 @@ const Image = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 12px;
 `;
 
 const TextBox = styled.div`
   padding: 4px;
-  text-align: center;
 `;
 
 const Title = styled.div`
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #333;
   margin-bottom: 4px;
   white-space: nowrap;

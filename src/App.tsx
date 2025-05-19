@@ -6,10 +6,10 @@ import LibScreen from "./screens/LibScreen";
 import MyScreen from "./screens/MyScreen";
 import AuthScreen from "./screens/AuthScreen";
 import TaleScreen from "./screens/TaleScreen";
-import CharacterScreen from "./screens/CharacterScreen";
 import BottomTabs from "./components/BottomTabs";
 import TaleSetupScreen from "./screens/TaleSetupScreen";
 import TaleDetailScreen from "./screens/TaleDetailScreen";
+import CameraScreen from "./screens/CameraScreen";
 
 export default function App() {
   const location = useLocation();
@@ -28,13 +28,13 @@ export default function App() {
       <Routes>
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/search" element={<SearchScreen />} />
+        <Route path="/ar" element={<CameraScreen />} />
         <Route path="/lib" element={<LibScreen />} />
         <Route path="/my" element={<MyScreen />} />
         <Route path="/auth" element={<AuthScreen />} />
         <Route path="/tale" element={<TaleDetailScreen />} />
         <Route path="/tale/play" element={<TaleScreen />} />
         <Route path="/tale/setup" element={<TaleSetupScreen />} />
-        <Route path="/tale/character" element={<CharacterScreen />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
       {!shouldHideTabs && <BottomTabs />}

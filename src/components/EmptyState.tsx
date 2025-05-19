@@ -49,7 +49,7 @@ export default function EmptyState({
 // 스타일 정의
 const Container = styled.div`
   flex: 1;
-  padding: 40px 20px;
+  padding: 10px 20px;
   text-align: center;
   display: flex;
   flex-direction: column;

@@ -1,10 +1,12 @@
+import { colors } from "../constants/colors";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
 import LocationBox from "../components/LocationBox";
 import tales from "../mocks/taleInfo";
-import { FaPlus } from "react-icons/fa6";
+import { MdOutlineWrongLocation } from "react-icons/md";
+import { FaPlus, FaPlay } from "react-icons/fa6";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
@@ -63,15 +65,6 @@ export default function HomeScreen() {
     }, 1000);
 
     fetchAllTalesData(0);
-    fetchAllTalesData(1);
-
-    const getLocation = async () => {
-      const status = await fetchCurrentLocation(mapRef.current);
-      if (status === "denied") {
-        setShowLocationModal(true);
-      }
-    };
-    getLocation();
 
     return () => clearTimeout(timeout);
   }, []);
@@ -173,7 +166,7 @@ export default function HomeScreen() {
           />
         ) : (
           <EmptyState
-            imageUrl="/assets/empty_icon.png"
+            icon={<MdOutlineWrongLocation />}
             title="주변 설화를 찾을 수 없어요"
             description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
           />
@@ -279,7 +272,7 @@ const MainSection = styled.div`
 `;
 
 const Section = styled.section`
-  margin-bottom: 30px;
+  border-bottom: 10px solid ${colors.BEIGE_300};
 `;
 
 const SectionHeader = styled.div`

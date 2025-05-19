@@ -30,7 +30,7 @@ const ChipButton = styled.button<{
   border: 1px solid;
   cursor: pointer;
   white-space: nowrap;
-  margin: 0 4px;
+  margin: 0 2px;
   transition: all 0.2s ease;
   box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px 0px;
 

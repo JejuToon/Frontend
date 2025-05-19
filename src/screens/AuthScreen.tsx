@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/Header";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa6";
+import { getKakaoLoginUrl } from "../components/KakaoLogin";
 
 export default function AuthScreen() {
   const navigate = useNavigate();
@@ -12,6 +13,37 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authorizationCode = urlParams.get("code");
+
+    if (authorizationCode) {
+      sendAuthorizationCode(authorizationCode);
+    }
+  }, []);
+
+  const sendAuthorizationCode = async (authorizationCode: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/v1/auth/kakao?authorizationCode=${encodeURIComponent(
+          authorizationCode
+        )}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      localStorage.setItem("accessToken", data.token.accessToken);
+      navigate("/home");
+    } catch (error) {
+      setError("카카오 로그인 실패");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +58,10 @@ export default function AuthScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleKakaoLogin = () => {
+    window.location.href = getKakaoLoginUrl();
   };
 
   return (
@@ -63,8 +99,16 @@ export default function AuthScreen() {
         </FormContainer>
 
         <SocialContainer>
-          <SocialButton />
-          <SocialButton />
+          <SocialButton onClick={handleKakaoLogin}>
+            <img
+              src="assets/icons/ico_login_kakao.svg"
+              alt="kakao"
+              style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+            />
+          </SocialButton>
+          <SocialButton>
+            <img src="assets/icons/ico_login_google.svg" />
+          </SocialButton>
         </SocialContainer>
 
         <AuthLinks>
@@ -122,7 +166,7 @@ const Input = styled.input`
 const LoginButton = styled.button`
   width: 100%;
   padding: 14px;
-  background: #e8e1f9;
+  background: #e2e8f0;
   border: none;
   border-radius: 6px;
   font-size: 1rem;

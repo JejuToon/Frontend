@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
+import { colors } from "../constants/colors";
 import {
   EmblaCarouselType,
   EmblaEventType,
