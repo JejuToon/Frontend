@@ -236,14 +236,15 @@ const Screen = styled.main`
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const HeaderWrapper = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background: white;
-  border-bottom: 1px solid #eee;
+  background: ${({ theme }) => theme.cardBackground || "white"};
+  border-bottom: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const Section = styled.section`
@@ -252,7 +253,7 @@ const Section = styled.section`
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  border-bottom: 10px solid ${colors.BEIGE_300};
+  border-bottom: 10px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const Content = styled.div`
@@ -271,6 +272,7 @@ const TTSContainer = styled.div`
 const TTSSelectContainer = styled.div`
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 `;
 
 const RateControl = styled.div`
@@ -286,7 +288,7 @@ const IconButton = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: #333;
+  color: ${({ theme }) => theme.text || "#333"};
   z-index: 1;
   align-items: center;
   justify-content: center;
@@ -297,10 +299,12 @@ const RateValue = styled.span`
   font-size: 16px;
   width: 40px;
   text-align: center;
+  color: ${({ theme }) => theme.text};
 `;
 
 const Label = styled.label`
   font-weight: 600;
+  color: ${({ theme }) => theme.text};
 `;
 
 const Footer = styled.footer`
@@ -311,16 +315,15 @@ const Footer = styled.footer`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: ${({ theme }) => theme.cardBackground || "white"};
   padding: 10px 0;
-  border-top: 1px solid #eee;
+  border-top: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const NextButton = styled.button`
   width: 70%;
   height: 44px;
-  background: #4b5563;
-
+  background: ${({ theme }) => theme.primary || "#4b5563"};
   color: white;
   font-weight: bold;
   border: none;
@@ -336,7 +339,7 @@ const FontPreview = styled.div<{ $font: any; $selected: boolean }>`
   font-family: ${({ $font }) => $font.name}, ${({ $font }) => $font.style};
   font-size: 18px;
   padding: 8px 12px;
-  border: 2px solid #ccc;
+  border: 2px solid ${({ theme }) => theme.border || "#ccc"};
   border-radius: 8px;
   margin-bottom: 8px;
   cursor: pointer;
@@ -345,4 +348,6 @@ const FontPreview = styled.div<{ $font: any; $selected: boolean }>`
   justify-content: center;
   display: flex;
   flex-direction: column;
+  background-color: ${({ theme }) => theme.cardBackground};
+  color: ${({ theme }) => theme.text};
 `;

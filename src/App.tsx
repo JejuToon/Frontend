@@ -15,6 +15,7 @@ export default function App() {
   const location = useLocation();
   const hideTabPaths = [
     "/auth",
+    "/tale",
     "/tale/play",
     "/tale/character",
     "/tale/setup",
@@ -28,7 +29,7 @@ export default function App() {
       <Routes>
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/search" element={<SearchScreen />} />
-        <Route path="/ar" element={<CameraScreen />} />
+        <Route path="/camera" element={<CameraScreen />} />
         <Route path="/lib" element={<LibScreen />} />
         <Route path="/my" element={<MyScreen />} />
         <Route path="/auth" element={<AuthScreen />} />

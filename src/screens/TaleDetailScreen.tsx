@@ -139,7 +139,7 @@ export default function TaleDetailScreen() {
   );
 }
 
-// Demo용 접근제어
+// Demo용 접근 제어
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -153,20 +153,21 @@ const ModalOverlay = styled.div`
   z-index: 999;
 `;
 
-// Demo용 접근제어
+// Demo용 접근 제어
 const ModalContent = styled.div`
-  background-color: white;
+  background-color: ${({ theme }) => theme.cardBackground || "white"};
   padding: 24px;
   border-radius: 12px;
   text-align: center;
   max-width: 300px;
+  color: ${({ theme }) => theme.text};
 `;
 
-// Demo용 접근제어
+// Demo용 접근 제어
 const CloseButton = styled.button`
   margin-top: 16px;
   padding: 8px 16px;
-  background-color: #4b5563;
+  background-color: ${({ theme }) => theme.primary || "#4b5563"};
   color: white;
   border: none;
   border-radius: 6px;
@@ -180,6 +181,7 @@ const Screen = styled.main`
   flex-direction: column;
   overflow-y: auto;
   padding-bottom: 60px;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const Header = styled.div`
@@ -198,7 +200,7 @@ const Header = styled.div`
 
 const Icon = styled.div`
   font-size: 18px;
-  color: #555;
+  color: ${({ theme }) => theme.textSecondary || "#555"};
   display: flex;
 `;
 
@@ -222,7 +224,7 @@ const WhiteSection = styled.div`
   bottom: 0;
   height: 20%;
   width: 100%;
-  background-color: white;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const CardImage = styled.img`
@@ -230,7 +232,7 @@ const CardImage = styled.img`
   top: 55%;
   left: 50%;
   width: 65%;
-  max-width: 300px;
+  max-width: 500px;
   transform: translate(-50%, -50%);
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
@@ -243,7 +245,7 @@ const PlayButtonOverlay = styled.button`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #4b5563;
+  background-color: ${({ theme }) => theme.primary || "#4b5563"};
   color: white;
   border: none;
   display: flex;
@@ -266,7 +268,7 @@ const ButtonWrapper = styled.div`
 const PlayButton = styled.button`
   width: 100%;
   height: 40px;
-  background: #4b5563;
+  background: ${({ theme }) => theme.primary || "#4b5563"};
   color: white;
   border: none;
   font-weight: bold;
@@ -293,18 +295,16 @@ const TaleTitle = styled.div`
   font-size: 16px;
   font-weight: 600;
   line-height: 1.4;
-  color: #222;
+  color: ${({ theme }) => theme.text || "#222"};
 `;
 
 const TaleDescription = styled.div<{ $expanded?: boolean }>`
   margin: 4px 0 0;
   font-size: 14px;
   line-height: 1.5;
-  color: #555;
-
+  color: ${({ theme }) => theme.textSecondary || "#555"};
   overflow: hidden;
   text-overflow: ellipsis;
-
   display: -webkit-box;
   -webkit-line-clamp: ${(props) => (props.$expanded ? "unset" : 3)};
   -webkit-box-orient: vertical;
@@ -314,10 +314,10 @@ const MoreButton = styled.button`
   width: 100%;
   padding: 14px 0;
   border: none;
-  border-bottom: 1px solid #e2e2e2;
-  background-color: #ffffff;
+  border-bottom: 1px solid ${({ theme }) => theme.border || "#e2e2e2"};
+  background-color: ${({ theme }) => theme.background};
   font-size: 13px;
-  color: #868686;
+  color: ${({ theme }) => theme.textSecondary || "#868686"};
   text-align: center;
 `;
 
@@ -332,6 +332,6 @@ const ChipContainer = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  background-color: #e0e0e0;
+  background-color: ${({ theme }) => theme.border || "#e0e0e0"};
   margin: 8px 0;
 `;

@@ -57,7 +57,7 @@ export default function BottomSheet({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={onToggle} // ✅ 클릭하면 순환 전환
+        onClick={onToggle}
       >
         <SheetHandle />
       </SheetHeader>
@@ -71,7 +71,7 @@ const SheetContainer = styled.div<{ $position: Position }>`
   left: 0;
   right: 0;
   bottom: 60px;
-  background: #fff;
+  background: ${({ theme }) => theme.sheetBackground};
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   overflow: hidden;
@@ -100,23 +100,40 @@ const SheetContainer = styled.div<{ $position: Position }>`
 
 const SheetHeader = styled.div`
   flex: 0 0 auto;
-  padding: 8px 8px;
-  background: #fff;
+  padding: 8px;
+  background: ${({ theme }) => theme.sheetBackground};
   z-index: 11;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+
+  /* 스크롤바 숨김 */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 `;
 
 const SheetHandle = styled.div`
   width: 60px;
   height: 4px;
-  background: #ccc;
+  background: ${({ theme }) => theme.sheetHandleColor || "#ccc"};
   border-radius: 2px;
 `;
 
 const SheetContent = styled.div`
   overflow-y: auto;
   flex: 1;
+  background: ${({ theme }) => theme.sheetBackground};
+
+  /* 스크롤바 숨김 */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 `;

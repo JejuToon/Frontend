@@ -57,9 +57,9 @@ export default function TTSPreviewCard({
 const Card = styled.div`
   display: flex;
   align-items: center;
-  background-color: #f5f4fa;
-  color: #333;
-  border-radius: 20px;
+  background-color: ${({ theme }) => theme.cardBackground || "#f5f4fa"};
+  color: ${({ theme }) => theme.text || "#333"};
+  border-radius: 50px;
   padding: 8px 12px;
   width: 100%;
   box-sizing: border-box;
@@ -81,13 +81,14 @@ const Message = styled.span`
   word-break: break-word;
   padding: 0px 4px;
   word-break: keep-all;
+  color: ${({ theme }) => theme.text};
 `;
 
 const PlayButton = styled.button`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: #4a4a4a;
+  background-color: ${({ theme }) => theme.primary || "#4a4a4a"};
   color: #fff;
   font-size: 16px;
   border: none;
@@ -98,6 +99,6 @@ const PlayButton = styled.button`
   display: flex;
 
   &:hover {
-    background-color: #5c5c5c;
+    background-color: ${({ theme }) => theme.primaryHover || "#5c5c5c"};
   }
 `;

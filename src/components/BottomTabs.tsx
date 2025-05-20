@@ -35,7 +35,7 @@ export default function BottomTabs() {
         )}
       </StyledNavLink>
 
-      <StyledNavLink to="/ar">
+      <StyledNavLink to="/camera">
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
@@ -71,7 +71,6 @@ export default function BottomTabs() {
   );
 }
 
-// styled-components
 const Nav = styled.nav`
   position: fixed;
   bottom: 0;
@@ -79,8 +78,9 @@ const Nav = styled.nav`
   right: 0;
   height: 60px;
   display: flex;
-  border-top: 1px solid #e0e0e0;
-  background: #ffffff;
+
+  background: ${({ theme }) =>
+    theme.mode === "dark" ? colors.BLACK : colors.WHITE};
   z-index: 20;
 `;
 
@@ -90,19 +90,22 @@ const StyledNavLink = styled(NavLink)`
 `;
 
 const Tab = styled.div`
-  color: #888;
+  height: 100%;
+  color: ${({ theme }) => theme.text};
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  transition: color 0.3s;
 
   &.active {
-    color: ${colors.ORANGE_500};
+    color: ${({ theme }) =>
+      theme.mode === "dark" ? colors.ORANGE_300 : theme.primary};
   }
 
   &.active svg {
-    color: ${colors.ORANGE_500};
+    color: ${({ theme }) =>
+      theme.mode === "dark" ? colors.ORANGE_300 : theme.primary};
   }
 `;
 

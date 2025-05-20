@@ -1,26 +1,50 @@
-// src/components/ThemeToggle.tsx
 import React from "react";
-import { useThemeStore } from "../stores/useThemeStore";
 import styled from "styled-components";
+import { useThemeStore } from "../stores/useThemeStore";
+import { FaMoon, FaSun } from "react-icons/fa";
 
 export default function ThemeToggle() {
   const { mode, toggleTheme } = useThemeStore();
+  const isDark = mode === "dark";
 
   return (
-    <ToggleButton onClick={toggleTheme}>
-      현재 모드: {mode === "light" ? "🌞 Light" : "🌙 Dark"} → 전환
-    </ToggleButton>
+    <ToggleWrapper onClick={toggleTheme}>
+      <Track $isDark={isDark}>
+        <Thumb $isDark={isDark}>
+          {isDark ? <FaMoon color="#facc15" /> : <FaSun color="#facc15" />}
+        </Thumb>
+      </Track>
+    </ToggleWrapper>
   );
 }
 
-const ToggleButton = styled.button`
-  background: ${({ theme }) => theme.primary};
-  color: ${({ theme }) => theme.text};
-  padding: 0.5rem 1rem;
+const ToggleWrapper = styled.button`
+  background: none;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
-  margin: 1rem;
-  font-size: 1rem;
-  transition: background 0.3s;
+`;
+
+const Track = styled.div<{ $isDark: boolean }>`
+  width: 80px;
+  height: 40px;
+  border-radius: 9999px;
+  background-color: ${({ $isDark }) => ($isDark ? "#60a5fa" : "#e7e4bb")};
+  position: relative;
+  transition: background-color 0.3s ease;
+`;
+
+const Thumb = styled.div<{ $isDark: boolean }>`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: ${({ $isDark }) => ($isDark ? "#1f2937" : "#f0f0f0")};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transform: ${({ $isDark }) =>
+    $isDark ? "translateX(0)" : "translateX(36px)"};
+  transition: transform 0.3s ease, background-color 0.3s ease;
 `;

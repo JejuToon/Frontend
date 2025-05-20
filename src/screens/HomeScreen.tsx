@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
 import LocationBox from "../components/LocationBox";
-import tales from "../mocks/taleInfo";
+
 import { MdOutlineWrongLocation } from "react-icons/md";
 import { FaPlus, FaPlay } from "react-icons/fa6";
 import Loader from "../components/Loader";
@@ -22,7 +22,8 @@ import "../styles/embla.css";
 import "../styles/emblaDrag.css";
 const OPTIONS: EmblaOptionsType = { loop: true };
 
-import { TaleContent } from "../types/tale";
+import type { TaleContent } from "../types/tale";
+import tales from "../mocks/taleInfo";
 
 const category1 = "assets/images/category/category1.png";
 const category2 = "assets/images/category/category2.png";
@@ -123,35 +124,31 @@ export default function HomeScreen() {
 
   return (
     <Container $isVisible={isVisible}>
-      <Wrapper>
-        <Header
-          left={<h1>홈</h1>}
-          center={null}
-          right={
-            <LocationBox
-              onClick={async () => {
-                const status = await fetchCurrentLocation(null); // 또는 mapRef 있으면 전달
-                if (status === "denied") {
-                  setShowLocationModal(true);
-                }
-              }}
-            />
-          }
-        />
-      </Wrapper>
+      <Header
+        left={<h1>홈</h1>}
+        center={null}
+        right={
+          <LocationBox
+            onClick={async () => {
+              const status = await fetchCurrentLocation(null); // 또는 mapRef 있으면 전달
+              if (status === "denied") {
+                setShowLocationModal(true);
+              }
+            }}
+          />
+        }
+      />
 
-      <MainSection>
-        <EmblaCarousel
-          slides={carouselTales}
-          options={OPTIONS}
-          onNextRef={(fn) => {
-            nextButtonRef.current = fn;
-            isReady.current = true;
-          }}
-          onUserInteraction={startAutoScroll}
-          onSlideClick={(t) => handleTaleClick(t)}
-        />
-      </MainSection>
+      <EmblaCarousel
+        slides={carouselTales}
+        options={OPTIONS}
+        onNextRef={(fn) => {
+          nextButtonRef.current = fn;
+          isReady.current = true;
+        }}
+        onUserInteraction={startAutoScroll}
+        onSlideClick={(t) => handleTaleClick(t)}
+      />
 
       <Section>
         <SectionHeader>
@@ -228,8 +225,8 @@ const Container = styled.div<{ $isVisible: boolean }>`
   height: 100%;
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   transition: opacity 0.6s ease;
-  overflow-y: auto;
   padding-bottom: 60px;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const ModalOverlay = styled.div`
@@ -246,33 +243,26 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: white;
+  background-color: ${({ theme }) => theme.cardBackground || "white"};
   padding: 24px;
   border-radius: 12px;
   text-align: center;
   max-width: 300px;
+  color: ${({ theme }) => theme.text};
 `;
 
 const CloseButton = styled.button`
   margin-top: 16px;
   padding: 8px 16px;
-  background-color: #4b5563;
+  background-color: ${({ theme }) => theme.primary || "#4b5563"};
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
 `;
 
-const Wrapper = styled.div`
-  z-index: 10;
-`;
-
-const MainSection = styled.div`
-  margin-bottom: 30px;
-`;
-
 const Section = styled.section`
-  border-bottom: 10px solid ${colors.BEIGE_300};
+  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
 `;
 
 const SectionHeader = styled.div`
@@ -280,11 +270,9 @@ const SectionHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  margin-bottom: 15px;
-  margin-top: 15px;
-
   h3 {
     font-weight: 500;
+    color: ${({ theme }) => theme.text};
   }
 `;
 
@@ -293,6 +281,7 @@ const SeeAllBtn = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: ${({ theme }) => theme.text};
 `;
 
 const CategoryGrid = styled.div`
@@ -300,6 +289,7 @@ const CategoryGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding: 0 16px;
+  margin-bottom: 16px;
 `;
 
 const CategoryCard = styled.div`
@@ -322,4 +312,5 @@ const CategoryLabel = styled.div`
   color: white;
   text-align: center;
   font-weight: bold;
+  background: rgba(0, 0, 0, 0.3);
 `;

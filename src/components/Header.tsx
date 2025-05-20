@@ -21,13 +21,19 @@ export default function Header({
   );
 }
 
-// styled-components
 const HeaderContainer = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: white;
+  height: 60px; //헤더 높이
+  padding: 0 16px;
+
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
+  transition: background 0.3s, color 0.3s, border 0.3s;
 `;
 
 const SlotLeft = styled.div`

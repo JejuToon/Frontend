@@ -46,10 +46,9 @@ export default function EmptyState({
   );
 }
 
-// 스타일 정의
 const Container = styled.div`
   flex: 1;
-  padding: 10px 20px;
+  padding: 16px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -67,31 +66,32 @@ const Image = styled.img`
 
 const IconWrapper = styled.div`
   font-size: 60px;
-  color: #d3d3d3;
+  color: ${({ theme }) => theme.iconSecondary || "#d3d3d3"};
   margin-bottom: 16px;
   cursor: pointer;
 
   &:hover {
-    color: #aaa;
+    color: ${({ theme }) => theme.iconHover || "#aaa"};
   }
 `;
 
 const Title = styled.div`
   font-size: 16px;
   font-weight: 600;
-  color: #444;
+  color: ${({ theme }) => theme.textPrimary || "#444"};
   margin-bottom: 8px;
   white-space: nowrap;
 `;
 
 const Description = styled.div<{ $isLink: boolean }>`
   font-size: 14px;
-  color: #999;
+  color: ${({ theme }) => theme.textSecondary || "#999"};
   text-decoration: ${({ $isLink }) => ($isLink ? "underline" : "none")};
   cursor: ${({ $isLink }) => ($isLink ? "pointer" : "default")};
   white-space: nowrap;
 
   &:hover {
-    color: ${({ $isLink }) => ($isLink ? "#0056b3" : "#999")};
+    color: ${({ $isLink, theme }) =>
+      $isLink ? theme.linkHover || "#0056b3" : theme.textSecondary || "#999"};
   }
 `;

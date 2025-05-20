@@ -280,7 +280,7 @@ export default function TaleScreen() {
               </LibButton>
               <ARButton
                 onClick={() => {
-                  navigate("/ar");
+                  navigate("/camera");
                 }}
               >
                 AR로 보기
@@ -299,8 +299,10 @@ const Screen = styled.main<{ $isVisible: boolean }>`
   height: 100vh;
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   transition: opacity 0.6s ease;
-  background: #fff;
+  background: ${({ theme }) => theme.taleBackground};
+  color: ${({ theme }) => theme.taleText};
 `;
+
 const ControlBarWrapper = styled.div`
   position: fixed;
   top: 0;
@@ -315,14 +317,14 @@ const ControlBar = styled.div`
   bottom: 40px;
   left: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.background};
   padding: 12px 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+  border-top: 1px solid ${({ theme }) => theme.border};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   z-index: 52;
 `;
 
@@ -351,11 +353,10 @@ const IconButton = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: #333;
-  z-index: 1;
+  color: ${({ theme }) => theme.text};
+  display: flex;
   align-items: center;
   justify-content: center;
-  display: flex;
 `;
 
 const ButtonGroupRight = styled.div`
@@ -382,7 +383,7 @@ const Image = styled.img`
 
 const TextSection = styled.div`
   flex: 1 1 auto;
-  background: #f5f0fa;
+  background: ${({ theme }) => theme.surface};
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -394,14 +395,12 @@ const TextSection = styled.div`
 const TextContainer = styled.div<{ $font?: any }>`
   width: 100%;
   padding: 16px;
-  background: #ffffff;
+  background: ${({ theme }) => theme.card};
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   font-family: ${({ $font }) =>
     $font ? `${$font.name}, ${$font.style}` : "system-ui, sans-serif"};
-
   line-height: 1.75;
-  line-spacing: 0.02em;
   word-break: keep-all;
 `;
 
@@ -417,7 +416,7 @@ const SelectContainer = styled.div`
 
 const ChoiceButton = styled.button`
   padding: 10px;
-  background: #7f3dff;
+  background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
   border-radius: 8px;
@@ -425,7 +424,7 @@ const ChoiceButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background: #6c2ee8;
+    background: ${({ theme }) => theme.primaryDark};
   }
 `;
 
@@ -434,8 +433,8 @@ const NavButtons = styled.div`
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background: #fff;
-  border-top: 1px solid #e0e0e0;
+  background: ${({ theme }) => theme.background};
+  border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
 const NavButton = styled.button`
@@ -444,7 +443,7 @@ const NavButton = styled.button`
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  color: #333;
+  color: ${({ theme }) => theme.text};
 
   &:disabled {
     opacity: 0.4;
@@ -458,7 +457,7 @@ const PageIndicator = styled.span`
   transform: translateX(-50%);
   font-size: 1rem;
   font-weight: 500;
-  color: #666;
+  color: ${({ theme }) => theme.textSoft};
 `;
 
 const ModalOverlay = styled.div`
@@ -475,7 +474,8 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: white;
+  background: ${({ theme }) => theme.card};
+  color: ${({ theme }) => theme.text};
   border-radius: 12px;
   padding: 24px;
   width: 90%;
@@ -530,7 +530,6 @@ const CloseButton = styled.button`
 
 const ARButton = styled(CloseButton)`
   background: #7f3dff;
-
   &:hover {
     background: #6a2eea;
   }
@@ -538,7 +537,6 @@ const ARButton = styled(CloseButton)`
 
 const LibButton = styled(CloseButton)`
   background: #7f3dff;
-
   &:hover {
     background: #6a2eea;
   }
@@ -546,7 +544,7 @@ const LibButton = styled(CloseButton)`
 
 const ChoiceTriggerButton = styled.button`
   padding: 10px 16px;
-  background: #7f3dff;
+  background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
   border-radius: 8px;
@@ -555,6 +553,6 @@ const ChoiceTriggerButton = styled.button`
   margin-top: 8px;
 
   &:hover {
-    background: #6a2eea;
+    background: ${({ theme }) => theme.primaryDark};
   }
 `;

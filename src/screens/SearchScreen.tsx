@@ -17,6 +17,7 @@ import {
   FaUser,
   FaHeart,
   FaCross,
+  FaBook,
 } from "react-icons/fa6";
 import { MdOutlineWrongLocation } from "react-icons/md";
 import { RiSparkling2Fill } from "react-icons/ri";
@@ -295,16 +296,16 @@ export default function SearchScreen() {
           !selectedCategories.includes("전체") &&
           selectedExtras.length === 0 && (
             <EmptyState
-              imageUrl="/assets/empty_icon.png"
+              icon={<FaBook />}
               title="선택된 설화가 없습니다"
-              description="지도를 클릭하거나 카테고리를 선택해보세요."
+              description="아무 이야기나 들어 보실래요?"
               navigateOnDescriptionClick={false}
             />
           )}
 
         {/*선택된 설화 바텀시트의 가장 위쪽에 표시 */}
         {sheetPos !== "collapsed" && selectedMarker && (
-          <CardSection>
+          <Section>
             <TaleList>
               <TaleCard
                 id={selectedMarker.id}
@@ -334,7 +335,7 @@ export default function SearchScreen() {
                 />
               </TaleCard>
             </TaleList>
-          </CardSection>
+          </Section>
         )}
 
         {selectedCategories.map((cat) => {
@@ -345,7 +346,7 @@ export default function SearchScreen() {
           return (
             <Section key={cat}>
               <SectionHeader>
-                <h3>{cat}</h3>
+                <span>{cat}</span>
               </SectionHeader>
               <TaleList>
                 {talesInCategory.map((t) => (
@@ -402,7 +403,7 @@ export default function SearchScreen() {
             ) : (
               <Section>
                 <SectionHeader>
-                  <h3>현재 위치와 가까운 설화</h3>
+                  <span>현재 위치와 가까운 설화</span>
                 </SectionHeader>
                 <TaleList>
                   {nearbyTales.map((t) => (
@@ -442,21 +443,13 @@ export default function SearchScreen() {
 
         {selectedExtras.includes("맞춤 추천") && (
           <Section>
-            <SectionHeader>
-              <h3>추천 설화</h3>
-            </SectionHeader>
-            <TaleList>
-              {tales.slice(2, 5).map((t) => (
-                <TaleCard
-                  key={t.id}
-                  id={t.id}
-                  title={t.title}
-                  description={t.description}
-                  thumbnailUrl={t.thumbnailUrl}
-                  onClick={() => handleTaleClick(t)}
-                />
-              ))}
-            </TaleList>
+            <SectionHeader></SectionHeader>
+            <EmptyState
+              icon={<RiSparkling2Fill />}
+              title="맞춤형 추천 정보가 없어요"
+              description="맞춤형 추천 받기"
+              navigateOnDescriptionClick={false}
+            />
           </Section>
         )}
       </BottomSheet>
@@ -470,6 +463,7 @@ const Screen = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const SearchHeader = styled.div`
@@ -489,7 +483,7 @@ const SearchBox = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #f3eefc;
+  background-color: ${({ theme }) => theme.inputBackground || "#f3eefc"};
   padding: 12px 16px;
   margin: 20px;
   border-radius: 999px;
@@ -501,14 +495,14 @@ const SearchInput = styled.input`
   flex: 1;
   border: none;
   background: transparent;
-  color: #444;
+  color: ${({ theme }) => theme.text};
   font-size: 16px;
   outline: none;
 `;
 
 const Icon = styled.div`
   font-size: 18px;
-  color: #555;
+  color: ${({ theme }) => theme.textSecondary || "#555"};
   display: flex;
 `;
 
@@ -531,7 +525,16 @@ const ChipContainer = styled.div`
   padding: 4px 16px;
   z-index: 5;
   overflow-x: auto;
+  overflow-y: hidden;
   white-space: nowrap;
+
+  /* 스크롤바 숨김 */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 `;
 
 const ChipContent = styled.span`
@@ -552,16 +555,18 @@ const CardSection = styled.div`
 `;
 
 const Section = styled.section`
-  border-bottom: 10px solid ${colors.BEIGE_300};
+  padding: 16px;
+  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
 `;
 
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 0 16px;
-  h3 {
+  margin-bottom: 12px;
+  span {
     font-weight: 500;
+    color: ${({ theme }) => theme.text};
   }
 `;
 
@@ -569,5 +574,4 @@ const TaleList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 16px;
 `;

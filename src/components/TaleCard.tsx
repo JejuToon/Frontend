@@ -62,7 +62,7 @@ export default function TaleCard({
 const Section = styled.div`
   position: relative;
   border-radius: 8px;
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || "#fff"};
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
   overflow: hidden;
 `;
@@ -81,11 +81,11 @@ const CloseButton = styled.button`
   background: transparent;
   border: none;
   font-size: 16px;
-  color: #999;
+  color: ${({ theme }) => theme.textSecondary || "#999"};
   cursor: pointer;
 
   &:hover {
-    color: #333;
+    color: ${({ theme }) => theme.text || "#333"};
   }
 `;
 
@@ -113,16 +113,16 @@ const Title = styled.h3`
   font-size: 16px;
   font-weight: 500;
   line-height: 1.4;
-  color: #222;
+  color: ${({ theme }) => theme.text || "#222"};
 `;
 
 const Description = styled.p`
   margin: 4px 0 0;
   font-size: 14px;
   line-height: 1.5;
-  color: #555;
+  color: ${({ theme }) => theme.textSecondary || "#555"};
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 최대 줄 수: 2줄 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

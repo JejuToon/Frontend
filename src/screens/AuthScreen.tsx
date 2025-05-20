@@ -69,7 +69,7 @@ export default function AuthScreen() {
       <Header
         left={
           <FaArrowLeft
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/my")}
             style={{ cursor: "pointer" }}
           />
         }
@@ -100,14 +100,10 @@ export default function AuthScreen() {
 
         <SocialContainer>
           <SocialButton onClick={handleKakaoLogin}>
-            <img
-              src="assets/icons/ico_login_kakao.svg"
-              alt="kakao"
-              style={{ width: "100%", height: "100%", borderRadius: "50%" }}
-            />
+            <img src="assets/icons/ico_login_kakao.png" alt="kakao" />
           </SocialButton>
           <SocialButton>
-            <img src="assets/icons/ico_login_google.svg" />
+            <img src="assets/icons/ico_login_google.png" alt="google" />
           </SocialButton>
         </SocialContainer>
 
@@ -121,11 +117,11 @@ export default function AuthScreen() {
   );
 }
 
-// styled-components
 const AuthScreenWrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const AuthContainer = styled.div`
@@ -141,7 +137,7 @@ const AuthContainer = styled.div`
 const LogoPlaceholder = styled.div`
   width: 200px;
   height: 120px;
-  background: #e0e0e0;
+  background: ${({ theme }) => theme.cardBackground || "#e0e0e0"};
   border-radius: 8px;
   margin-bottom: 40px;
 `;
@@ -157,37 +153,50 @@ const FormContainer = styled.form`
 const Input = styled.input`
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #ddd;
+  border: 1px solid ${({ theme }) => theme.border || "#ddd"};
   border-radius: 6px;
   font-size: 1rem;
+  background-color: ${({ theme }) => theme.inputBackground || theme.background};
+  color: ${({ theme }) => theme.text};
   box-sizing: border-box;
 `;
 
 const LoginButton = styled.button`
   width: 100%;
   padding: 14px;
-  background: #e2e8f0;
+  background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
   border: none;
   border-radius: 6px;
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: ${({ theme }) => theme.buttonText || "#333"};
   cursor: pointer;
 `;
 
 const SocialContainer = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 32px;
   margin: 32px 0 24px;
 `;
 
 const SocialButton = styled.button`
   width: 48px;
   height: 48px;
-  background: #e0e0e0;
+  background: ${({ theme }) => theme.background};
   border: none;
   border-radius: 50%;
   cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
 `;
 
 const AuthLinks = styled.div`
@@ -197,7 +206,7 @@ const AuthLinks = styled.div`
 
 const AuthLink = styled.a`
   font-size: 0.875rem;
-  color: #555;
+  color: ${({ theme }) => theme.textSecondary || "#555"};
   text-decoration: none;
 `;
 

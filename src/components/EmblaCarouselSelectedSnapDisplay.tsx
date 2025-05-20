@@ -40,7 +40,7 @@ export const SelectedSnapDisplay: React.FC<PropType> = (props) => {
   const { selectedSnap, snapCount } = props;
 
   return (
-    <div className="embla__selected-snap-display">
+    <div>
       {selectedSnap + 1} / {snapCount}
     </div>
   );

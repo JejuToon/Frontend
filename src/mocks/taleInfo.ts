@@ -1,6 +1,8 @@
+import type { TaleContent } from "../types/tale";
+
 const taleThumb = "/assets/images/TaleThumb.png";
 
-const tales = [
+const tales: TaleContent[] = [
   {
     id: 1,
     title: "설문대할망",

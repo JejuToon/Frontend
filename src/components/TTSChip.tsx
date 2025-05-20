@@ -33,15 +33,16 @@ export default function TTSChip({
 const ChipContainer = styled.div<{ $selected: boolean }>`
   display: flex;
   align-items: center;
-  background-color: #f5f4fa;
-  color: #333;
+  background-color: ${({ theme }) => theme.cardBackground || "#f5f4fa"};
+  color: ${({ theme }) => theme.text || "#333"};
   border-radius: 50px;
   width: fit-content;
   max-width: 100%;
   min-height: 40px;
   box-sizing: border-box;
   border: 2px solid
-    ${({ $selected }) => ($selected ? "#7f3dff" : "transparent")};
+    ${({ $selected, theme }) =>
+      $selected ? theme.primary || "#7f3dff" : "transparent"};
   cursor: pointer;
   transition: border 0.2s ease;
   box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
@@ -63,7 +64,7 @@ const IconWrapper = styled.div`
   justify-content: center;
   margin-left: 0;
   border-radius: 50%;
-  background-color: #e0dcf8;
+  background-color: ${({ theme }) => theme.iconBackground || "#e0dcf8"};
   flex-shrink: 0;
 `;
 
@@ -78,4 +79,5 @@ const Name = styled.span`
   line-height: 1.4;
   word-break: break-word;
   padding: 8px;
+  color: ${({ theme }) => theme.text};
 `;

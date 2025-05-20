@@ -9,15 +9,9 @@ export default function MyScreen() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const handleSettings = () => console.log("설정 클릭");
-
   return (
     <MyScreenContainer>
-      <Header
-        left={<h1>정보</h1>}
-        center={null}
-        right={<span onClick={handleSettings}>⚙️</span>}
-      />
+      <Header left={<h1>정보</h1>} center={null} right={null} />
 
       <ButtonWrapper>
         <LoginButton onClick={user ? logout : () => navigate("/auth")}>
@@ -25,40 +19,63 @@ export default function MyScreen() {
         </LoginButton>
       </ButtonWrapper>
 
-      <MyList>
-        {[...Array(5)].map((_, i) => (
-          <MyListItem key={i}>
-            <ItemText>설정 {i}</ItemText>
+      <Section>
+        <SectionHeader></SectionHeader>
+        <MyList>
+          <MyListItem>
+            <ItemText>다크 모드</ItemText>
+            <ThemeToggle />
           </MyListItem>
-        ))}
-      </MyList>
-      <ThemeToggle />
+        </MyList>
+      </Section>
+
+      <Section>
+        <SectionHeader></SectionHeader>
+        <MyList>
+          {[...Array(3)].map((_, i) => (
+            <MyListItem key={i}>
+              <ItemText>설정 {i}</ItemText>
+            </MyListItem>
+          ))}
+        </MyList>
+      </Section>
+
+      <Section>
+        <SectionHeader></SectionHeader>
+        <MyList>
+          {[...Array(3)].map((_, i) => (
+            <MyListItem key={i}>
+              <ItemText>설정 {i}</ItemText>
+            </MyListItem>
+          ))}
+        </MyList>
+      </Section>
     </MyScreenContainer>
   );
 }
 
-// styled-components
 const MyScreenContainer = styled.main`
-  flex: 1;
   display: flex;
+  height: 100%;
   flex-direction: column;
-  overflow-y: auto;
-  padding-bottom: 60px; /* BottomTabs 높이 고려 */
+  padding-bottom: 60px;
+  transition: opacity 0.6s ease;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const ButtonWrapper = styled.div`
-  width: 100%;
-  padding: 0 16px;
-  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  text-aling: center;
 `;
 
 const LoginButton = styled.button`
-  width: 100%;
-  align-self: center; // 수직 방향에서 가운데 정렬
+  width: 90%;
+  align-self: center;
   padding: 14px 0;
   margin: 6px;
-  background: #e2e8f0;
-  color: black;
+  background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
+  color: ${({ theme }) => theme.buttonText || "black"};
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -69,20 +86,35 @@ const LoginButton = styled.button`
   }
 `;
 
-const MyList = styled.ul`
+const Section = styled.section`
+  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  h3 {
+    font-weight: 500;
+    color: ${({ theme }) => theme.text};
+  }
+`;
+
+const MyList = styled.div`
   list-style: none;
   margin: 0;
 `;
 
-const MyListItem = styled.li`
+const MyListItem = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
+  padding: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
-const ItemText = styled.span`
-  padding-left: 16px;
+const ItemText = styled.div`
   font-size: 20px;
-  color: #333;
+  color: ${({ theme }) => theme.text || "#333"};
 `;

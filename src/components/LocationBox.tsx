@@ -47,19 +47,20 @@ export default function LocationBox({ onClick, label }: LocationBoxProps) {
   );
 }
 
-// styled-components
 const Button = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid ${({ theme }) => theme.border || "#ddd"};
   border-radius: 20px;
-  background: #fff;
+  background: ${({ theme }) => theme.cardBackground || "#fff"};
+  color: ${({ theme }) => theme.text};
   cursor: pointer;
 `;
 
 const Label = styled.span`
   font-size: 14px;
   white-space: nowrap;
+  color: ${({ theme }) => theme.text};
 `;

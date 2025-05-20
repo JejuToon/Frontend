@@ -91,7 +91,7 @@ const fakeLoginApi = async (
           user: { id: 1, name: "test user", email },
         });
       } else {
-        reject(new Error("Invalid credentials"));
+        reject(new Error("아이디 또는 비밀번호가 올바르지 않습니다"));
       }
     }, 1000);
   });

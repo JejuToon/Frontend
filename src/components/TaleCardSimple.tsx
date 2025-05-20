@@ -26,7 +26,7 @@ export default function TaleCardSimple({
 }
 
 const Card = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.background};
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -66,7 +66,7 @@ const TextBox = styled.div`
 const Title = styled.div`
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: ${({ theme }) => theme.text || "#333"};
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;

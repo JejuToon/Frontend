@@ -8,6 +8,7 @@ import Tabs, { TabItem } from "../components/Tabs";
 import { useAuth } from "../hooks/useAuth";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
+import { RiLoginBoxLine } from "react-icons/ri";
 
 import { TaleContent } from "../types/tale";
 
@@ -61,10 +62,16 @@ export default function LibScreen() {
       <Header left={<h1>설화</h1>} center={null} right={null} />
 
       {!user ? (
-        <LoginPrompt>
-          <p>저장된 설화와 캐릭터를 보려면 로그인</p>
+        <EmptyStateGrid>
+          <EmptyState
+            icon={<RiLoginBoxLine />}
+            title="연결된 정보가 없어요"
+            description="로그인하면 이용할 수 있어요"
+            linkUrl="/auth"
+            navigateOnDescriptionClick={true}
+          />
           <LoginButton onClick={() => navigate("/auth")}>로그인</LoginButton>
-        </LoginPrompt>
+        </EmptyStateGrid>
       ) : (
         <>
           <LibTabs>
@@ -132,27 +139,27 @@ export default function LibScreen() {
   );
 }
 
-// styled-components
 const LibScreenContainer = styled.main`
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 60px; /* BottomTabs 높이 고려 */
+  padding-bottom: 60px;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const LoginPrompt = styled.div`
   text-align: center;
   margin-top: 48px;
   padding: 0 16px;
-  color: #555;
+  color: ${({ theme }) => theme.textSecondary || "#555"};
 `;
 
 const LoginButton = styled.button`
   margin-top: 16px;
   padding: 12px 24px;
-  background: #e2e8f0;
-  color: black;
+  background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
+  color: ${({ theme }) => theme.buttonText || "black"};
   font-size: 16px;
   border: none;
   border-radius: 8px;
@@ -161,7 +168,7 @@ const LoginButton = styled.button`
 
 const LibTabs = styled.div`
   display: flex;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid ${({ theme }) => theme.border || "#ddd"};
   margin: 0 16px;
 `;
 
@@ -173,8 +180,10 @@ const LibTab = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
-  color: ${({ $active }) => ($active ? "#000" : "#666")};
-  border-bottom: ${({ $active }) => ($active ? "2px solid #000" : "none")};
+  color: ${({ $active, theme }) =>
+    $active ? theme.text : theme.textSecondary || "#666"};
+  border-bottom: ${({ $active, theme }) =>
+    $active ? `2px solid ${theme.text}` : "none"};
 `;
 
 const TaleList = styled.div`
@@ -198,6 +207,6 @@ const CharacterGrid = styled.div`
 const EmptyStateGrid = styled.div`
   display: flex;
   flex-direction: column;
-
   padding: 150px;
+  background-color: ${({ theme }) => theme.background};
 `;
