@@ -2,12 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { TaleContent } from "../types/tale";
 
-export interface Character {
-  id: number;
-  name: string;
-  avatarUrl: string;
-}
-
 export interface TTSConfig {
   voiceIndex: number;
   rate: number;
@@ -20,8 +14,6 @@ export interface FontConfig {
 
 interface StoryState {
   selectedTale: TaleContent | null;
-  selectedCharacter: Character | null;
-  selectedCharacterImage: string | null;
 
   ttsConfig: TTSConfig;
   setTTSConfig: (config: Partial<TTSConfig>) => void;
@@ -32,8 +24,6 @@ interface StoryState {
   viewedTales: TaleContent[];
 
   setTale: (tale: TaleContent) => void;
-  setCharacter: (char: Character) => void;
-  setCharacterImage: (url: string) => void;
   addViewedTale: (tale: TaleContent) => void;
 
   reset: () => void;
@@ -44,7 +34,6 @@ export const useStoryStore = create(
     (set) => ({
       selectedTale: null,
       selectedCharacter: null,
-      selectedCharacterImage: null,
 
       ttsConfig: {
         voiceIndex: 0,
@@ -73,8 +62,6 @@ export const useStoryStore = create(
       viewedTales: [],
 
       setTale: (tale) => set({ selectedTale: tale }),
-      setCharacter: (char) => set({ selectedCharacter: char }),
-      setCharacterImage: (url) => set({ selectedCharacterImage: url }),
       addViewedTale: (tale) =>
         set((state) => ({
           viewedTales: [...state.viewedTales, tale],
@@ -83,8 +70,6 @@ export const useStoryStore = create(
       reset: () =>
         set({
           selectedTale: null,
-          selectedCharacter: null,
-          selectedCharacterImage: null,
           ttsConfig: {
             voiceIndex: 0,
             rate: 1,

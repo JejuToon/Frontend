@@ -20,6 +20,7 @@ const scripts = [
       choices: [
         { text: "치마를 이용해 흙을 퍼 나르기", next: 3 },
         { text: "선택지2", next: 3 },
+        { text: "", next: 3 },
       ],
     },
     {

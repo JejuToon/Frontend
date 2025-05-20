@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { colors } from "../constants/colors";
 import { useNavigate } from "react-router-dom";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
 import Header from "../components/Header";
 import { FaArrowLeft } from "react-icons/fa6";
 import { useAuth } from "../hooks/useAuth";
@@ -9,14 +9,8 @@ import { useStoryStore } from "../stores/useStoryStore";
 import TTSPreviewCard from "../components/TTSPreviewCard";
 import TTSChip from "../components/TTSChip";
 import { FontFaceStyle } from "../components/FontFaceStyle";
-import {
-  IoVolumeMute,
-  IoVolumeLow,
-  IoVolumeMedium,
-  IoVolumeHigh,
-  IoPlayBack,
-  IoPlayForward,
-} from "react-icons/io5";
+import TTSSettings from "../components/TTSSettings";
+import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 
 import { fontOptions } from "../constants/fonts";
 import { TTSInfo } from "../constants/ttsInfo";
@@ -25,18 +19,16 @@ const sampleScript = "제주도에는 약 1만 8천여 개의 설화가 전해�
 const fontScript1 = "이곳은 신들의 발자취가 깃든 제주,";
 const fontScript2 = "바람 속에 전설이 머무는 섬입니다.";
 
-const volumeLevels = [0, 0.33, 0.66, 1];
-
 export default function TaleSetupScreen() {
   const navigate = useNavigate();
   const { ttsConfig, fontConfig, setTTSConfig, setFontConfig } =
     useStoryStore();
 
-  const [volumeLevel, setVolumeLevel] = useState(() =>
-    volumeLevels.indexOf(ttsConfig.volume)
-  );
-  const volume = volumeLevels[volumeLevel];
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [ttsExpanded, setTtsExpanded] = useState(true);
+  const [volume, setVolume] = useState(ttsConfig.volume);
   const [rate, setRate] = useState(ttsConfig.rate);
+
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(
     null
   );
@@ -65,43 +57,38 @@ export default function TaleSetupScreen() {
     setCurrentlyPlayingUrl(audioUrl);
 
     audio.onended = () => {
-      setCurrentlyPlayingUrl(null); // 재생 끝나면 상태 초기화 → 버튼 복구
+      setCurrentlyPlayingUrl(null);
     };
-  };
-
-  const renderVolumeIcon = () => {
-    switch (volumeLevel) {
-      case 0:
-        return <IoVolumeMute />;
-      case 1:
-        return <IoVolumeLow />;
-      case 2:
-        return <IoVolumeMedium />;
-      case 3:
-      default:
-        return <IoVolumeHigh />;
-    }
-  };
-
-  const handleDecreaseRate = () => {
-    setRate((prev) => Math.max(0.5, Math.round((prev - 0.1) * 10) / 10));
-  };
-
-  const handleIncreaseRate = () => {
-    setRate((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10));
   };
 
   const handleButtonClick = () => {
     setTTSConfig({
       voiceIndex: selectedTTSIndex,
       rate,
-      volume: volumeLevels[volumeLevel],
+      volume,
     });
     setFontConfig({
       fontName: selectedFontName,
     });
 
     navigate("/tale/play");
+  };
+
+  const handleToggleTts = () => {
+    if (ttsEnabled) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        setCurrentlyPlayingUrl(null);
+      }
+
+      setTtsExpanded(false);
+      setTtsEnabled(false);
+    } else {
+      setTtsEnabled(true);
+
+      setTtsExpanded(true);
+    }
   };
 
   return (
@@ -116,82 +103,63 @@ export default function TaleSetupScreen() {
 
       <Content>
         <Section>
-          <Label>미리 듣기</Label>
-          <TTSContainer>
-            {TTSInfo.map((tts, index) => (
-              <TTSPreviewCard
-                key={index}
-                profileUrl={tts.profileUrl}
-                message={sampleScript}
-                audioUrl={tts.audioUrl}
-                volume={volume}
-                rate={rate}
-                onPlayRequest={(audio) =>
-                  handlePlayRequest(audio, tts.audioUrl)
-                }
-                isPlaying={currentlyPlayingUrl === tts.audioUrl}
-              />
-            ))}
+          <ToggleContainerWrapper>
+            <ToggleContainer>
+              <ToggleLabel>
+                TTS
+                <ToggleSwitch checked={ttsEnabled} onChange={handleToggleTts} />
+              </ToggleLabel>
+              <IconToggle onClick={() => setTtsExpanded(!ttsExpanded)}>
+                {ttsExpanded ? <IoChevronUp /> : <IoChevronDown />}
+              </IconToggle>
+            </ToggleContainer>
+          </ToggleContainerWrapper>
 
-            <Label>TTS 선택</Label>
-            <TTSSelectContainer>
+          <Collapsible open={ttsExpanded}>
+            <TTSSettings
+              volume={volume}
+              rate={rate}
+              selectedVoiceIndex={selectedTTSIndex}
+              onVolumeChange={setVolume}
+              onRateChange={setRate}
+              onVoiceSelect={setSelectedTTSIndex}
+            />
+
+            <TTSContainer>
               {TTSInfo.map((tts, index) => (
-                <TTSChip
+                <TTSPreviewCard
                   key={index}
                   profileUrl={tts.profileUrl}
-                  name={tts.label}
-                  selected={selectedTTSIndex === index}
-                  onClick={() => setSelectedTTSIndex(index)}
+                  message={sampleScript}
+                  audioUrl={tts.audioUrl}
+                  volume={volume}
+                  rate={rate}
+                  onPlayRequest={(audio) =>
+                    handlePlayRequest(audio, tts.audioUrl)
+                  }
+                  isPlaying={currentlyPlayingUrl === tts.audioUrl}
                 />
               ))}
-            </TTSSelectContainer>
-          </TTSContainer>
+            </TTSContainer>
+          </Collapsible>
         </Section>
 
-        <Section>
-          <Label>음량</Label>
-          <TTSSelectContainer>
-            <TTSChip
-              key={0}
-              icon={<IoVolumeMute />}
-              name={"음소거"}
-              selected={volumeLevel === 0}
-              onClick={() => setVolumeLevel(0)}
-            />
-            <TTSChip
-              key={1}
-              icon={<IoVolumeLow />}
-              name={"1단계"}
-              selected={volumeLevel === 1}
-              onClick={() => setVolumeLevel(1)}
-            />
-            <TTSChip
-              key={2}
-              icon={<IoVolumeMedium />}
-              name={"2단계"}
-              selected={volumeLevel === 2}
-              onClick={() => setVolumeLevel(2)}
-            />
-            <TTSChip
-              key={3}
-              icon={<IoVolumeHigh />}
-              name={"3단계"}
-              selected={volumeLevel === 3}
-              onClick={() => setVolumeLevel(3)}
-            />
-          </TTSSelectContainer>
-
-          <Label>속도</Label>
-          <RateControl>
-            <IconButton>
-              <IoPlayBack onClick={handleDecreaseRate} />
-            </IconButton>
-            <RateValue>{rate.toFixed(1)}</RateValue>
-            <IconButton>
-              <IoPlayForward onClick={handleIncreaseRate} />
-            </IconButton>
-          </RateControl>
-        </Section>
+        {/* 보이지 않게 렌더링만 시켜서 폰트파일을 미리 가져오게 하는 영역 */}
+        <div
+          style={{
+            position: "absolute",
+            left: -9999,
+            width: 0,
+            height: 0,
+            overflow: "hidden",
+          }}
+        >
+          {fontOptions.map((font) => (
+            <React.Fragment key={font.name}>
+              <FontFaceStyle font={font} />
+            </React.Fragment>
+          ))}
+        </div>
 
         <Section>
           <Label>폰트 선택</Label>
@@ -206,22 +174,13 @@ export default function TaleSetupScreen() {
             ))}
           </TTSSelectContainer>
 
-          {fontOptions.map((font) => {
-            if (font.name !== selectedFontName) return null;
-
-            return (
-              <React.Fragment key={font.name}>
-                <FontFaceStyle font={font} />
-                <FontPreview
-                  $font={font}
-                  $selected={selectedFontName === font.name}
-                >
-                  <div>{fontScript1}</div>
-                  <div>{fontScript2}</div>
-                </FontPreview>
-              </React.Fragment>
-            );
-          })}
+          <FontPreview
+            $font={fontOptions.find((f) => f.name === selectedFontName)!}
+            $selected
+          >
+            <div>{fontScript1}</div>
+            <div>{fontScript2}</div>
+          </FontPreview>
         </Section>
       </Content>
       <Footer>
@@ -247,6 +206,102 @@ const HeaderWrapper = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
+const Collapsible = styled.div<{ open: boolean }>`
+  overflow: hidden;
+  max-height: ${({ open }) => (open ? "800px" : "0")};
+  opacity: ${({ open }) => (open ? 1 : 0)};
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+`;
+
+const ToggleContainerWrapper = styled.div``;
+
+const ToggleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const IconToggle = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: ${({ theme }) => theme.text};
+  cursor: pointer;
+`;
+
+const ToggleLabel = styled.label`
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const ToggleSwitch = styled.input.attrs({ type: "checkbox" })`
+  width: 40px;
+  height: 20px;
+  appearance: none;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  &:checked {
+    background: ${({ theme }) => theme.primary};
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    transform: ${({ checked }) => (checked ? "translateX(20px)" : "none")};
+  }
+`;
+
+const SliderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+`;
+
+const SliderLabel = styled.span`
+  width: 48px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const IconWrapper = styled.div`
+  font-size: 20px;
+  color: ${({ theme }) => theme.text};
+`;
+
+const SliderInput = styled.input.attrs({ type: "range" })`
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: ${({ theme }) => theme.border};
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.primary};
+    border: 2px solid white;
+    margin-top: 0px; /* thumb를 track 중앙에 맞추기 */
+  }
+`;
+
 const Section = styled.section`
   display: flex;
   width: 100%;
@@ -267,39 +322,13 @@ const TTSContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-top: 8px;
 `;
 
 const TTSSelectContainer = styled.div`
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-`;
-
-const RateControl = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const IconButton = styled.button`
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: ${({ theme }) => theme.text || "#333"};
-  z-index: 1;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-`;
-
-const RateValue = styled.span`
-  font-size: 16px;
-  width: 40px;
-  text-align: center;
-  color: ${({ theme }) => theme.text};
 `;
 
 const Label = styled.label`

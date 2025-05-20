@@ -9,14 +9,8 @@ import {
   FaRotate,
   FaPause,
 } from "react-icons/fa6";
-import {
-  IoVolumeMute,
-  IoVolumeLow,
-  IoVolumeMedium,
-  IoVolumeHigh,
-  IoPlayBack,
-  IoPlayForward,
-} from "react-icons/io5";
+import { TbHome } from "react-icons/tb";
+
 import { fontOptions } from "../constants/fonts";
 import scripts from "../mocks/scriptInfo";
 import Loader from "../components/Loader";
@@ -24,6 +18,7 @@ import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useChoiceHandler } from "../hooks/useChoiceHandler";
 import { useStoryStore } from "../stores/useStoryStore";
 import { FontFaceStyle } from "../components/FontFaceStyle";
+import TTSSettings from "../components/TTSSettings";
 import { parseAudioPath } from "../utils/parseAudioPath";
 
 const talePagesInfo = scripts[0];
@@ -33,21 +28,12 @@ interface Choice {
   next: number;
 }
 
-const volumeLevels = [0, 0.33, 0.66, 1];
-
 export default function TaleScreen() {
-  const { ttsConfig, selectedTale, fontConfig, selectedCharacterImage } =
-    useStoryStore();
+  const { ttsConfig, selectedTale, fontConfig } = useStoryStore();
 
   const navigate = useNavigate();
   const tale = selectedTale;
   const font = fontOptions.find((f) => f.name === fontConfig.fontName);
-
-  const [volumeLevel, setVolumeLevel] = useState(() => {
-    const idx = volumeLevels.findIndex((v) => v === ttsConfig.volume);
-    return idx === -1 ? 2 : idx;
-  });
-  const volume = volumeLevels[volumeLevel];
 
   // 로딩 테스트
   const [isLoading, setIsLoading] = useState(true);
@@ -56,16 +42,18 @@ export default function TaleScreen() {
   const [page, setPage] = useState(0);
   const talePages = talePagesInfo;
   const currentPage = talePages[page];
-  const audioUrl = parseAudioPath(
-    selectedTale?.title || "",
-    ttsConfig.voiceIndex,
-    page + 1
+
+  const [volume, setVolume] = useState(ttsConfig.volume);
+  const [rate, setRate] = useState(ttsConfig.rate);
+  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(
+    ttsConfig.voiceIndex
   );
 
-  const [showControlBar, setShowControlBar] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [rate, setRate] = useState(ttsConfig.rate);
-  const [rating, setRating] = useState(0); //별점
+  const audioUrl = parseAudioPath(
+    selectedTale?.title || "",
+    selectedVoiceIndex,
+    page + 1
+  );
 
   const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
     audioUrl ? audioUrl : currentPage.audioUrl,
@@ -73,6 +61,10 @@ export default function TaleScreen() {
     rate,
     isLoading
   );
+
+  const [showControlBar, setShowControlBar] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [rating, setRating] = useState(0); //별점
 
   const { showChoiceModal, setShowChoiceModal, handleChoice } =
     useChoiceHandler(setPage);
@@ -88,33 +80,10 @@ export default function TaleScreen() {
   }, []);
 
   const current = talePages[page];
+
   const hasChoices = current.choices && current.choices.length > 0;
-
-  const handlePrev = () => {
-    if (page > 0) setPage(page - 1);
-  };
-
-  const handleNext = () => {
-    if (page < talePages.length - 1) setPage(page + 1);
-  };
-
-  const handleVolumeIconClick = () => {
-    setVolumeLevel((prev) => (prev + 1) % volumeLevels.length);
-  };
-
-  const renderVolumeIcon = () => {
-    switch (volumeLevel) {
-      case 0:
-        return <IoVolumeMute />;
-      case 1:
-        return <IoVolumeLow />;
-      case 2:
-        return <IoVolumeMedium />;
-      case 3:
-      default:
-        return <IoVolumeHigh />;
-    }
-  };
+  const handlePrev = () => page > 0 && setPage(page - 1);
+  const handleNext = () => page < talePages.length - 1 && setPage(page + 1);
 
   const handleGoToLibrary = () => {
     const storedTale = localStorage.getItem("myTales");
@@ -126,19 +95,11 @@ export default function TaleScreen() {
     navigate("/lib");
   };
 
-  const handleDecreaseRate = () => {
-    setRate((prev) => Math.max(0.5, Math.round((prev - 0.1) * 10) / 10));
-  };
-
-  const handleIncreaseRate = () => {
-    setRate((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10));
-  };
-
   useEffect(() => {
     if (audio) {
-      audio.volume = volumeLevels[volumeLevel];
+      audio.volume = volume;
     }
-  }, [volumeLevel]);
+  }, [volume]);
 
   useEffect(() => {
     if (audio) {
@@ -159,7 +120,7 @@ export default function TaleScreen() {
       <TextSection>
         <TextContainer $font={font}>{current.text}</TextContainer>
 
-        {hasChoices && current.choiceIndex == null && (
+        {hasChoices && (
           <ChoiceTriggerButton onClick={() => setShowChoiceModal(true)}>
             선택하기
           </ChoiceTriggerButton>
@@ -182,67 +143,73 @@ export default function TaleScreen() {
             </ModalContent>
           </ModalOverlay>
         )}
+        <NavWrapper>
+          <NavButtons>
+            <IconButton onClick={() => setShowControlBar(!showControlBar)}>
+              <FaGear />
+            </IconButton>
+
+            <PageIndicator>
+              {page + 1} / {talePages.length}
+            </PageIndicator>
+
+            <ButtonGroupRight>
+              <NavButton onClick={handlePrev} disabled={page === 0}>
+                이전
+              </NavButton>
+
+              {page === talePages.length - 1 ? (
+                <NavButton onClick={() => setShowCompleteModal(true)}>
+                  완료
+                </NavButton>
+              ) : (
+                <NavButton onClick={handleNext} disabled={hasChoices}>
+                  다음
+                </NavButton>
+              )}
+            </ButtonGroupRight>
+          </NavButtons>
+        </NavWrapper>
       </TextSection>
 
       {showControlBar && (
         <ControlBarWrapper onClick={() => setShowControlBar(false)}>
           <ControlBar onClick={(e) => e.stopPropagation()}>
-            <IconButton onClick={() => navigate(-1)}>
-              <FaArrowLeft />
-            </IconButton>
-            <TitleText>{tale?.title || "설화"}</TitleText>
+            <Group>
+              <LeftGroup>
+                <IconButton onClick={() => navigate(-1)}>
+                  <FaArrowLeft />
+                </IconButton>
+                <TitleText>{tale?.title || "설화"}</TitleText>
+                <IconButton onClick={() => navigate("/")}>
+                  <TbHome />
+                </IconButton>
+              </LeftGroup>
 
-            <IconButton>
-              <FaRotate onClick={replay} />
-            </IconButton>
-            <IconButton>
-              {audio && !audio.paused ? (
-                <FaPause onClick={toggleAudio} />
-              ) : (
-                <FaPlay onClick={toggleAudio} />
-              )}
-            </IconButton>
-            <IconButton onClick={handleVolumeIconClick}>
-              {renderVolumeIcon()}
-            </IconButton>
-            <RateControl>
-              <IconButton>
-                <IoPlayBack onClick={handleDecreaseRate} />
-              </IconButton>
-              <RateValue>{rate.toFixed(1)}</RateValue>
-              <IconButton>
-                <IoPlayForward onClick={handleIncreaseRate} />
-              </IconButton>
-            </RateControl>
+              <CenterGroup>
+                <IconButton onClick={toggleAudio}>
+                  {audio && !audio.paused ? <FaPause /> : <FaPlay />}
+                </IconButton>
+              </CenterGroup>
+
+              <RightGroup>
+                <IconButton onClick={replay}>
+                  <FaRotate />
+                </IconButton>
+              </RightGroup>
+            </Group>
+
+            <TTSSettings
+              volume={volume}
+              rate={rate}
+              selectedVoiceIndex={selectedVoiceIndex}
+              onVolumeChange={setVolume}
+              onRateChange={setRate}
+              onVoiceSelect={setSelectedVoiceIndex}
+            />
           </ControlBar>
         </ControlBarWrapper>
       )}
-
-      <NavButtons>
-        <IconButton onClick={() => setShowControlBar(!showControlBar)}>
-          <FaGear />
-        </IconButton>
-
-        <PageIndicator>
-          {page + 1} / {talePages.length}
-        </PageIndicator>
-
-        <ButtonGroupRight>
-          <NavButton onClick={handlePrev} disabled={page === 0}>
-            이전
-          </NavButton>
-
-          {page === talePages.length - 1 ? (
-            <NavButton onClick={() => setShowCompleteModal(true)}>
-              완료
-            </NavButton>
-          ) : (
-            <NavButton onClick={handleNext} disabled={hasChoices}>
-              다음
-            </NavButton>
-          )}
-        </ButtonGroupRight>
-      </NavButtons>
 
       {showCompleteModal && (
         <ModalOverlay>
@@ -297,10 +264,15 @@ const Screen = styled.main<{ $isVisible: boolean }>`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  flex: 1;
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   transition: opacity 0.6s ease;
   background: ${({ theme }) => theme.taleBackground};
   color: ${({ theme }) => theme.taleText};
+
+  @media (orientation: landscape) {
+    flex-direction: row; /* 가로 모드: 좌우 나란히 */
+  }
 `;
 
 const ControlBarWrapper = styled.div`
@@ -308,36 +280,49 @@ const ControlBarWrapper = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  bottom: 40px;
+  bottom: 53px;
   z-index: 51;
 `;
 
 const ControlBar = styled.div`
   position: fixed;
-  bottom: 40px;
+  bottom: 53px;
   left: 0;
   width: 100%;
   background: ${({ theme }) => theme.background};
   padding: 12px 16px;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   border-top: 1px solid ${({ theme }) => theme.border};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+
   z-index: 52;
+
+  @media (orientation: landscape) {
+    width: 50%;
+    right: 0;
+    left: auto;
+  }
 `;
 
-const RateControl = styled.div`
+const Group = styled.div`
+  display: flex;
+`;
+
+const LeftGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 `;
 
-const RateValue = styled.span`
-  font-size: 16px;
-  width: 40px;
-  text-align: center;
+const CenterGroup = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const RightGroup = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 const TitleText = styled.h1`
@@ -347,8 +332,8 @@ const TitleText = styled.h1`
 `;
 
 const IconButton = styled.button`
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
   font-size: 20px;
@@ -370,6 +355,12 @@ const ImageContainer = styled.div`
   position: relative;
   width: 100%;
   overflow: hidden;
+
+  @media (orientation: landscape) {
+    width: 50%;
+    height: auto;
+    aspect-ratio: auto;
+  }
 `;
 
 const Image = styled.img`
@@ -390,6 +381,11 @@ const TextSection = styled.div`
   gap: 16px;
   justify-content: center;
   align-items: center;
+
+  @media (orientation: landscape) {
+    width: 50%;
+    padding: 20px 16px; /* 여백 조정 */
+  }
 `;
 
 const TextContainer = styled.div<{ $font?: any }>`
@@ -425,6 +421,18 @@ const ChoiceButton = styled.button`
 
   &:hover {
     background: ${({ theme }) => theme.primaryDark};
+  }
+`;
+
+const NavWrapper = styled.div`
+  position: fixed;
+  bottom: 0px;
+  width: 100%;
+
+  @media (orientation: landscape) {
+    width: 50%;
+    height: auto;
+    aspect-ratio: auto;
   }
 `;
 
