@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
+import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "../hooks/useAuth";
 
 export default function MyScreen() {
@@ -25,12 +26,13 @@ export default function MyScreen() {
       </ButtonWrapper>
 
       <MyList>
-        {[...Array(9)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <MyListItem key={i}>
             <ItemText>설정 {i}</ItemText>
           </MyListItem>
         ))}
       </MyList>
+      <ThemeToggle />
     </MyScreenContainer>
   );
 }

@@ -1,11 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { colors } from "../constants/colors";
-import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMapLoader } from "../hooks/useMapLoader";
-
-import CustomOverlayAbove from "../components/CustomOverlayAbove";
-import CustomOverlay from "../components/CustomOverlay";
 
 import Chip from "../components/Chip";
 import LocationBox from "../components/LocationBox";
@@ -27,7 +23,6 @@ import { RiSparkling2Fill } from "react-icons/ri";
 import { MdNearMe } from "react-icons/md";
 import { TbMapPin, TbPlayerPlayFilled } from "react-icons/tb";
 import Loader from "../components/Loader";
-import NowLocation from "../components/NowLocation";
 import EmptyState from "../components/EmptyState";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useStoryStore } from "../stores/useStoryStore";
@@ -38,17 +33,7 @@ import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 
 import { TaleContent } from "../types/tale";
-
-const CATEGORY_MARKER_ICON =
-  "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
-
-const EXTRA_MARKER_ICON =
-  "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
-
-const CURRENT_LOCATION_ICON =
-  "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
-
-const DEFAULT_CENTER = { lat: 33.4996, lng: 126.5312 };
+import MapRenderer from "../components/MapRenderer";
 
 const notFoundImg = "/assets/images/seolmun.png";
 
@@ -58,19 +43,16 @@ const extraChips = ["근처", "맞춤 추천"];
 const extrasIcons = [MdNearMe, RiSparkling2Fill];
 
 export default function SearchScreen() {
+  const DEFAULT_CENTER = useMemo(() => ({ lat: 33.4996, lng: 126.5312 }), []);
   const navigate = useNavigate();
   const location = useLocation();
   const fromHomeNearby = (location.state as any)?.fromHomeNearby;
-
-  const { setTale } = useStoryStore();
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useMapLoader();
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const onMapLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-    map.panTo(DEFAULT_CENTER);
-  }, []);
-
+  const { setTale } = useStoryStore();
   const { allTales, allTalesLoading, fetchAllTalesData } = useAllTalesStore();
   const { talesByCategory, loadingByCategory, fetchTalesForCategory } =
     useCategoryTalesStore();
@@ -85,20 +67,29 @@ export default function SearchScreen() {
     onMarkerClick,
   } = useSelectedMarkerStore();
 
-  const {
-    selectedCategories,
-    selectedExtras,
-    toggleCategory,
-    toggleExtra,
-    isAllCategorySelected,
-    clearAllCategories, // ["개척담", ...] -> []
-    selectAllCategories, // ["개척담", ... ] -> allCategories
-  } = useFilterChipsStore();
+  const selectedCategories = useFilterChipsStore((s) => s.selectedCategories);
+  const selectedExtras = useFilterChipsStore((s) => s.selectedExtras);
+  const toggleCategory = useFilterChipsStore((s) => s.toggleCategory);
+  const toggleExtra = useFilterChipsStore((s) => s.toggleExtra);
+  const isAllCategorySelected = useFilterChipsStore(
+    (s) => s.isAllCategorySelected
+  );
+  const setIsAllCategorySelected = useFilterChipsStore(
+    (s) => s.setIsAllCategorySelected
+  );
+  const clearAllCategories = useFilterChipsStore((s) => s.clearAllCategories);
+  const selectAllCategories = useFilterChipsStore((s) => s.selectAllCategories);
 
-  // 로딩 상태 계산
+  const onMapLoad = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map;
+      map.panTo(DEFAULT_CENTER);
+    },
+    [DEFAULT_CENTER]
+  );
+
   const isLoading = useMemo(() => {
-    if (isAllCategorySelected()) return allTalesLoading;
-
+    if (isAllCategorySelected) return allTalesLoading;
     return selectedCategories.some((cat) => loadingByCategory[cat] === true);
   }, [
     isAllCategorySelected,
@@ -107,24 +98,44 @@ export default function SearchScreen() {
     loadingByCategory,
   ]);
 
-  // 선택된 마커 말풍선 오버레이
-  const [showOverlay, setShowOverlay] = useState(false);
+  const filteredMarkers = useMemo(() => {
+    const raw = isAllCategorySelected
+      ? allTales
+      : selectedCategories.flatMap((c) => talesByCategory[c] || []);
+    const map = new Map<number, TaleContent>();
+    raw.forEach((t) => map.set(t.id, t));
+    return Array.from(map.values());
+  }, [isAllCategorySelected, allTales, selectedCategories, talesByCategory]);
 
-  // 검색어 상태 저장
-  const [keyword, setKeyword] = useState("");
+  const markerCache = useRef<Map<string, TaleContent[]>>(new Map());
 
-  // "전체" 활성화 상태 여부
-  const [isAllSelected, setIsAllSelected] = useState(isAllCategorySelected);
+  const allMarkers = useMemo(() => {
+    const key = [
+      selectedExtras.includes("근처") ? "nearby" : "onlyFiltered",
+      filteredMarkers.map((m) => m.id).join("-"),
+      nearbyTales.map((n) => n.id).join("-"),
+    ].join("|");
+
+    if (markerCache.current.has(key)) {
+      return markerCache.current.get(key)!;
+    }
+
+    const raw = selectedExtras.includes("근처")
+      ? [...filteredMarkers, ...nearbyTales]
+      : filteredMarkers;
+
+    const map = new Map<number, TaleContent>();
+    raw.forEach((t) => map.set(t.id, t));
+    const deduped = Array.from(map.values());
+
+    markerCache.current.set(key, deduped);
+    return deduped;
+  }, [selectedExtras, filteredMarkers, nearbyTales]);
 
   useEffect(() => {
-    // 홈에서 근처 설화 ">" 아이콘 클릭
     if (fromHomeNearby && selectedExtras.includes("근처")) {
-      setTimeout(() => {
-        setSheetPos("full");
-      }, 300);
-    }
-    // 홈에서 설화를 선택하여 넘어올 경우
-    if (selectedMarker) {
+      setTimeout(() => setSheetPos("full"), 300);
+    } else if (selectedMarker) {
       setTimeout(() => {
         setSheetPos("half");
         mapRef.current?.panTo({
@@ -133,62 +144,45 @@ export default function SearchScreen() {
         });
         mapRef.current?.setZoom(9.7);
       }, 300);
-      // 홈에서 카테고리를 선택하여 넘어올 경우
     } else if (selectedCategories.length > 0) {
-      setTimeout(() => {
-        setSheetPos("full");
-      }, 300);
+      setTimeout(() => setSheetPos("full"), 300);
     }
   }, []);
 
   useEffect(() => {
-    if (isAllSelected && allTales.length === 0) {
-      fetchAllTalesData(0);
-    }
-  }, [isAllSelected]);
-
-  useEffect(() => {
     if (selectedMarker) {
       setShowOverlay(true);
-      setTimeout(() => {
-        setSheetPos("half");
-      }, 1100);
+      setTimeout(() => setSheetPos("half"), 1100);
     }
   }, [selectedMarker]);
 
   useEffect(() => {
-    const shouldFetchAll = isAllCategorySelected();
-
-    if (shouldFetchAll && allTales.length === 0) {
+    if (isAllCategorySelected && allTales.length === 0) {
       fetchAllTalesData(0);
     } else {
       selectedCategories.forEach((cat) => {
         const alreadyFetched = talesByCategory[cat]?.length > 0;
-        if (!alreadyFetched) {
-          fetchTalesForCategory(cat, 0);
-        }
+        if (!alreadyFetched) fetchTalesForCategory(cat, 0);
       });
     }
   }, [selectedCategories]);
 
   useEffect(() => {
-    const handleNearbyFetch = async () => {
+    const fetchNearby = async () => {
       if (!selectedExtras.includes("근처")) return;
       if (!currentLocation) await fetchCurrentLocation(mapRef.current);
       const { lat, lng } =
         useCurrentLocationStore.getState().currentLocation || {};
       if (lat && lng) {
         fetchNearbyTalesData(lat, lng);
-        setTimeout(() => {
-          setSheetPos("full");
-        }, 300);
+        setTimeout(() => setSheetPos("full"), 300);
       }
     };
-    handleNearbyFetch();
+    fetchNearby();
   }, [selectedExtras, currentLocation]);
 
-  const handleTaleClick = (tale: TaleContent) => {
-    setTale(tale);
+  const handleTaleClick = (t: TaleContent) => {
+    setTale(t);
     navigate("/tale");
   };
 
@@ -196,32 +190,6 @@ export default function SearchScreen() {
     setShowOverlay(false);
     setSelectedMarker(null);
   };
-
-  const filteredMarkers: TaleContent[] = useMemo(() => {
-    const rawList = isAllCategorySelected()
-      ? allTales
-      : selectedCategories.flatMap((cat) => talesByCategory[cat] || []);
-
-    const uniqueMap = new Map<number, TaleContent>();
-    for (const tale of rawList) {
-      if (!uniqueMap.has(tale.id)) {
-        uniqueMap.set(tale.id, tale);
-      }
-    }
-    return Array.from(uniqueMap.values());
-  }, [selectedCategories, allTales, talesByCategory]);
-
-  const allMarkers: TaleContent[] = useMemo(() => {
-    const combined = selectedExtras.includes("근처")
-      ? [...filteredMarkers, ...nearbyTales]
-      : [...filteredMarkers];
-
-    const uniqueMap = new Map<number, TaleContent>();
-    for (const tale of combined) {
-      uniqueMap.set(tale.id, tale);
-    }
-    return Array.from(uniqueMap.values());
-  }, [filteredMarkers, nearbyTales, selectedExtras]);
 
   if (loadError) return <div>Map load failed…</div>;
   if (!isLoaded || isLoading) return <Loader type="inline" />;
@@ -243,85 +211,19 @@ export default function SearchScreen() {
       </SearchHeader>
 
       <MapWrapper>
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "100%" }}
-          center={DEFAULT_CENTER}
-          zoom={12}
-          onLoad={onMapLoad}
-          options={{
-            gestureHandling: "greedy",
-            mapTypeControl: false,
-            fullscreenControl: false,
-            streetViewControl: false,
-            cameraControl: false,
-          }}
-        >
-          {/* 활성화된 마커 표시*/}
-          {allMarkers.map((tale) => {
-            const isNearbyMatched =
-              selectedExtras.includes("근처") &&
-              nearbyTales.some((t) => t.id === tale.id);
-            const isCategoryMatched =
-              selectedCategories.length > 0 &&
-              tale.categories?.some((cat) => selectedCategories.includes(cat));
-            const isSelected = selectedMarker?.id === tale.id;
-
-            // 우선순위: selectedExtras > selectedCategories > 기본
-            const markerIcon = isNearbyMatched
-              ? EXTRA_MARKER_ICON
-              : isCategoryMatched
-              ? CATEGORY_MARKER_ICON
-              : CATEGORY_MARKER_ICON; // 기본값
-
-            return (
-              <Marker
-                key={tale.id}
-                position={{
-                  lat: tale.location[0]?.latitude ?? DEFAULT_CENTER.lat,
-                  lng: tale.location[0]?.longitude ?? DEFAULT_CENTER.lng,
-                }}
-                title={tale.title}
-                icon={{
-                  url: markerIcon,
-                  scaledSize: new google.maps.Size(40, 40),
-                }}
-                onClick={() => onMarkerClick(tale, mapRef)}
-              />
-            );
-          })}
-
-          {/* 내 위치 마커 표시 */}
-          {currentLocation && mapRef.current && (
-            <CustomOverlay map={mapRef.current} position={currentLocation}>
-              <NowLocation />
-            </CustomOverlay>
-          )}
-
-          {/* 선택된 마커 표시 */}
-          {selectedMarker && mapRef.current && showOverlay && (
-            <CustomOverlayAbove
-              map={mapRef.current}
-              position={{
-                lat: selectedMarker.location[0].latitude,
-                lng: selectedMarker.location[0].longitude,
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: "white",
-                  border: "1px solid #ccc",
-                  borderRadius: "10px",
-                  padding: "8px 12px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-                  fontSize: "14px",
-                  pointerEvents: "auto",
-                }}
-              >
-                <strong>{selectedMarker.title}</strong>
-              </div>
-            </CustomOverlayAbove>
-          )}
-        </GoogleMap>
+        <MapRenderer
+          allMarkers={allMarkers}
+          nearbyTales={nearbyTales}
+          selectedMarker={selectedMarker}
+          selectedExtras={selectedExtras}
+          selectedCategories={selectedCategories}
+          mapRef={mapRef}
+          onMarkerClick={onMarkerClick}
+          showOverlay={showOverlay}
+          currentLocation={currentLocation}
+          onMapLoad={onMapLoad}
+          defaultCenter={DEFAULT_CENTER}
+        />
       </MapWrapper>
 
       <ChipContainer>
@@ -345,10 +247,10 @@ export default function SearchScreen() {
         })}
 
         <Chip
-          selected={isAllCategorySelected()}
+          selected={isAllCategorySelected}
           onToggle={() => {
-            const next = !isAllCategorySelected();
-            setIsAllSelected(next);
+            const next = !isAllCategorySelected;
+            setIsAllCategorySelected(!isAllCategorySelected);
             next ? selectAllCategories() : clearAllCategories();
           }}
         >

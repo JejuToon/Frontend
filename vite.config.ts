@@ -9,9 +9,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "robots.txt"],
       manifest: {
-        name: "Jeju Folktale AR",
-        short_name: "JejuAR",
-        description: "제주 설화를 기반으로 한 AR 스토리 웹앱",
+        name: "탐라담",
+        short_name: "탐라담",
+        start_url: "/",
+        description: "제주 설화 앱",
         theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",

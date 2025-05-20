@@ -6,21 +6,23 @@ const allExtraChips = ["근처", "맞춤 추천"];
 interface FilterStore {
   selectedCategories: string[];
   selectedExtras: string[];
+  isAllCategorySelected: boolean;
 
   toggleCategory: (cat: string) => void;
   toggleExtra: (extra: string) => void;
   initializeCategory: (cat?: string | string[]) => void;
   setExtras: (extras: string[]) => void;
   clearFilters: () => void;
-  isAllCategorySelected: () => boolean;
   selectAllCategories: () => void;
   clearAllCategories: () => void;
   clearAllExtras: () => void;
+  setIsAllCategorySelected: (value: boolean) => void;
 }
 
 export const useFilterChipsStore = create<FilterStore>((set, get) => ({
   selectedCategories: [],
   selectedExtras: [],
+  isAllCategorySelected: false,
 
   toggleCategory: (cat) => {
     const { selectedCategories } = get();
@@ -71,12 +73,11 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
     set({ selectedCategories: [], selectedExtras: [] });
   },
 
-  isAllCategorySelected: () => {
-    const { selectedCategories } = get();
-    return allCategories.every((c) => selectedCategories.includes(c));
-  },
-
   selectAllCategories: () => set({ selectedCategories: allCategories }),
   clearAllCategories: () => set({ selectedCategories: [] }),
   clearAllExtras: () => set({ selectedExtras: [] }),
+
+  setIsAllCategorySelected: (value) => {
+    set({ isAllCategorySelected: value });
+  },
 }));
