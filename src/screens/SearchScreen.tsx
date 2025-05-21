@@ -68,18 +68,17 @@ export default function SearchScreen() {
     onMarkerClick,
   } = useSelectedMarkerStore();
 
-  const selectedCategories = useFilterChipsStore((s) => s.selectedCategories);
-  const selectedExtras = useFilterChipsStore((s) => s.selectedExtras);
-  const toggleCategory = useFilterChipsStore((s) => s.toggleCategory);
-  const toggleExtra = useFilterChipsStore((s) => s.toggleExtra);
-  const isAllCategorySelected = useFilterChipsStore(
-    (s) => s.isAllCategorySelected
-  );
-  const setIsAllCategorySelected = useFilterChipsStore(
-    (s) => s.setIsAllCategorySelected
-  );
-  const clearAllCategories = useFilterChipsStore((s) => s.clearAllCategories);
-  const selectAllCategories = useFilterChipsStore((s) => s.selectAllCategories);
+  const {
+    selectedCategories,
+    selectedExtras,
+    toggleCategory,
+    toggleExtra,
+    toggleAllCategory,
+    isAllCategorySelected,
+    setIsAllCategorySelected,
+    clearAllCategories,
+    selectAllCategories,
+  } = useFilterChipsStore();
 
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {
@@ -178,6 +177,7 @@ export default function SearchScreen() {
         fetchNearbyTalesData(lat, lng);
         setTimeout(() => setSheetPos("full"), 300);
       }
+      setIsAllCategorySelected(false);
     };
     fetchNearby();
   }, [selectedExtras, currentLocation]);
@@ -249,11 +249,7 @@ export default function SearchScreen() {
 
         <Chip
           selected={isAllCategorySelected}
-          onToggle={() => {
-            const next = !isAllCategorySelected;
-            setIsAllCategorySelected(!isAllCategorySelected);
-            next ? selectAllCategories() : clearAllCategories();
-          }}
+          onToggle={() => toggleAllCategory()}
         >
           <ChipContent>
             <FaScroll style={{ marginRight: 2 }} />

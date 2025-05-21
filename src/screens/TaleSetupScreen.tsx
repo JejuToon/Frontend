@@ -24,7 +24,7 @@ export default function TaleSetupScreen() {
   const { ttsConfig, fontConfig, setTTSConfig, setFontConfig } =
     useStoryStore();
 
-  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const { ttsEnabled, setTtsEnabled } = useStoryStore();
   const [ttsExpanded, setTtsExpanded] = useState(true);
   const [volume, setVolume] = useState(ttsConfig.volume);
   const [rate, setRate] = useState(ttsConfig.rate);
@@ -86,7 +86,6 @@ export default function TaleSetupScreen() {
       setTtsEnabled(false);
     } else {
       setTtsEnabled(true);
-
       setTtsExpanded(true);
     }
   };
@@ -264,44 +263,6 @@ const ToggleSwitch = styled.input.attrs({ type: "checkbox" })`
   }
 `;
 
-const SliderContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-`;
-
-const SliderLabel = styled.span`
-  width: 48px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-`;
-
-const IconWrapper = styled.div`
-  font-size: 20px;
-  color: ${({ theme }) => theme.text};
-`;
-
-const SliderInput = styled.input.attrs({ type: "range" })`
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: ${({ theme }) => theme.border};
-  appearance: none;
-  outline: none;
-  cursor: pointer;
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: ${({ theme }) => theme.primary};
-    border: 2px solid white;
-    margin-top: 0px; /* thumb를 track 중앙에 맞추기 */
-  }
-`;
-
 const Section = styled.section`
   display: flex;
   width: 100%;
@@ -316,6 +277,14 @@ const Content = styled.div`
   display: flex;
   overflow-y: auto;
   flex-direction: column;
+
+  /* 스크롤바 숨김 */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 `;
 
 const TTSContainer = styled.div`

@@ -29,7 +29,7 @@ interface Choice {
 }
 
 export default function TaleScreen() {
-  const { ttsConfig, selectedTale, fontConfig } = useStoryStore();
+  const { ttsConfig, selectedTale, fontConfig, ttsEnabled } = useStoryStore();
 
   const navigate = useNavigate();
   const tale = selectedTale;
@@ -59,7 +59,8 @@ export default function TaleScreen() {
     audioUrl ? audioUrl : currentPage.audioUrl,
     volume,
     rate,
-    isLoading
+    isLoading,
+    ttsEnabled
   );
 
   const [showControlBar, setShowControlBar] = useState(false);
@@ -198,15 +199,16 @@ export default function TaleScreen() {
                 </IconButton>
               </RightGroup>
             </Group>
-
-            <TTSSettings
-              volume={volume}
-              rate={rate}
-              selectedVoiceIndex={selectedVoiceIndex}
-              onVolumeChange={setVolume}
-              onRateChange={setRate}
-              onVoiceSelect={setSelectedVoiceIndex}
-            />
+            <Collapsible open={ttsEnabled}>
+              <TTSSettings
+                volume={volume}
+                rate={rate}
+                selectedVoiceIndex={selectedVoiceIndex}
+                onVolumeChange={setVolume}
+                onRateChange={setRate}
+                onVoiceSelect={setSelectedVoiceIndex}
+              />
+            </Collapsible>
           </ControlBar>
         </ControlBarWrapper>
       )}
@@ -323,6 +325,13 @@ const CenterGroup = styled.div`
 const RightGroup = styled.div`
   display: flex;
   align-items: center;
+`;
+
+const Collapsible = styled.div<{ open: boolean }>`
+  overflow: hidden;
+  max-height: ${({ open }) => (open ? "800px" : "0")};
+  opacity: ${({ open }) => (open ? 1 : 0)};
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 `;
 
 const TitleText = styled.h1`

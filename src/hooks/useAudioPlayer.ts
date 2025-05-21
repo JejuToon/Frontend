@@ -5,13 +5,17 @@ export function useAudioPlayer(
   url: string,
   volume: number,
   rate: number,
-  isLoading: boolean
+  isLoading: boolean,
+  ttsEnabled: boolean
 ) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !ttsEnabled) {
+      setAudio(null);
+      return;
+    }
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
@@ -28,7 +32,7 @@ export function useAudioPlayer(
       newAudio.pause();
       newAudio.currentTime = 0;
     };
-  }, [url, isLoading]);
+  }, [url, isLoading, ttsEnabled]);
 
   useEffect(() => {
     if (!audio) return;
@@ -53,11 +57,11 @@ export function useAudioPlayer(
     isPlaying,
     setAudio,
     toggleAudio: () => {
-      if (!audio) return;
+      if (!audio || !ttsEnabled) return;
       audio.paused ? audio.play() : audio.pause();
     },
     replay: () => {
-      if (audio) {
+      if (audio && ttsEnabled) {
         audio.currentTime = 0;
         audio.play();
       }

@@ -18,6 +18,9 @@ interface StoryState {
   ttsConfig: TTSConfig;
   setTTSConfig: (config: Partial<TTSConfig>) => void;
 
+  ttsEnabled: boolean;
+  setTtsEnabled: (enabled: boolean) => void;
+
   fontConfig: FontConfig;
   setFontConfig: (config: Partial<FontConfig>) => void;
 
@@ -47,6 +50,9 @@ export const useStoryStore = create(
             ...config,
           },
         })),
+
+      ttsEnabled: true,
+      setTtsEnabled: (enabled) => set({ ttsEnabled: enabled }),
 
       fontConfig: {
         fontName: "default",
