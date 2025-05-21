@@ -1,22 +1,22 @@
-import React, { memo, useMemo } from "react";
+import React, { useState, memo, useMemo } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import CustomOverlay from "./CustomOverlay";
 import CustomOverlayAbove from "./CustomOverlayAbove";
 import NowLocation from "./NowLocation";
-import { TaleContent } from "../types/tale";
+import { useTheme } from "styled-components";
+import type { TaleContent, TaleMarker } from "../types/tale";
 
 interface MapRendererProps {
-  allMarkers: TaleContent[];
+  allMarkers: TaleMarker[];
   nearbyTales: TaleContent[];
-  selectedMarker: TaleContent | null;
-  selectedExtras: string[];
-  selectedCategories: string[];
+  selectedMarker: TaleMarker | null;
+  selectedExtras: string[]; // ["근처"] or ["맞춤 추천"] or []
+  selectedCategories: string[]; // 카테고리 배열 or []
   mapRef: React.MutableRefObject<google.maps.Map | null>;
   onMarkerClick: (
-    tale: TaleContent,
+    marker: TaleMarker,
     mapRef: React.MutableRefObject<google.maps.Map | null>
   ) => void;
-  showOverlay: boolean;
   currentLocation: { lat: number; lng: number } | null;
   onMapLoad: (map: google.maps.Map) => void;
   defaultCenter: { lat: number; lng: number };
@@ -26,9 +26,6 @@ const CATEGORY_MARKER_ICON =
   "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
 const EXTRA_MARKER_ICON =
   "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
-const DEFAULT_CENTER = { lat: 33.4996, lng: 126.5312 };
-
-const MemoMarker = memo(Marker);
 
 const MapRenderer: React.FC<MapRendererProps> = ({
   allMarkers,
@@ -38,60 +35,112 @@ const MapRenderer: React.FC<MapRendererProps> = ({
   selectedCategories,
   mapRef,
   onMarkerClick,
-  showOverlay,
   currentLocation,
   onMapLoad,
   defaultCenter,
 }) => {
-  const mapOptions = useMemo(
-    () => ({
-      gestureHandling: "greedy",
-      mapTypeControl: false,
-      fullscreenControl: false,
-      streetViewControl: false,
-      cameraControl: false,
-    }),
-    []
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  const theme = useTheme();
+  const containerStyle = { width: "100%", height: "100%" };
+
+  const handleLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
+    onMapLoad(map);
+    setMapLoaded(true);
+  };
+
+  // 1) 카테고리 필터링된 마커
+  const categoryFiltered = useMemo(
+    () =>
+      selectedCategories.length > 0
+        ? allMarkers.filter((m) =>
+            m.categories.some((cat) => selectedCategories.includes(cat))
+          )
+        : [],
+    [allMarkers, selectedCategories]
   );
 
-  const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-  const center = useMemo(() => defaultCenter, [defaultCenter]);
+  // 2) nearbyTales → TaleMarker 배열로 변환
+  const nearbyMarkers = useMemo<TaleMarker[]>(
+    () =>
+      selectedExtras.includes("근처")
+        ? nearbyTales.flatMap((tale) =>
+            tale.location.map((loc) => ({
+              id: tale.id,
+              title: tale.title,
+              location: loc,
+              categories: tale.categories,
+              description: tale.description,
+              score: tale.score,
+              thumbnail: tale.thumbnail,
+            }))
+          )
+        : [],
+    [nearbyTales, selectedExtras]
+  );
+
+  // 3) 실제 렌더링할 마커 & 아이콘 선택
+  const { markersToShow, useExtraIcon } = useMemo(() => {
+    if (selectedExtras.length > 0) {
+      // "근처" 혹은 "맞춤 추천" 모드
+      return {
+        markersToShow: nearbyMarkers, // "맞춤 추천"도 아직 구현이 없다면 []으로
+        useExtraIcon: true, // orange-dot
+      };
+    }
+    if (selectedCategories.length > 0) {
+      // 카테고리 모드
+      return {
+        markersToShow: categoryFiltered,
+        useExtraIcon: false, // purple-dot
+      };
+    }
+    // 아무것도 선택 안 됐으면 표시 없음
+    return { markersToShow: [] as TaleMarker[], useExtraIcon: false };
+  }, [selectedExtras, selectedCategories, nearbyMarkers, categoryFiltered]);
 
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}
-      center={center}
+      center={defaultCenter}
       zoom={12}
-      onLoad={onMapLoad}
-      options={mapOptions}
+      onLoad={handleLoad}
+      options={{
+        gestureHandling: "greedy",
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        cameraControl: false,
+      }}
     >
-      {allMarkers.map((tale) => {
-        const isNearbyMatched =
-          selectedExtras.includes("근처") &&
-          nearbyTales.some((t) => t.id === tale.id);
-        const isCategoryMatched =
-          selectedCategories.length > 0 &&
-          tale.categories?.some((cat) => selectedCategories.includes(cat));
+      {markersToShow.map((m) => {
+        const key = `${m.id}-${m.location.latitude}-${m.location.longitude}`;
+        const isSelected =
+          selectedMarker !== null &&
+          selectedMarker.id === m.id &&
+          selectedMarker.location.latitude === m.location.latitude &&
+          selectedMarker.location.longitude === m.location.longitude;
 
-        const markerIcon = isNearbyMatched
-          ? EXTRA_MARKER_ICON
-          : isCategoryMatched
-          ? CATEGORY_MARKER_ICON
-          : CATEGORY_MARKER_ICON;
+        // 선택된 마커면 icon을 지정하지 않아 기본 아이콘 사용
+        const icon = isSelected
+          ? undefined
+          : {
+              url: useExtraIcon ? EXTRA_MARKER_ICON : CATEGORY_MARKER_ICON,
+              scaledSize: new google.maps.Size(32, 32),
+            };
 
         return (
-          <MemoMarker
-            key={tale.id}
+          <Marker
+            key={key}
             position={{
-              lat: tale.location[0]?.latitude ?? DEFAULT_CENTER.lat,
-              lng: tale.location[0]?.longitude ?? DEFAULT_CENTER.lng,
+              lat: m.location.latitude,
+              lng: m.location.longitude,
             }}
-            title={tale.title}
-            icon={{
-              url: markerIcon,
-              scaledSize: new google.maps.Size(40, 40),
-            }}
-            onClick={() => onMarkerClick(tale, mapRef)}
+            title={m.title}
+            icon={icon}
+            zIndex={isSelected ? 999 : undefined}
+            onClick={() => onMarkerClick(m, mapRef)}
           />
         );
       })}
@@ -102,18 +151,19 @@ const MapRenderer: React.FC<MapRendererProps> = ({
         </CustomOverlay>
       )}
 
-      {selectedMarker && mapRef.current && showOverlay && (
+      {selectedMarker && mapRef.current && (
         <CustomOverlayAbove
           map={mapRef.current}
           position={{
-            lat: selectedMarker.location[0].latitude,
-            lng: selectedMarker.location[0].longitude,
+            lat: selectedMarker.location.latitude,
+            lng: selectedMarker.location.longitude,
           }}
         >
           <div
             style={{
-              backgroundColor: "white",
-              border: "1px solid #ccc",
+              backgroundColor: theme.cardBackground,
+              color: theme.text,
+              border: `1px solid ${theme.border ?? "#ccc"}`,
               borderRadius: "10px",
               padding: "8px 12px",
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
@@ -121,7 +171,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
               pointerEvents: "auto",
             }}
           >
-            <strong>{selectedMarker.title}</strong>
+            {selectedMarker.title}
           </div>
         </CustomOverlayAbove>
       )}

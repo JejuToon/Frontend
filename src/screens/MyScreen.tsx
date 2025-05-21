@@ -24,7 +24,7 @@ export default function MyScreen() {
         <MyList>
           <MyListItem>
             <ItemText>다크 모드</ItemText>
-            <ThemeToggle />
+            <ThemeToggle variant="medium" />
           </MyListItem>
         </MyList>
       </Section>
@@ -73,7 +73,7 @@ const LoginButton = styled.button`
   width: 90%;
   align-self: center;
   padding: 14px 0;
-  margin: 6px;
+  margin: 16px;
   background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
   color: ${({ theme }) => theme.buttonText || "black"};
   border: none;

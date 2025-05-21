@@ -182,8 +182,7 @@ const EmblaRoot = styled.div`
   --slide-height: 19rem;
   --slide-spacing: 0rem;
   --slide-size: 45%;
-  background-color: ${({ theme }) =>
-    theme.mode == "dark" ? colors.BLACK : colors.WHITE};
+  background-color: ${({ theme }) => theme.bottomTabsBackground};
 `;
 
 const EmblaViewport = styled.div`

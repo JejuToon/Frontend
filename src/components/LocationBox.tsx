@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { TbCurrentLocation } from "react-icons/tb";
+import { IoLocationSharp } from "react-icons/io5";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { reverseGeocode } from "../utils/reverseGeocode";
 
@@ -41,26 +41,31 @@ export default function LocationBox({ onClick, label }: LocationBoxProps) {
 
   return (
     <Button onClick={onClick}>
-      <TbCurrentLocation />
+      <IoLocationSharp />
+
       <Label>{resolvedLabel}</Label>
     </Button>
   );
 }
 
 const Button = styled.button`
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border: 1px solid ${({ theme }) => theme.border || "#ddd"};
+  border: 1px solid ${({ theme }) => "#ff8a3d"};
   border-radius: 20px;
-  background: ${({ theme }) => theme.cardBackground || "#fff"};
+  background: ${({ theme }) => "#ff8a3d"};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.primaryHover};
+  }
 `;
 
 const Label = styled.span`
   font-size: 14px;
   white-space: nowrap;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }) => "theme.text"};
 `;

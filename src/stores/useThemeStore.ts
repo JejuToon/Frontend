@@ -1,5 +1,6 @@
 // src/stores/useThemeStore.ts
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type ThemeMode = "light" | "dark";
 
@@ -19,16 +20,18 @@ const getInitialTheme = (): ThemeMode => {
 };
 */
 
-export const useThemeStore = create<ThemeStore>((set) => ({
-  mode: "dark", //getInitialTheme(),
-  toggleTheme: () =>
-    set((state) => {
-      const newMode = state.mode === "light" ? "dark" : "light";
-      localStorage.setItem("theme", newMode);
-      return { mode: newMode };
+export const useThemeStore = create<ThemeStore>()(
+  persist(
+    (set, get) => ({
+      mode: "dark", // getInitalTheme();
+      toggleTheme: () => {
+        const newMode = get().mode === "light" ? "dark" : "light";
+        set({ mode: newMode });
+      },
+      setMode: (mode) => set({ mode }),
     }),
-  setMode: (mode) => {
-    localStorage.setItem("theme", mode);
-    set({ mode });
-  },
-}));
+    {
+      name: "theme", // localStorage 키
+    }
+  )
+);

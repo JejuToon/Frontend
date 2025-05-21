@@ -31,7 +31,7 @@ const HeaderContainer = styled.div`
   height: 60px; //헤더 높이
   padding: 0 16px;
 
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.bottomTabsBackground};
   color: ${({ theme }) => theme.text};
   transition: background 0.3s, color 0.3s, border 0.3s;
 `;

@@ -7,8 +7,9 @@ interface EmptyStateProps {
   imageUrl?: string;
   title: string;
   description: string;
-  linkUrl?: string;
-  navigateOnDescriptionClick?: boolean;
+  onIconClick?: () => void;
+  onTitleClick?: () => void;
+  onDescriptionClick?: () => void;
 }
 
 export default function EmptyState({
@@ -16,29 +17,24 @@ export default function EmptyState({
   imageUrl,
   title,
   description,
-  linkUrl,
-  navigateOnDescriptionClick = false,
+  onIconClick,
+  onTitleClick,
+  onDescriptionClick,
 }: EmptyStateProps) {
-  const navigate = useNavigate();
-
-  const handleIconClick = () => {
-    if (linkUrl) navigate(linkUrl);
-  };
-
-  const handleDescriptionClick = () => {
-    if (navigateOnDescriptionClick && linkUrl) {
-      navigate(linkUrl);
-    }
-  };
-
   return (
     <Container>
       {imageUrl && <Image src={imageUrl} alt="empty" />}
-      {icon && <IconWrapper onClick={handleIconClick}>{icon}</IconWrapper>}
-      <Title>{title}</Title>
+      {icon && (
+        <IconWrapper onClick={onIconClick} $clickable={!!onIconClick}>
+          {icon}
+        </IconWrapper>
+      )}
+      <Title onClick={onTitleClick} $clickable={!!onTitleClick}>
+        {title}
+      </Title>
       <Description
-        onClick={handleDescriptionClick}
-        $isLink={navigateOnDescriptionClick && !!linkUrl}
+        onClick={onDescriptionClick}
+        $clickable={!!onDescriptionClick}
       >
         {description}
       </Description>
@@ -64,34 +60,44 @@ const Image = styled.img`
   margin-bottom: 16px;
 `;
 
-const IconWrapper = styled.div`
+const IconWrapper = styled.div<{ $clickable: boolean }>`
   font-size: 60px;
-  color: ${({ theme }) => theme.iconSecondary || "#d3d3d3"};
+  color: ${({ theme }) => theme.primary};
   margin-bottom: 16px;
-  cursor: pointer;
+  ${({ $clickable }) => $clickable && "cursor: pointer;"}
 
   &:hover {
-    color: ${({ theme }) => theme.iconHover || "#aaa"};
+    color: ${({ theme, $clickable }) =>
+      $clickable ? theme.iconHover || "#aaa" : theme.iconSecondary};
   }
 `;
 
-const Title = styled.div`
+const Title = styled.div<{ $clickable: boolean }>`
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   color: ${({ theme }) => theme.textPrimary || "#444"};
   margin-bottom: 8px;
   white-space: nowrap;
+  ${({ $clickable }) =>
+    $clickable && "cursor: pointer; text-decoration: underline;"}
+
+  &:hover {
+    color: ${({ theme, $clickable }) =>
+      $clickable ? theme.linkHover || "#0056b3" : theme.textPrimary};
+  }
 `;
 
-const Description = styled.div<{ $isLink: boolean }>`
+const Description = styled.div<{ $clickable: boolean }>`
   font-size: 14px;
   color: ${({ theme }) => theme.textSecondary || "#999"};
-  text-decoration: ${({ $isLink }) => ($isLink ? "underline" : "none")};
-  cursor: ${({ $isLink }) => ($isLink ? "pointer" : "default")};
+  ${({ $clickable }) =>
+    $clickable && "text-decoration: underline; cursor: pointer;"}
   white-space: nowrap;
 
   &:hover {
-    color: ${({ $isLink, theme }) =>
-      $isLink ? theme.linkHover || "#0056b3" : theme.textSecondary || "#999"};
+    color: ${({ theme, $clickable }) =>
+      $clickable
+        ? theme.linkHover || "#0056b3"
+        : theme.textSecondary || "#999"};
   }
 `;

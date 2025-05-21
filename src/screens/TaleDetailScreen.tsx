@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { colors } from "../constants/colors";
-import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlay } from "react-icons/fa6";
-import Chip from "../components/Chip";
+import styled from "styled-components";
+
 import { useStoryStore } from "../stores/useStoryStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
+import Chip from "../components/Chip";
+
 import { TaleDetailResponse } from "../types/tale";
 import { fetchTaleDetail } from "../api/tale";
 
+// 데모용 접근 제어
+import { useAccessControl } from "../components/AccessControlProvider";
+
 export default function TaleDetailScreen() {
+  // 데모용 접근 제어
+  const { openModal } = useAccessControl();
+
   const navigate = useNavigate();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
   const { initializeCategory } = useFilterChipsStore();
-  const { selectedTale } = useStoryStore();
+  const { selectedTaleId } = useStoryStore();
   const [descExpanded, setDescExpanded] = useState(false);
   const [originExpanded, setOriginExpanded] = useState(false);
 
@@ -22,33 +29,32 @@ export default function TaleDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Demo용 접근 제어
-  const [showModal, setShowModal] = useState(false);
-  const desiredId = 1; //설문대할망 id로 설정
-
   useEffect(() => {
     const loadTaleDetail = async () => {
-      if (!selectedTale?.id) return;
+      if (!selectedTaleId) return;
       try {
         setLoading(true);
-        const detail = await fetchTaleDetail(selectedTale.id);
+        const detail = await fetchTaleDetail(selectedTaleId);
         setTaleDetail(detail);
       } catch (err) {
         setError("설화 정보를 불러오는 데 실패했습니다.");
       } finally {
-        console.log("설화 정보 불러오기 성공");
-        console.log(taleDetail);
         setLoading(false);
       }
     };
-
     loadTaleDetail();
-  }, [selectedTale]);
+  }, []);
 
+  useEffect(() => {
+    //console.log(`taleDetail: ${JSON.stringify(taleDetail)}`);
+  }, [taleDetail]);
+
+  // Demo용 접근제어 설문대할망 id
+  const desiredId = 1;
   const handlePlayClick = () => {
     //Demo용 접근제어
     if (taleDetail?.id !== desiredId) {
-      setShowModal(true);
+      openModal();
       return;
     }
 
@@ -125,54 +131,9 @@ export default function TaleDetailScreen() {
           </MoreButton>
         </ContentSection>
       </ContentArea>
-
-      {/* Demo용 접근 제어 */}
-      {showModal && (
-        <ModalOverlay onClick={() => setShowModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <p>현재 선택된 설화는 접근할 수 없습니다.</p>
-            <CloseButton onClick={() => setShowModal(false)}>확인</CloseButton>
-          </ModalContent>
-        </ModalOverlay>
-      )}
     </Screen>
   );
 }
-
-// Demo용 접근 제어
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-`;
-
-// Demo용 접근 제어
-const ModalContent = styled.div`
-  background-color: ${({ theme }) => theme.cardBackground || "white"};
-  padding: 24px;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 300px;
-  color: ${({ theme }) => theme.text};
-`;
-
-// Demo용 접근 제어
-const CloseButton = styled.button`
-  margin-top: 16px;
-  padding: 8px 16px;
-  background-color: ${({ theme }) => theme.primary || "#4b5563"};
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-`;
 
 const Screen = styled.main`
   position: relative;
@@ -214,7 +175,7 @@ const CardSection = styled.div`
 const BlurSection = styled.div.withConfig({
   shouldForwardProp: (prop) => prop !== "$imageUrl",
 })<{ $imageUrl: string }>`
-  height: 80%;
+  height: 70%;
   background: url(${(props) => props.$imageUrl}) no-repeat center / cover;
   filter: blur(20px);
 `;
@@ -222,7 +183,7 @@ const BlurSection = styled.div.withConfig({
 const WhiteSection = styled.div`
   position: absolute;
   bottom: 0;
-  height: 20%;
+  height: 30%;
   width: 100%;
   background-color: ${({ theme }) => theme.background};
 `;
@@ -231,7 +192,7 @@ const CardImage = styled.img`
   position: absolute;
   top: 55%;
   left: 50%;
-  width: 65%;
+  width: 80%;
   max-width: 500px;
   transform: translate(-50%, -50%);
   border-radius: 12px;
@@ -240,8 +201,8 @@ const CardImage = styled.img`
 
 const PlayButtonOverlay = styled.button`
   position: absolute;
-  bottom: 7%;
-  right: 20%;
+  bottom: 20%;
+  right: 15%;
   width: 48px;
   height: 48px;
   border-radius: 50%;

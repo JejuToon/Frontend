@@ -11,6 +11,8 @@ import TaleSetupScreen from "./screens/TaleSetupScreen";
 import TaleDetailScreen from "./screens/TaleDetailScreen";
 import CameraScreen from "./screens/CameraScreen";
 
+import { AccessControlProvider } from "./components/AccessControlProvider";
+
 export default function App() {
   const location = useLocation();
   const hideTabPaths = [
@@ -26,19 +28,21 @@ export default function App() {
 
   return (
     <div>
-      <Routes>
-        <Route path="/home" element={<HomeScreen />} />
-        <Route path="/search" element={<SearchScreen />} />
-        <Route path="/camera" element={<CameraScreen />} />
-        <Route path="/lib" element={<LibScreen />} />
-        <Route path="/my" element={<MyScreen />} />
-        <Route path="/auth" element={<AuthScreen />} />
-        <Route path="/tale" element={<TaleDetailScreen />} />
-        <Route path="/tale/play" element={<TaleScreen />} />
-        <Route path="/tale/setup" element={<TaleSetupScreen />} />
-        <Route path="*" element={<Navigate to="/home" replace />} />
-      </Routes>
-      {!shouldHideTabs && <BottomTabs />}
+      <AccessControlProvider>
+        <Routes>
+          <Route path="/home" element={<HomeScreen />} />
+          <Route path="/search" element={<SearchScreen />} />
+          <Route path="/camera" element={<CameraScreen />} />
+          <Route path="/lib" element={<LibScreen />} />
+          <Route path="/my" element={<MyScreen />} />
+          <Route path="/auth" element={<AuthScreen />} />
+          <Route path="/tale" element={<TaleDetailScreen />} />
+          <Route path="/tale/play" element={<TaleScreen />} />
+          <Route path="/tale/setup" element={<TaleSetupScreen />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
+        {!shouldHideTabs && <BottomTabs />}
+      </AccessControlProvider>
     </div>
   );
 }

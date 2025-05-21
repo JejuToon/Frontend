@@ -79,8 +79,7 @@ const Nav = styled.nav`
   height: 60px;
   display: flex;
 
-  background: ${({ theme }) =>
-    theme.mode === "dark" ? colors.BLACK : colors.WHITE};
+  background: ${({ theme }) => theme.bottomTabsBackground};
   z-index: 20;
 `;
 
@@ -91,7 +90,7 @@ const StyledNavLink = styled(NavLink)`
 
 const Tab = styled.div`
   height: 100%;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }) => (theme.mode === "dark" ? "#fff" : "#3e3e3e")};
   display: flex;
   flex-direction: column;
   align-items: center;
