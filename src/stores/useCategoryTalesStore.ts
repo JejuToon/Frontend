@@ -17,7 +17,7 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
 
     // 이미 로딩 중이면 요청 생략
     if (loadingByCategory[category]) {
-      console.log(`${category}는 이미 불러오는 중...`);
+      console.log(`${category} 이미 불러오는 중...`);
       return;
     }
 
@@ -52,9 +52,5 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
         loadingByCategory: { ...state.loadingByCategory, [category]: false },
       }));
     }
-    console.log("이전 카테고리:", talesByCategory);
-    console.log("이전 로딩상태:", loadingByCategory);
-    console.log("최신 카테고리:", get().talesByCategory);
-    console.log("최신 로딩상태:", get().loadingByCategory);
   },
 }));

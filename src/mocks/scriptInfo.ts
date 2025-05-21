@@ -20,7 +20,7 @@ const scripts = [
       choices: [
         { text: "치마를 이용해 흙을 퍼 나르기", next: 3 },
         { text: "선택지2", next: 3 },
-        { text: "", next: 3 },
+        { text: "선택지3", next: 3 },
       ],
     },
     {
@@ -40,6 +40,7 @@ const scripts = [
       choices: [
         { text: "속옷을 만들어 준다.", next: 6 },
         { text: "아무것도 만들어 주지 않는다.", next: 6 },
+        { text: "선택지3", next: 6 },
       ],
     },
     {
@@ -56,6 +57,7 @@ const scripts = [
       choices: [
         { text: "선택지 1", next: 1 },
         { text: "선택지 2", next: 1 },
+        { text: "선택지 3", next: 1 },
       ],
       choiceIndex: 0,
     },
@@ -71,6 +73,7 @@ const scripts = [
       choices: [
         { text: "선택지 3", next: 3 },
         { text: "선택지 4", next: 3 },
+        { text: "선택지 5", next: 1 },
       ],
       choiceIndex: 1,
     },

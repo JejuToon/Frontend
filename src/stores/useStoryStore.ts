@@ -13,6 +13,7 @@ export interface FontConfig {
 }
 
 interface StoryState {
+  selectedTaleId: number | null;
   selectedTale: TaleContent | null;
 
   ttsConfig: TTSConfig;
@@ -27,6 +28,7 @@ interface StoryState {
   viewedTales: TaleContent[];
 
   setTale: (tale: TaleContent) => void;
+  setTaleId: (id: number) => void;
   addViewedTale: (tale: TaleContent) => void;
 
   reset: () => void;
@@ -37,6 +39,7 @@ export const useStoryStore = create(
     (set) => ({
       selectedTale: null,
       selectedCharacter: null,
+      selectedTaleId: null,
 
       ttsConfig: {
         voiceIndex: 0,
@@ -68,6 +71,7 @@ export const useStoryStore = create(
       viewedTales: [],
 
       setTale: (tale) => set({ selectedTale: tale }),
+      setTaleId: (id) => set({ selectedTaleId: id }),
       addViewedTale: (tale) =>
         set((state) => ({
           viewedTales: [...state.viewedTales, tale],

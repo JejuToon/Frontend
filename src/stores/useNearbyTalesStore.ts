@@ -15,13 +15,11 @@ export const useNearbyTalesStore = create<NearbyTaleStore>((set) => ({
   fetchNearbyTalesData: async (lat, lng) => {
     set({ nearbyTalesLoading: true });
     try {
-      console.log("근처 설화 목록 요청");
       const res = await fetchNearbyTales(lat, lng);
       set({ nearbyTales: res.contents });
     } catch (err) {
       console.error("근처 설화 목록 로딩 실패:", err);
     } finally {
-      console.log("근처 설화 목록 로딩 완료");
       set({ nearbyTalesLoading: false });
     }
   },

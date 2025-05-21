@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { colors } from "../constants/colors";
-import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -10,15 +8,21 @@ import {
   FaPause,
 } from "react-icons/fa6";
 import { TbHome } from "react-icons/tb";
+import styled from "styled-components";
 
-import { fontOptions } from "../constants/fonts";
-import scripts from "../mocks/scriptInfo";
-import Loader from "../components/Loader";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useChoiceHandler } from "../hooks/useChoiceHandler";
 import { useStoryStore } from "../stores/useStoryStore";
+
+import ThemeToggle from "../components/ThemeToggle";
+import Loader from "../components/Loader";
 import { FontFaceStyle } from "../components/FontFaceStyle";
 import TTSSettings from "../components/TTSSettings";
+
+import { fontOptions } from "../constants/fonts";
+
+import scripts from "../mocks/scriptInfo";
+
 import { parseAudioPath } from "../utils/parseAudioPath";
 
 const talePagesInfo = scripts[0];
@@ -191,12 +195,13 @@ export default function TaleScreen() {
                 <IconButton onClick={toggleAudio}>
                   {audio && !audio.paused ? <FaPause /> : <FaPlay />}
                 </IconButton>
-              </CenterGroup>
-
-              <RightGroup>
                 <IconButton onClick={replay}>
                   <FaRotate />
                 </IconButton>
+              </CenterGroup>
+
+              <RightGroup>
+                <ThemeToggle variant="small" />
               </RightGroup>
             </Group>
             <Collapsible open={ttsEnabled}>
@@ -252,7 +257,7 @@ export default function TaleScreen() {
                   navigate("/camera");
                 }}
               >
-                AR로 보기
+                캐릭터와 사진 찍기{" "}
               </ARButton>
             </ButtonContainer>
           </ModalContent>
@@ -383,7 +388,7 @@ const Image = styled.img`
 
 const TextSection = styled.div`
   flex: 1 1 auto;
-  background: ${({ theme }) => theme.surface};
+  background: ${({ theme }) => theme.taleBackground};
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -400,7 +405,7 @@ const TextSection = styled.div`
 const TextContainer = styled.div<{ $font?: any }>`
   width: 100%;
   padding: 16px;
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme }) => theme.taleTextBackground};
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   font-family: ${({ $font }) =>
@@ -450,7 +455,7 @@ const NavButtons = styled.div`
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.bottomTabsBackground};
   border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
@@ -491,12 +496,12 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: ${({ theme }) => theme.card};
+  background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   border-radius: 12px;
   padding: 24px;
   width: 90%;
-  max-width: 400px;
+  max-width: 600px;
   text-align: center;
 `;
 
@@ -546,16 +551,16 @@ const CloseButton = styled.button`
 `;
 
 const ARButton = styled(CloseButton)`
-  background: #7f3dff;
+  background: #ff8a3d;
   &:hover {
-    background: #6a2eea;
+    background: #ff8a3d;
   }
 `;
 
 const LibButton = styled(CloseButton)`
-  background: #7f3dff;
+  background: #ff8a3d;
   &:hover {
-    background: #6a2eea;
+    background: #ff8a3d;
   }
 `;
 

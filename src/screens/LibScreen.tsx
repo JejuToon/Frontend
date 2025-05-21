@@ -148,18 +148,11 @@ const LibScreenContainer = styled.main`
   background-color: ${({ theme }) => theme.background};
 `;
 
-const LoginPrompt = styled.div`
-  text-align: center;
-  margin-top: 48px;
-  padding: 0 16px;
-  color: ${({ theme }) => theme.textSecondary || "#555"};
-`;
-
 const LoginButton = styled.button`
   margin-top: 16px;
   padding: 12px 24px;
-  background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
-  color: ${({ theme }) => theme.buttonText || "black"};
+  background: ${({ theme }) => theme.buttonBackground};
+  color: ${({ theme }) => theme.buttonText};
   font-size: 16px;
   border: none;
   border-radius: 8px;
@@ -168,7 +161,7 @@ const LoginButton = styled.button`
 
 const LibTabs = styled.div`
   display: flex;
-  border-bottom: 1px solid ${({ theme }) => theme.border || "#ddd"};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   margin: 0 16px;
 `;
 
@@ -207,6 +200,6 @@ const CharacterGrid = styled.div`
 const EmptyStateGrid = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 150px;
+  padding: 100px;
   background-color: ${({ theme }) => theme.background};
 `;

@@ -1,15 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { colors } from "../constants/colors";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useMapLoader } from "../hooks/useMapLoader";
-
-import Chip from "../components/Chip";
-import LocationBox from "../components/LocationBox";
-import BottomSheet from "../components/BottomSheet";
-import TaleCard from "../components/TaleCard";
-import CustomButton from "../components/CustomButton";
-import styled from "styled-components";
-import tales from "../mocks/taleInfo";
 import {
   FaBars,
   FaScroll,
@@ -22,9 +12,12 @@ import {
 import { MdOutlineWrongLocation } from "react-icons/md";
 import { RiSparkling2Fill } from "react-icons/ri";
 import { MdNearMe } from "react-icons/md";
-import { TbMapPin, TbPlayerPlayFilled } from "react-icons/tb";
-import Loader from "../components/Loader";
-import EmptyState from "../components/EmptyState";
+import { IoLocationSharp } from "react-icons/io5";
+import { TbPlayerPlayFilled } from "react-icons/tb";
+import styled from "styled-components";
+
+import { useMapLoader } from "../hooks/useMapLoader";
+
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useStoryStore } from "../stores/useStoryStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
@@ -33,32 +26,36 @@ import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 
-import { TaleContent } from "../types/tale";
+import Chip from "../components/Chip";
+import LocationBox from "../components/LocationBox";
+import BottomSheet from "../components/BottomSheet";
+import TaleCard from "../components/TaleCard";
+import CustomButton from "../components/CustomButton";
+import SearchOverlay from "../components/SearchOverlay";
+import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
 import MapRenderer from "../components/MapRenderer";
 
-const notFoundImg = "/assets/images/seolmun.png";
+import { TaleContent, TaleMarker } from "../types/tale";
 
 const allCategories = ["개척담", "인물담", "연애담", "신앙담"];
 const categoriesIcons = [FaPersonHiking, FaUser, FaHeart, FaCross];
 const extraChips = ["근처", "맞춤 추천"];
 const extrasIcons = [MdNearMe, RiSparkling2Fill];
 
+// 데모용 접근 제어
+import { useAccessControl } from "../components/AccessControlProvider";
+
 export default function SearchScreen() {
-  const DEFAULT_CENTER = useMemo(() => ({ lat: 33.4996, lng: 126.5312 }), []);
+  // 데모용 접근 제어
+  const { openModal } = useAccessControl();
+
   const navigate = useNavigate();
   const location = useLocation();
   const fromHomeNearby = (location.state as any)?.fromHomeNearby;
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [keyword, setKeyword] = useState("");
-  const mapRef = useRef<google.maps.Map | null>(null);
 
-  const { isLoaded, loadError } = useMapLoader();
-  const { setTale } = useStoryStore();
-  const { allTales, allTalesLoading, fetchAllTalesData } = useAllTalesStore();
-  const { talesByCategory, loadingByCategory, fetchTalesForCategory } =
-    useCategoryTalesStore();
-  const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
-  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
+  const DEFAULT_CENTER = useMemo(() => ({ lat: 33.4996, lng: 126.5312 }), []);
+
   const {
     selectedMarker,
     setSelectedMarker,
@@ -67,6 +64,21 @@ export default function SearchScreen() {
     handleSheetToggle,
     onMarkerClick,
   } = useSelectedMarkerStore();
+
+  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  // 바텀 시트 내부 스크롤 영역을 가리킬 ref
+  const sheetScrollRef = useRef<HTMLDivElement>(null);
+
+  const { isLoaded, loadError } = useMapLoader();
+  const { setTaleId } = useStoryStore();
+  const { allTales, allTalesLoading, fetchAllTalesData } = useAllTalesStore();
+  const { talesByCategory, loadingByCategory, fetchTalesForCategory } =
+    useCategoryTalesStore();
+  const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
+  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
 
   const {
     selectedCategories,
@@ -98,49 +110,48 @@ export default function SearchScreen() {
     loadingByCategory,
   ]);
 
-  const filteredMarkers = useMemo(() => {
-    const raw = isAllCategorySelected
-      ? allTales
-      : selectedCategories.flatMap((c) => talesByCategory[c] || []);
-    const map = new Map<number, TaleContent>();
-    raw.forEach((t) => map.set(t.id, t));
-    return Array.from(map.values());
-  }, [isAllCategorySelected, allTales, selectedCategories, talesByCategory]);
+  const allMarkers: TaleMarker[] = useMemo<TaleMarker[]>(() => {
+    // 1) 모든 카테고리 배열을 평탄화(flat)한 뒤, id 기준으로 중복 제거
+    const uniqueTales = Array.from(
+      new Map(
+        Object.values(talesByCategory)
+          .flat()
+          .map((tale) => [tale.id, tale] as [number, TaleContent])
+      ).values()
+    );
 
-  const markerCache = useRef<Map<string, TaleContent[]>>(new Map());
-
-  const allMarkers = useMemo(() => {
-    const key = [
-      selectedExtras.includes("근처") ? "nearby" : "onlyFiltered",
-      filteredMarkers.map((m) => m.id).join("-"),
-      nearbyTales.map((n) => n.id).join("-"),
-    ].join("|");
-
-    if (markerCache.current.has(key)) {
-      return markerCache.current.get(key)!;
-    }
-
-    const raw = selectedExtras.includes("근처")
-      ? [...filteredMarkers, ...nearbyTales]
-      : filteredMarkers;
-
-    const map = new Map<number, TaleContent>();
-    raw.forEach((t) => map.set(t.id, t));
-    const deduped = Array.from(map.values());
-
-    markerCache.current.set(key, deduped);
-    return deduped;
-  }, [selectedExtras, filteredMarkers, nearbyTales]);
+    // 2) 중복 없는 각 TaleContent 에 대해 location 개수만큼 Marker 생성
+    return uniqueTales.flatMap((tale) =>
+      tale.location.map((loc) => ({
+        id: tale.id,
+        title: tale.title,
+        location: loc,
+        categories: tale.categories,
+        description: tale.description,
+        score: tale.score,
+        thumbnail: tale.thumbnail,
+      }))
+    );
+  }, [talesByCategory]);
 
   useEffect(() => {
+    // 마운트 시점에 모든 카테고리 정보 가져오기 (우선 첫번째 페이지만)
+    allCategories.forEach((category) => {
+      const existing = talesByCategory[category];
+      // 이미 데이터가 있으면 스킵, 없으면 가져오기
+      if (!existing || existing.length === 0) {
+        fetchTalesForCategory(category, 0);
+      }
+    });
+
     if (fromHomeNearby && selectedExtras.includes("근처")) {
       setTimeout(() => setSheetPos("full"), 300);
     } else if (selectedMarker) {
       setTimeout(() => {
         setSheetPos("half");
         mapRef.current?.panTo({
-          lat: selectedMarker.location[0].latitude - 0.2,
-          lng: selectedMarker.location[0].longitude,
+          lat: selectedMarker.location.latitude - 0.2,
+          lng: selectedMarker.location.longitude,
         });
         mapRef.current?.setZoom(9.7);
       }, 300);
@@ -151,21 +162,9 @@ export default function SearchScreen() {
 
   useEffect(() => {
     if (selectedMarker) {
-      setShowOverlay(true);
       setTimeout(() => setSheetPos("half"), 1100);
     }
   }, [selectedMarker]);
-
-  useEffect(() => {
-    if (isAllCategorySelected && allTales.length === 0) {
-      fetchAllTalesData(0);
-    } else {
-      selectedCategories.forEach((cat) => {
-        const alreadyFetched = talesByCategory[cat]?.length > 0;
-        if (!alreadyFetched) fetchTalesForCategory(cat, 0);
-      });
-    }
-  }, [selectedCategories]);
 
   useEffect(() => {
     const fetchNearby = async () => {
@@ -182,18 +181,32 @@ export default function SearchScreen() {
     fetchNearby();
   }, [selectedExtras, currentLocation]);
 
-  const handleTaleClick = (t: TaleContent) => {
-    setTale(t);
+  const handleTaleClick = (id: number) => {
+    setTaleId(id);
     navigate("/tale");
   };
 
   const handleCloseClick = () => {
-    setShowOverlay(false);
     setSelectedMarker(null);
   };
 
+  const handlePlayButton = () => {};
+
+  const handleViewLocation = (t: TaleContent) => {
+    const marker = allMarkers.find((m) => m.id === t.id);
+    if (!marker) return;
+
+    mapRef.current?.panTo({
+      lat: t.location[0].latitude,
+      lng: t.location[0].longitude,
+    });
+
+    setSelectedMarker(marker);
+    setSheetPos("half");
+  };
+
   if (loadError) return <div>Map load failed…</div>;
-  if (!isLoaded || isLoading) return <Loader type="inline" />;
+  if (!isLoaded || isLoading) return <Loader type="full" />;
 
   return (
     <Screen>
@@ -207,9 +220,18 @@ export default function SearchScreen() {
             placeholder="설화 검색"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
+            onFocus={() => setShowSearchOverlay(true)}
           />
         </SearchBox>
       </SearchHeader>
+
+      {showSearchOverlay && (
+        <SearchOverlay
+          keyword={keyword}
+          onKeywordChange={setKeyword}
+          onClose={() => setShowSearchOverlay(false)}
+        />
+      )}
 
       <MapWrapper>
         <MapRenderer
@@ -220,7 +242,6 @@ export default function SearchScreen() {
           selectedCategories={selectedCategories}
           mapRef={mapRef}
           onMarkerClick={onMarkerClick}
-          showOverlay={showOverlay}
           currentLocation={currentLocation}
           onMapLoad={onMapLoad}
           defaultCenter={DEFAULT_CENTER}
@@ -282,172 +303,178 @@ export default function SearchScreen() {
         onToggle={handleSheetToggle}
         onChangePosition={setSheetPos}
       >
-        <LocBoxWrapper>
-          <LocationBox onClick={() => fetchCurrentLocation(mapRef.current)} />
-        </LocBoxWrapper>
+        {/* 바텀 시트 내부 최상단에 스크롤 가능한 wrapper */}
+        <SheetScrollWrapper ref={sheetScrollRef}>
+          <LocBoxWrapper>
+            <LocationBox onClick={() => fetchCurrentLocation(mapRef.current)} />
+          </LocBoxWrapper>
 
-        {sheetPos !== "collapsed" &&
-          !selectedMarker &&
-          selectedCategories.length === 0 &&
-          !selectedCategories.includes("전체") &&
-          selectedExtras.length === 0 && (
-            <EmptyState
-              icon={<FaBook />}
-              title="선택된 설화가 없습니다"
-              description="아무 이야기나 들어 보실래요?"
-              navigateOnDescriptionClick={false}
-            />
-          )}
+          {sheetPos !== "collapsed" &&
+            !selectedMarker &&
+            selectedCategories.length === 0 &&
+            !selectedCategories.includes("전체") &&
+            selectedExtras.length === 0 && (
+              <EmptyState
+                icon={<FaBook />}
+                title="선택된 설화가 없습니다"
+                description="이야기를 찾아보세요"
+              />
+            )}
 
-        {/*선택된 설화 바텀시트의 가장 위쪽에 표시 */}
-        {sheetPos !== "collapsed" && selectedMarker && (
-          <Section>
-            <TaleList>
-              <TaleCard
-                id={selectedMarker.id}
-                title={selectedMarker.title ?? `설화 ${selectedMarker.id}`}
-                description={selectedMarker.description ?? "설명 없음"}
-                thumbnailUrl={selectedMarker.thumbnail ?? notFoundImg}
-                onClick={() => handleTaleClick(selectedMarker)}
-                onCloseClick={() => handleCloseClick()}
-              >
-                <CustomButton
-                  label="재생"
-                  icon={<TbPlayerPlayFilled />}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => console.log("tts설정 페이지 이동")}
-                />
-                <CustomButton
-                  label="위치 보기"
-                  icon={<TbMapPin />}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setShowOverlay(true);
-                    setSheetPos("half");
-                    console.log("테스트");
-                  }}
-                />
-              </TaleCard>
-            </TaleList>
-          </Section>
-        )}
-
-        {selectedCategories.map((cat) => {
-          const talesInCategory = talesByCategory[cat] || [];
-
-          if (talesInCategory.length === 0) return null;
-
-          return (
-            <Section key={cat}>
-              <SectionHeader>
-                <span>{cat}</span>
-              </SectionHeader>
+          {/*선택된 설화 바텀시트의 가장 위쪽에 표시 */}
+          {sheetPos !== "collapsed" && selectedMarker && (
+            <Section>
               <TaleList>
-                {talesInCategory.map((t) => (
-                  <TaleCard
-                    key={`${cat}-${t.id}`}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    thumbnailUrl={t.thumbnail}
-                    onClick={() => handleTaleClick(t)}
-                  >
-                    <CustomButton
-                      label="재생"
-                      icon={<TbPlayerPlayFilled />}
-                      size="small"
-                      variant="outlined"
-                      onClick={() => console.log("tts설정 페이지 이동")}
-                    />
-                    <CustomButton
-                      label="위치 보기"
-                      icon={<TbMapPin />}
-                      size="small"
-                      variant="outlined"
-                      onClick={() => {
-                        setSelectedMarker(t);
-                        setShowOverlay(true);
-                        setSheetPos("half");
-                        console.log("테스트");
-                      }}
-                    />
-                  </TaleCard>
-                ))}
+                <TaleCard
+                  id={selectedMarker.id}
+                  title={selectedMarker.title ?? `설화 ${selectedMarker.id}`}
+                  description={selectedMarker.description ?? "설명 없음"}
+                  thumbnailUrl={selectedMarker.thumbnail ?? ""}
+                  onClick={() => handleTaleClick(selectedMarker.id)}
+                  onCloseClick={() => handleCloseClick()}
+                >
+                  <CustomButton
+                    label="재생"
+                    icon={<TbPlayerPlayFilled />}
+                    size="small"
+                    variant="filled"
+                    onClick={() => console.log("tts설정 페이지 이동")}
+                  />
+                  <CustomButton
+                    label="위치 보기"
+                    icon={<IoLocationSharp />}
+                    size="small"
+                    variant="filled"
+                    onClick={() => {
+                      mapRef.current?.panTo({
+                        lat: selectedMarker.location.latitude,
+                        lng: selectedMarker.location.longitude,
+                      });
+
+                      sheetScrollRef.current?.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
+                      setSheetPos("half");
+                    }}
+                  />
+                </TaleCard>
               </TaleList>
             </Section>
-          );
-        })}
+          )}
 
-        {selectedExtras.includes("근처") && (
-          <>
-            {!currentLocation ? (
-              <EmptyState
-                icon={<MdOutlineWrongLocation />}
-                title="위치 정보를 가져올 수 없어요"
-                description="브라우저 또는 앱에서 위치 권한을 허용해 주세요"
-                navigateOnDescriptionClick={false}
-              />
-            ) : nearbyTales.length === 0 ? (
-              <EmptyState
-                imageUrl="/assets/empty_nearby.png"
-                title="근처에 설화가 없어요"
-                description="조금 더 이동해보거나 다른 카테고리를 선택해보세요."
-                navigateOnDescriptionClick={false}
-              />
-            ) : (
-              <Section>
+          {selectedCategories.map((cat) => {
+            const talesInCategory = talesByCategory[cat] || [];
+
+            if (talesInCategory.length === 0) return null;
+
+            return (
+              <Section key={cat}>
                 <SectionHeader>
-                  <span>현재 위치와 가까운 설화</span>
+                  <span>{cat}</span>
                 </SectionHeader>
                 <TaleList>
-                  {nearbyTales.map((t) => (
+                  {talesInCategory.map((t) => (
                     <TaleCard
-                      key={t.id}
+                      key={`${cat}-${t.id}`}
                       id={t.id}
                       title={t.title}
                       description={t.description}
                       thumbnailUrl={t.thumbnail}
-                      onClick={() => handleTaleClick(t)}
+                      onClick={() => handleTaleClick(t.id)}
                     >
                       <CustomButton
                         label="재생"
                         icon={<TbPlayerPlayFilled />}
                         size="small"
-                        variant="outlined"
+                        variant="filled"
                         onClick={() => console.log("tts설정 페이지 이동")}
                       />
                       <CustomButton
                         label="위치 보기"
-                        icon={<TbMapPin />}
+                        icon={<IoLocationSharp />}
                         size="small"
-                        variant="outlined"
-                        onClick={() => {
-                          setSelectedMarker(t);
-                          setShowOverlay(true);
-                          setSheetPos("half");
-                        }}
+                        variant="filled"
+                        onClick={() => handleViewLocation(t)}
                       />
                     </TaleCard>
                   ))}
                 </TaleList>
               </Section>
-            )}
-          </>
-        )}
+            );
+          })}
 
-        {selectedExtras.includes("맞춤 추천") && (
-          <Section>
-            <SectionHeader></SectionHeader>
-            <EmptyState
-              icon={<RiSparkling2Fill />}
-              title="맞춤형 추천 정보가 없어요"
-              description="맞춤형 추천 받기"
-              navigateOnDescriptionClick={false}
-            />
-          </Section>
-        )}
+          {/* 근처 */}
+          {selectedExtras.includes("근처") && (
+            <>
+              {!currentLocation ? (
+                <EmptyState
+                  icon={<MdOutlineWrongLocation />}
+                  title="위치 정보를 가져올 수 없어요"
+                  description="브라우저 또는 앱에서 위치 권한을 허용해 주세요"
+                />
+              ) : nearbyTales.length === 0 ? (
+                <EmptyState
+                  icon={<MdOutlineWrongLocation />}
+                  title="근처에 설화가 없어요"
+                  description="조금 더 이동해보거나 다른 카테고리를 선택해보세요."
+                />
+              ) : (
+                <Section>
+                  <SectionHeader>
+                    <span>현재 위치와 가까운 설화</span>
+                  </SectionHeader>
+                  <TaleList>
+                    {nearbyTales.map((t) => (
+                      <TaleCard
+                        key={t.id}
+                        id={t.id}
+                        title={t.title}
+                        description={t.description}
+                        thumbnailUrl={t.thumbnail}
+                        onClick={() => handleTaleClick(t.id)}
+                      >
+                        <CustomButton
+                          label="재생"
+                          icon={<TbPlayerPlayFilled />}
+                          size="small"
+                          variant="filled"
+                          onClick={() => console.log("tts설정 페이지 이동")}
+                        />
+                        <CustomButton
+                          label="위치 보기"
+                          icon={<IoLocationSharp />}
+                          size="small"
+                          variant="filled"
+                          onClick={() => handleViewLocation(t)}
+                        />
+                      </TaleCard>
+                    ))}
+                  </TaleList>
+                </Section>
+              )}
+            </>
+          )}
+
+          {selectedExtras.includes("맞춤 추천") && (
+            <Section>
+              <SectionHeader></SectionHeader>
+              <EmptyState
+                icon={<RiSparkling2Fill />}
+                title="맞춤형 추천 정보가 없어요"
+                description="맞춤형 추천 받기"
+                onIconClick={() => {
+                  // 데모용 접근 제어
+                  openModal();
+                }}
+                onDescriptionClick={() => {
+                  // 데모용 접근 제어
+                  openModal();
+                }}
+              />
+            </Section>
+          )}
+        </SheetScrollWrapper>
       </BottomSheet>
     </Screen>
   );
@@ -479,7 +506,7 @@ const SearchBox = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: ${({ theme }) => theme.inputBackground || "#f3eefc"};
+  background-color: ${({ theme }) => theme.inputBackground};
   padding: 12px 16px;
   margin: 20px;
   border-radius: 999px;
@@ -539,15 +566,25 @@ const ChipContent = styled.span`
   gap: 4px;
 `;
 
+const SheetScrollWrapper = styled.div`
+  overflow-y: auto;
+  max-height: 100%;
+
+  /* IE/Edge */
+  -ms-overflow-style: none;
+  /* Firefox */
+  scrollbar-width: none;
+
+  /* Chrome, Safari */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 const LocBoxWrapper = styled.div`
   display: flex;
   justify-content: center;
   padding: 8px 0;
-`;
-
-const CardSection = styled.div`
-  margin-top: 15px;
-  margin-bottom: 20px;
 `;
 
 const Section = styled.section`

@@ -3,6 +3,16 @@ export interface Location {
   longitude: number;
 }
 
+export interface TaleMarker {
+  id: number;
+  title: string;
+  location: Location;
+  categories: string[];
+  description: string;
+  score: number;
+  thumbnail: string;
+}
+
 export interface TaleContent {
   id: number;
   title: string;

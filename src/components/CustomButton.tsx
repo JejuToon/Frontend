@@ -1,4 +1,3 @@
-// components/ButtonContainer.tsx
 import React from "react";
 import styled, { css } from "styled-components";
 import { colors } from "../constants/colors";
@@ -23,13 +22,13 @@ export default function CustomButton({
 }: CustomButtonProps) {
   return (
     <StyledButton
-      size={size}
-      variant={variant}
+      $size={size}
+      $variant={variant}
       disabled={disabled}
       onClick={onClick}
       {...props}
     >
-      {icon && <IconWrapper size={size}>{icon}</IconWrapper>}
+      {icon && <IconWrapper $size={size}>{icon}</IconWrapper>}
       {label}
     </StyledButton>
   );
@@ -37,7 +36,7 @@ export default function CustomButton({
 
 const sizeStyles = {
   small: css`
-    padding: 4px;
+    padding: 6px;
     height: 30px;
     font-weight: 400;
   `,
@@ -71,8 +70,8 @@ const variantStyles = {
 };
 
 const StyledButton = styled.button<{
-  size: "small" | "medium" | "large";
-  variant: "standard" | "filled" | "outlined";
+  $size: "small" | "medium" | "large";
+  $variant: "standard" | "filled" | "outlined";
 }>`
   border-radius: 10px;
   font-size: 14px;
@@ -83,8 +82,8 @@ const StyledButton = styled.button<{
   cursor: pointer;
   transition: opacity 0.2s ease;
 
-  ${({ size }) => sizeStyles[size]}
-  ${({ variant }) => variantStyles[variant]}
+  ${({ $size }) => sizeStyles[$size]}
+  ${({ $variant }) => variantStyles[$variant]}
 
   &:hover {
     opacity: 0.8;
@@ -98,14 +97,14 @@ const StyledButton = styled.button<{
   }
 `;
 
-const IconWrapper = styled.span<{ size: "small" | "medium" | "large" }>`
+const IconWrapper = styled.span<{ $size: "small" | "medium" | "large" }>`
   display: flex;
   align-items: center;
   margin-right: 2px;
 
   svg {
-    ${({ size }) => {
-      switch (size) {
+    ${({ $size }) => {
+      switch ($size) {
         case "small":
           return "font-size: 16px;";
         case "medium":

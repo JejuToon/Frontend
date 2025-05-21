@@ -25,7 +25,7 @@ export default function TaleSetupScreen() {
     useStoryStore();
 
   const { ttsEnabled, setTtsEnabled } = useStoryStore();
-  const [ttsExpanded, setTtsExpanded] = useState(true);
+  const [ttsExpanded, setTtsExpanded] = useState(ttsEnabled);
   const [volume, setVolume] = useState(ttsConfig.volume);
   const [rate, setRate] = useState(ttsConfig.rate);
 
@@ -313,7 +313,7 @@ const Footer = styled.footer`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ theme }) => theme.cardBackground || "white"};
+  background: ${({ theme }) => theme.bottomTabsBackground};
   padding: 10px 0;
   border-top: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
@@ -328,7 +328,7 @@ const NextButton = styled.button`
   border-radius: 22px;
   cursor: pointer;
 
-  &:active {
+  &:hover {
     opacity: 0.8;
   }
 `;

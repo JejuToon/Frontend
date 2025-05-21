@@ -1,37 +1,42 @@
+import { colors } from "../constants/colors";
+
 export const lightTheme = {
   mode: "light",
-  background: "#ffffff",
-  cardBackground: "#ffffff",
-  inputBackground: "#fff",
-  sheetBackground: "#fff",
-  taleBackground: "#fff",
+  background: " #f6e7c1",
+  cardBackground: " #fff",
+  inputBackground: colors.BEIGE_500,
+  sheetBackground: colors.BEIGE_500,
+  taleBackground: colors.KHAKI_500,
+  bottomTabsBackground: colors.BEIGE_500,
 
-  surface: "#ffffff",
-  card: "#f9f9f9",
+  taleTextBackground: " #fff",
 
-  taleText: "#222222",
+  taleText: " #222222",
 
-  text: "#000000",
-  textSoft: "#666666",
-  textPrimary: "#444",
-  textSecondary: "#999",
+  text: " #3e3e3e",
+  textSoft: " #666666",
+  textPrimary: " #3e3e3e",
+  textSecondary: " #b1a78f",
 
-  primary: "#e4793f",
-  primaryHover: "#5c5c5c",
-  primaryDark: "#7f3dff",
-  border: "#e0e0e0",
+  primary: " #e4793f",
+  primaryLight: " #eb9064",
+  primaryHover: " #f59b6a",
+  primaryDark: " #c76f34",
+  primaryDisabled: "rgba(228,121,63,0.3)",
+  border: " #b1a78f",
 
-  iconBackground: "#e0dcf8",
-  iconSecondary: "#d3d3d3",
-  iconHover: "#aaa",
-  linkHover: "#0056b3",
+  iconBackground: " #e0dcf8",
+  iconSecondary: " #d3d3d3",
+  iconHover: " #aaa",
+  linkHover: " #0056b3",
 
-  buttonBackground: "#e2e8f0",
-  buttonText: "#000000",
+  buttonBackground: " #fff4e6",
+  buttonSelectedBackground: " #ff8a3d",
+  buttonText: " #000000",
 
-  sheetHandleColor: "#ccc",
-  emblaDotBg: "#b1a78f",
-  emblaDotSelectedBg: "#e4793f",
+  sheetHandleColor: colors.KHAKI_500,
+  emblaDotBg: colors.KHAKI_500,
+  emblaDotSelectedBg: " #e4793f",
 };
 
 export const darkTheme = {
@@ -40,9 +45,10 @@ export const darkTheme = {
   cardBackground: "#3e3e3e",
   inputBackground: "#2a2a2a",
   sheetBackground: "#2e2e2e",
-  taleBackground: "#2e2e2e",
+  taleBackground: "#1e1e1e",
+  bottomTabsBackground: "#3e3e3e",
 
-  surface: "#121212",
+  taleTextBackground: "#121212",
   card: "#1e1e1e",
 
   taleText: "#f1f1f1",

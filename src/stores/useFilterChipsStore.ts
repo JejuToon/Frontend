@@ -1,6 +1,7 @@
 import { create } from "zustand";
+import { useSelectedMarkerStore } from "./useSelectedMarkerStore";
 
-const allCategories = ["개척담", "인물담", "연애담", "신앙담"];
+export const allCategories = ["개척담", "인물담", "연애담", "신앙담"];
 const allExtraChips = ["근처", "맞춤 추천"];
 
 interface FilterStore {
@@ -26,7 +27,7 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
   isAllCategorySelected: false,
 
   toggleCategory: (cat) => {
-    const { selectedCategories } = get();
+    const { selectedCategories, selectedExtras } = get();
     const alreadySelected = selectedCategories.includes(cat);
 
     const newCategories = alreadySelected
@@ -37,10 +38,21 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
       selectedCategories: newCategories,
       selectedExtras: [], // Extra는 모두 해제
     });
+
+    if (newCategories.length !== allCategories.length) {
+      set({
+        isAllCategorySelected: false,
+      });
+    }
+
+    // extras -> categories 변경시
+    if (selectedExtras.length > 0) {
+      useSelectedMarkerStore.getState().setSelectedMarker(null);
+    }
   },
 
   toggleAllCategory: () => {
-    const { isAllCategorySelected, clearAllExtras } = get();
+    const { isAllCategorySelected, selectedExtras, clearAllExtras } = get();
     clearAllExtras();
 
     if (isAllCategorySelected) {
@@ -54,10 +66,15 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
         isAllCategorySelected: !isAllCategorySelected,
       });
     }
+
+    // extras -> categories 변경시
+    if (selectedExtras.length > 0) {
+      useSelectedMarkerStore.getState().setSelectedMarker(null);
+    }
   },
 
   toggleExtra: (extra) => {
-    const { selectedExtras } = get();
+    const { selectedCategories, selectedExtras } = get();
     const alreadySelected = selectedExtras.includes(extra);
 
     const newExtras = alreadySelected
@@ -69,6 +86,11 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
       selectedCategories: [], // 카테고리는 모두 해제
       isAllCategorySelected: false,
     });
+
+    // extras -> categories 변경시
+    if (selectedCategories.length > 0) {
+      useSelectedMarkerStore.getState().setSelectedMarker(null);
+    }
   },
 
   initializeCategory: (cat) => {

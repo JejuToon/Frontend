@@ -1,18 +1,18 @@
 import { create } from "zustand";
-import { TaleContent } from "../types/tale";
+import { TaleMarker } from "../types/tale";
 
 export type SheetPos = "collapsed" | "half" | "full";
 
 interface SelectedMarkerStore {
-  selectedMarker: TaleContent | null;
+  selectedMarker: TaleMarker | null;
   sheetPos: SheetPos;
 
-  setSelectedMarker: (marker: TaleContent | null) => void;
+  setSelectedMarker: (marker: TaleMarker | null) => void;
   setSheetPos: (pos: SheetPos) => void;
-  initialize: (marker: TaleContent | null) => void;
+  initialize: (marker: TaleMarker | null) => void;
   handleSheetToggle: () => void;
   onMarkerClick: (
-    tale: TaleContent,
+    marker: TaleMarker,
     mapRef: React.RefObject<google.maps.Map | null>
   ) => void;
 }
@@ -31,16 +31,16 @@ export const useSelectedMarkerStore = create<SelectedMarkerStore>(
       else setSheetPos("collapsed");
     },
 
-    onMarkerClick: (tale, mapRef) => {
+    onMarkerClick: (marker, mapRef) => {
       const { selectedMarker, setSelectedMarker, setSheetPos } = get();
-      if (selectedMarker?.id === tale.id) {
+      if (selectedMarker?.id === marker.id) {
         mapRef.current?.panTo({
-          lat: tale.location[0].latitude,
-          lng: tale.location[0].longitude,
+          lat: marker.location.latitude,
+          lng: marker.location.longitude,
         });
         mapRef.current?.setZoom(14);
       } else {
-        setSelectedMarker(tale);
+        setSelectedMarker(marker);
         setSheetPos("half");
       }
     },

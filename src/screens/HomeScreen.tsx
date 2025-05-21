@@ -1,20 +1,19 @@
-import { colors } from "../constants/colors";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import Header from "../components/Header";
-import LocationBox from "../components/LocationBox";
-
 import { MdOutlineWrongLocation } from "react-icons/md";
-import { FaPlus, FaPlay } from "react-icons/fa6";
-import Loader from "../components/Loader";
-import EmptyState from "../components/EmptyState";
+import { FaPlus } from "react-icons/fa6";
+import styled from "styled-components";
+
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
 
+import Header from "../components/Header";
+import LocationBox from "../components/LocationBox";
+import Loader from "../components/Loader";
+import EmptyState from "../components/EmptyState";
 import EmblaCarousel from "../components/EmblaCarousel";
 import EmblaCarouselDragFree from "../components/EmblaCarouselDragFree";
 import { EmblaOptionsType } from "embla-carousel";
@@ -23,65 +22,92 @@ import "../styles/emblaDrag.css";
 const OPTIONS: EmblaOptionsType = { loop: true };
 
 import type { TaleContent } from "../types/tale";
-import tales from "../mocks/taleInfo";
 
-const category1 = "assets/images/category/category1.png";
-const category2 = "assets/images/category/category2.png";
-const category3 = "assets/images/category/category3.png";
-const category4 = "assets/images/category/category4.png";
+import { getRandomSlice } from "../utils/shuffleArray";
 
 const categories = [
-  { key: "개척담", label: "개척담", imageUrl: category1 },
-  { key: "인물담", label: "인물담", imageUrl: category2 },
-  { key: "연애담", label: "연애담", imageUrl: category3 },
-  { key: "신앙담", label: "신앙담", imageUrl: category4 },
+  {
+    key: "개척담",
+    label: "개척담",
+    imageUrl: "assets/images/category/category1.png",
+  },
+  {
+    key: "인물담",
+    label: "인물담",
+    imageUrl: "assets/images/category/category2.png",
+  },
+  {
+    key: "연애담",
+    label: "연애담",
+    imageUrl: "assets/images/category/category3.png",
+  },
+  {
+    key: "신앙담",
+    label: "신앙담",
+    imageUrl: "assets/images/category/category4.png",
+  },
 ];
 
-const recommendedTales: TaleContent[] = tales.slice(3, 7);
+// 데모용 접근 제어
+import { useAccessControl } from "../components/AccessControlProvider";
 
 export default function HomeScreen() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
-  const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
-
-  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
-  const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
-  const { allTales, fetchAllTalesData } = useAllTalesStore();
+  // 데모용 접근 제어
+  const { openModal } = useAccessControl();
 
   const navigate = useNavigate();
+
+  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
+  const { nearbyTales, nearbyTalesLoading, fetchNearbyTalesData } =
+    useNearbyTalesStore();
+  const { allTales, fetchAllTalesData } = useAllTalesStore();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
   const { initializeCategory, setExtras } = useFilterChipsStore();
 
+  // 상단 캐러셀 상태
   const nextButtonRef = useRef<(() => void) | null>(null);
   const isReady = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
+  const [recommendedTales, setrecommendTales] = useState<TaleContent[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
+    // 로딩 테스트
     const timeout = setTimeout(() => {
       setIsLoading(false);
       setTimeout(() => setIsVisible(true), 100);
     }, 1000);
 
-    fetchAllTalesData(0);
+    startAutoScroll(); // 상단 캐러셀 스크롤 시작
+    fetchAllTalesData(0); // 전체 설화 목록 가져오기 (여기서는 1페이지만)
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
   useEffect(() => {
-    if (currentLocation) {
-      fetchNearbyTalesData(currentLocation.lat, currentLocation.lng);
-    }
-  }, [currentLocation]);
-
-  useEffect(() => {
+    // 마운트 이후 설화 목록을 가져오면 랜덤으로 추출하여 상단 캐러셀에 삽입
     if (allTales.length >= 5) {
       const shuffled = [...allTales].sort(() => Math.random() - 0.5);
       setCarouselTales(shuffled.slice(0, 5));
     }
+
+    // 가져온 설화 목록 중 랜덤으로 꺼내 추천 설화의 기본설화값으로 삽입
+    setrecommendTales(getRandomSlice(allTales, 4));
   }, [allTales]);
+
+  useEffect(() => {
+    // 현재 위치가 설정되면, 근처 위치 설화 받아 오기
+    if (currentLocation) {
+      fetchNearbyTalesData(currentLocation.lat, currentLocation.lng);
+    }
+  }, [currentLocation]);
 
   const startAutoScroll = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -92,13 +118,6 @@ export default function HomeScreen() {
     }, 4000);
   };
 
-  useEffect(() => {
-    startAutoScroll();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
   const nearbyButtonClick = () => {
     setExtras(["근처"]);
     initializeCategory([]);
@@ -107,7 +126,19 @@ export default function HomeScreen() {
   };
 
   const handleTaleClick = (tale: TaleContent) => {
-    setSelectedMarker(tale);
+    const marker = {
+      id: tale.id,
+      title: tale.title,
+      location: {
+        latitude: tale.location[0].latitude,
+        longitude: tale.location[0].longitude,
+      },
+      categories: tale.categories,
+      description: tale.description,
+      score: tale.score,
+      thumbnail: tale.thumbnail,
+    };
+    setSelectedMarker(marker);
     setSheetPos("collapsed");
     initializeCategory(tale.categories);
     navigate("/search");
@@ -125,12 +156,17 @@ export default function HomeScreen() {
   return (
     <Container $isVisible={isVisible}>
       <Header
-        left={<h1>홈</h1>}
+        left={
+          <ImgWrapper>
+            <ImgIcon src={"/icons/icon.png"} alt={"탐라담"} />
+            <Img src={"/icons/title-icon.png"} alt={"탐라담"} />
+          </ImgWrapper>
+        }
         center={null}
         right={
           <LocationBox
             onClick={async () => {
-              const status = await fetchCurrentLocation(null); // 또는 mapRef 있으면 전달
+              const status = await fetchCurrentLocation(null);
               if (status === "denied") {
                 setShowLocationModal(true);
               }
@@ -152,10 +188,30 @@ export default function HomeScreen() {
 
       <Section>
         <SectionHeader>
+          <h3>추천 설화</h3>
+          <FaPlus
+            title="맞춤형 설화 추천 받기"
+            onClick={() => {
+              // 데모용 접근 제어
+              openModal();
+            }}
+          />
+        </SectionHeader>
+        <EmblaCarouselDragFree
+          slides={recommendedTales}
+          options={{ dragFree: true, containScroll: "trimSnaps" }}
+          onTaleClick={(t) => handleTaleClick(t)}
+        />
+      </Section>
+
+      <Section>
+        <SectionHeader>
           <h3>현재 위치와 가까운 설화</h3>
           <SeeAllBtn onClick={nearbyButtonClick}>&gt;</SeeAllBtn>
         </SectionHeader>
-        {nearbyTales.length > 0 ? (
+        {nearbyTalesLoading ? (
+          <Loader type="inline" />
+        ) : nearbyTales.length > 0 ? (
           <EmblaCarouselDragFree
             slides={nearbyTales}
             options={{ dragFree: true, containScroll: "trimSnaps" }}
@@ -166,23 +222,9 @@ export default function HomeScreen() {
             icon={<MdOutlineWrongLocation />}
             title="주변 설화를 찾을 수 없어요"
             description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
+            onIconClick={() => fetchCurrentLocation(null)}
           />
         )}
-      </Section>
-
-      <Section>
-        <SectionHeader>
-          <h3>추천 설화</h3>
-          <FaPlus
-            title="맞춤형 설화 추천 받기"
-            onClick={() => console.log("추천 폼으로 이동")}
-          />
-        </SectionHeader>
-        <EmblaCarouselDragFree
-          slides={recommendedTales}
-          options={{ dragFree: true, containScroll: "trimSnaps" }}
-          onTaleClick={(t) => handleTaleClick(t)}
-        />
       </Section>
 
       <Section>
@@ -205,10 +247,12 @@ export default function HomeScreen() {
       {showLocationModal && (
         <ModalOverlay onClick={() => setShowLocationModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
-            <p>위치 권한이 차단되어 있어 설화를 추천할 수 없습니다.</p>
-            <p>
+            <ModalText>
+              위치 권한이 차단되어 있어 설화를 추천할 수 없습니다.
+            </ModalText>
+            <ModalText>
               브라우저 설정에서 위치 권한을 <strong>허용</strong>해 주세요.
-            </p>
+            </ModalText>
             <CloseButton onClick={() => setShowLocationModal(false)}>
               확인
             </CloseButton>
@@ -229,6 +273,26 @@ const Container = styled.div<{ $isVisible: boolean }>`
   background-color: ${({ theme }) => theme.background};
 `;
 
+const ImgWrapper = styled.div`
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 8px;
+`;
+
+const ImgIcon = styled.img`
+  height: 40px;
+  width: 40px;
+`;
+
+const Img = styled.img`
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+`;
+
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -243,12 +307,22 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: ${({ theme }) => theme.cardBackground || "white"};
+  background-color: ${({ theme }) => theme.background};
   padding: 24px;
   border-radius: 12px;
   text-align: center;
   max-width: 300px;
+  white-space:nowrap 
   color: ${({ theme }) => theme.text};
+`;
+
+const ModalText = styled.div`
+  display: block;
+  text-align: center;
+  white-space: normal; /* 기본 줄바꿈 허용 */
+  word-break: keep-all; /* 단어 단위로만 줄바꿈 */
+  overflow-wrap: normal; /* 긴 단어 강제 줄바꿈 해제 */
+  margin-bottom: 8px;
 `;
 
 const CloseButton = styled.button`
@@ -261,9 +335,7 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
-const Section = styled.section`
-  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
-`;
+const Section = styled.section``;
 
 const SectionHeader = styled.div`
   display: flex;
@@ -312,5 +384,4 @@ const CategoryLabel = styled.div`
   color: white;
   text-align: center;
   font-weight: bold;
-  background: rgba(0, 0, 0, 0.3);
 `;
