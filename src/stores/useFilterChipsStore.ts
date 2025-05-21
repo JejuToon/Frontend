@@ -8,6 +8,7 @@ interface FilterStore {
   selectedExtras: string[];
   isAllCategorySelected: boolean;
 
+  toggleAllCategory: () => void;
   toggleCategory: (cat: string) => void;
   toggleExtra: (extra: string) => void;
   initializeCategory: (cat?: string | string[]) => void;
@@ -38,6 +39,23 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
     });
   },
 
+  toggleAllCategory: () => {
+    const { isAllCategorySelected, clearAllExtras } = get();
+    clearAllExtras();
+
+    if (isAllCategorySelected) {
+      set({
+        selectedCategories: [],
+        isAllCategorySelected: !isAllCategorySelected,
+      });
+    } else {
+      set({
+        selectedCategories: allCategories,
+        isAllCategorySelected: !isAllCategorySelected,
+      });
+    }
+  },
+
   toggleExtra: (extra) => {
     const { selectedExtras } = get();
     const alreadySelected = selectedExtras.includes(extra);
@@ -49,6 +67,7 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
     set({
       selectedExtras: newExtras,
       selectedCategories: [], // 카테고리는 모두 해제
+      isAllCategorySelected: false,
     });
   },
 
