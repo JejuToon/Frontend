@@ -45,7 +45,12 @@ export default function CameraScreen() {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
 
-  const gestureRef = useRef<{ initialDistance: number; initialAngle: number } | null>(null);
+  const gestureRef = useRef<{
+    initialDistance: number;
+    initialAngle: number;
+    initialScale: number;
+    initialRotation: number;
+  } | null>(null);
 
   useEffect(() => {
     startCamera(facingMode);
@@ -144,30 +149,31 @@ export default function CameraScreen() {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-  if (e.touches.length === 2) {
-    const touches = e.touches as unknown as TouchList;
-    gestureRef.current = {
-      initialDistance: getDistance(touches),
-      initialAngle: getAngle(touches),
-    };
-  }
-};
+    if (e.touches.length === 2) {
+      const touches = e.touches as unknown as TouchList;
+      gestureRef.current = {
+        initialDistance: getDistance(touches),
+        initialAngle: getAngle(touches),
+        initialScale: scale,
+        initialRotation: rotation,
+      };
+    }
+  };
 
-const handleTouchMove = (e: React.TouchEvent) => {
-  if (e.touches.length === 2 && gestureRef.current) {
-    e.preventDefault();
-    const touches = e.touches as unknown as TouchList;
-    const newDistance = getDistance(touches);
-    const newAngle = getAngle(touches);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && gestureRef.current) {
+      e.preventDefault();
+      const touches = e.touches as unknown as TouchList;
+      const currentDistance = getDistance(touches);
+      const currentAngle = getAngle(touches);
 
-    const newScale = newDistance / gestureRef.current.initialDistance;
-    const rotationDelta = newAngle - gestureRef.current.initialAngle;
+      const scaleRatio = currentDistance / gestureRef.current.initialDistance;
+      const angleDelta = currentAngle - gestureRef.current.initialAngle;
 
-    setScale(Math.max(0.5, Math.min(newScale, 3)));
-    setRotation(rotationDelta);
-  }
-};
-
+      setScale(Math.max(0.2, Math.min(gestureRef.current.initialScale * scaleRatio, 5)));
+      setRotation(gestureRef.current.initialRotation + angleDelta);
+    }
+  };
 
   const handleTouchEnd = () => {
     gestureRef.current = null;
