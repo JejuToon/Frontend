@@ -202,7 +202,6 @@ const HeaderWrapper = styled.div`
   top: 0;
   z-index: 100;
   background: ${({ theme }) => theme.cardBackground || "white"};
-  border-bottom: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const Collapsible = styled.div<{ open: boolean }>`

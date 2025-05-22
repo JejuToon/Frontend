@@ -53,9 +53,12 @@ const Button = styled.button`
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border: 1px solid ${({ theme }) => "#ff8a3d"};
+  border: 1px solid ${({ theme }) => "rgba(209, 163, 94, 0.8)"};
   border-radius: 20px;
-  background: ${({ theme }) => "#ff8a3d"};
+  background: ${({ theme }) =>
+    theme.mode == "dark"
+      ? " rgba(226, 195, 147, 0.8)"
+      : " rgba(209, 163, 94, 0.8)"};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
 
@@ -67,5 +70,5 @@ const Button = styled.button`
 const Label = styled.span`
   font-size: 14px;
   white-space: nowrap;
-  color: ${({ theme }) => "theme.text"};
+  color: ${({ theme }) => theme.text};
 `;

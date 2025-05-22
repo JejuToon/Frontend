@@ -21,7 +21,8 @@ export default function TaleDetailScreen() {
   const navigate = useNavigate();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
   const { initializeCategory } = useFilterChipsStore();
-  const { selectedTaleId } = useStoryStore();
+  const { selectedTaleId, selectedTaleDetail, setSelectedTaleDetail } =
+    useStoryStore();
   const [descExpanded, setDescExpanded] = useState(false);
   const [originExpanded, setOriginExpanded] = useState(false);
 
@@ -46,7 +47,10 @@ export default function TaleDetailScreen() {
   }, []);
 
   useEffect(() => {
-    //console.log(`taleDetail: ${JSON.stringify(taleDetail)}`);
+    if (taleDetail !== null) {
+      setSelectedTaleDetail(taleDetail);
+      console.log(`taleDetail: ${JSON.stringify(selectedTaleDetail)}`);
+    }
   }, [taleDetail]);
 
   // Demo용 접근제어 설문대할망 id

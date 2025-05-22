@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -8,6 +8,7 @@ import {
   FaPause,
 } from "react-icons/fa6";
 import { TbHome } from "react-icons/tb";
+import { IoChevronUp } from "react-icons/io5";
 import styled from "styled-components";
 
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
@@ -33,15 +34,21 @@ interface Choice {
 }
 
 export default function TaleScreen() {
-  const { ttsConfig, selectedTale, fontConfig, ttsEnabled } = useStoryStore();
+  const { ttsConfig, selectedTaleDetail, fontConfig, ttsEnabled } =
+    useStoryStore();
 
   const navigate = useNavigate();
-  const tale = selectedTale;
+  const tale = selectedTaleDetail;
   const font = fontOptions.find((f) => f.name === fontConfig.fontName);
 
   // 로딩 테스트
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+
+  // 스와이프 감지
+  const [showNav, setShowNav] = useState(true);
+  const pointerStart = useRef({ x: 0, y: 0 });
+  const SWIPE_THRESHOLD = 50;
 
   const [page, setPage] = useState(0);
   const talePages = talePagesInfo;
@@ -54,7 +61,7 @@ export default function TaleScreen() {
   );
 
   const audioUrl = parseAudioPath(
-    selectedTale?.title || "",
+    selectedTaleDetail?.title || "",
     selectedVoiceIndex,
     page + 1
   );
@@ -84,6 +91,41 @@ export default function TaleScreen() {
     return () => clearTimeout(timeout);
   }, []);
 
+  useEffect(() => {
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audio) {
+      audio.playbackRate = rate;
+    }
+  }, [rate]);
+
+  // 1) showNav가 true가 될 때마다 타이머 재설정
+  useEffect(() => {
+    if (!showNav) return;
+    const timer = setTimeout(() => setShowNav(false), 5000); // 5초 후 숨김
+    return () => clearTimeout(timer);
+  }, [showNav]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+  };
+  const handlePointerUp = (e: React.PointerEvent) => {
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
+      if (dx > 0 && page > 0) handlePrev();
+      else if (dx < 0 && page < talePages.length - 1 && !hasChoices)
+        handleNext();
+    } else if (dy < -SWIPE_THRESHOLD) {
+      setShowNav(true);
+    }
+  };
+
   const current = talePages[page];
 
   const hasChoices = current.choices && current.choices.length > 0;
@@ -100,23 +142,16 @@ export default function TaleScreen() {
     navigate("/lib");
   };
 
-  useEffect(() => {
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    if (audio) {
-      audio.playbackRate = rate;
-    }
-  }, [rate]);
-
   // 로딩 테스트
   if (isLoading) return <Loader />;
 
   return (
-    <Screen $isVisible={isVisible}>
+    <Screen
+      $isVisible={isVisible}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+    >
+      <SwipeCapture />
       <ImageContainer>
         <Image src={current.imageUrl} alt="이야기 이미지" />
       </ImageContainer>
@@ -148,7 +183,12 @@ export default function TaleScreen() {
             </ModalContent>
           </ModalOverlay>
         )}
-        <NavWrapper>
+        <NavWrapper
+          style={{
+            transform: showNav ? "translateY(0)" : "translateY(100%)",
+            transition: "transform .3s",
+          }}
+        >
           <NavButtons>
             <IconButton onClick={() => setShowControlBar(!showControlBar)}>
               <FaGear />
@@ -175,6 +215,13 @@ export default function TaleScreen() {
             </ButtonGroupRight>
           </NavButtons>
         </NavWrapper>
+
+        {/* 4) 숨겨졌을 때 감지용 투명 스와이프 영역 */}
+        {!showNav && (
+          <UpButton onClick={() => setShowNav(true)}>
+            <IoChevronUp size={24} />
+          </UpButton>
+        )}
       </TextSection>
 
       {showControlBar && (
@@ -191,14 +238,16 @@ export default function TaleScreen() {
                 </IconButton>
               </LeftGroup>
 
-              <CenterGroup>
-                <IconButton onClick={toggleAudio}>
-                  {audio && !audio.paused ? <FaPause /> : <FaPlay />}
-                </IconButton>
-                <IconButton onClick={replay}>
-                  <FaRotate />
-                </IconButton>
-              </CenterGroup>
+              {ttsEnabled && (
+                <CenterGroup>
+                  <IconButton onClick={toggleAudio}>
+                    {audio && !audio.paused ? <FaPause /> : <FaPlay />}
+                  </IconButton>
+                  <IconButton onClick={replay}>
+                    <FaRotate />
+                  </IconButton>
+                </CenterGroup>
+              )}
 
               <RightGroup>
                 <ThemeToggle variant="small" />
@@ -243,7 +292,7 @@ export default function TaleScreen() {
               <CloseButton
                 onClick={() => {
                   setShowCompleteModal(false);
-                  navigate("/search");
+                  navigate("/home");
                 }}
               >
                 홈으로
@@ -257,7 +306,7 @@ export default function TaleScreen() {
                   navigate("/camera");
                 }}
               >
-                캐릭터와 사진 찍기{" "}
+                캐릭터와 사진 찍기
               </ARButton>
             </ButtonContainer>
           </ModalContent>
@@ -268,6 +317,7 @@ export default function TaleScreen() {
 }
 
 const Screen = styled.main<{ $isVisible: boolean }>`
+  touch-action: none;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -280,6 +330,14 @@ const Screen = styled.main<{ $isVisible: boolean }>`
   @media (orientation: landscape) {
     flex-direction: row; /* 가로 모드: 좌우 나란히 */
   }
+`;
+
+const SwipeCapture = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 1; /* NavButtons(…) 보다 낮은 레벨 */
+  touch-action: none; /* 터치 드래그가 브라우저 스크롤로 빠지지 않도록 */
+  pointer-events: none; /* 클릭 / 터치 이벤트를 뒤로 통과시킴 */
 `;
 
 const ControlBarWrapper = styled.div`
@@ -387,9 +445,11 @@ const Image = styled.img`
 `;
 
 const TextSection = styled.div`
+  position: relative;
   flex: 1 1 auto;
   background: ${({ theme }) => theme.taleBackground};
   padding: 20px;
+  padding-bottom: 40px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -442,11 +502,32 @@ const NavWrapper = styled.div`
   position: fixed;
   bottom: 0px;
   width: 100%;
+  height: 40px;
 
   @media (orientation: landscape) {
     width: 50%;
     height: auto;
     aspect-ratio: auto;
+    transform: translateX(-50%);
+  }
+`;
+
+const UpButton = styled.button`
+  position: absolute;
+  bottom: 8px; /* SwipeArea 안쪽에서 살짝 위로 */
+  right: 12px; /* 왼쪽 구석 */
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
   }
 `;
 

@@ -7,7 +7,7 @@ export const lightTheme = {
   inputBackground: colors.BEIGE_500,
   sheetBackground: colors.BEIGE_500,
   taleBackground: colors.KHAKI_500,
-  bottomTabsBackground: colors.BEIGE_500,
+  bottomTabsBackground: colors.BEIGE_300,
 
   taleTextBackground: " #fff",
 

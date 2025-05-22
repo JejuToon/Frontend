@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { TaleContent } from "../types/tale";
+import { TaleContent, TaleDetailResponse } from "../types/tale";
 
 export interface TTSConfig {
   voiceIndex: number;
@@ -15,6 +15,7 @@ export interface FontConfig {
 interface StoryState {
   selectedTaleId: number | null;
   selectedTale: TaleContent | null;
+  selectedTaleDetail: TaleDetailResponse | null;
 
   ttsConfig: TTSConfig;
   setTTSConfig: (config: Partial<TTSConfig>) => void;
@@ -28,6 +29,7 @@ interface StoryState {
   viewedTales: TaleContent[];
 
   setTale: (tale: TaleContent) => void;
+  setSelectedTaleDetail: (taleDetail: TaleDetailResponse) => void;
   setTaleId: (id: number) => void;
   addViewedTale: (tale: TaleContent) => void;
 
@@ -40,6 +42,7 @@ export const useStoryStore = create(
       selectedTale: null,
       selectedCharacter: null,
       selectedTaleId: null,
+      selectedTaleDetail: null,
 
       ttsConfig: {
         voiceIndex: 0,
@@ -71,6 +74,8 @@ export const useStoryStore = create(
       viewedTales: [],
 
       setTale: (tale) => set({ selectedTale: tale }),
+      setSelectedTaleDetail: (taleDetail) =>
+        set({ selectedTaleDetail: taleDetail }),
       setTaleId: (id) => set({ selectedTaleId: id }),
       addViewedTale: (tale) =>
         set((state) => ({
