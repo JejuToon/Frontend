@@ -43,6 +43,9 @@ export default function TaleScreen() {
   const tale = selectedTaleDetail;
   const font = fontOptions.find((f) => f.name === fontConfig.fontName);
 
+  // 이미지 로딩
+  const [loaded, setLoaded] = useState(false);
+
   // 로딩 테스트
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
@@ -94,6 +97,13 @@ export default function TaleScreen() {
     }, 1000);
     return () => clearTimeout(timeout);
   }, []);
+
+  // 이미지 preload
+  useEffect(() => {
+    const img = new Image();
+    img.src = currentPage.imageUrl;
+    img.onload = () => setLoaded(true);
+  }, [currentPage]);
 
   useEffect(() => {
     if (audio) {
@@ -193,7 +203,14 @@ export default function TaleScreen() {
         $transition={pageTransition}
         onAnimationEnd={() => setPageTransition(null)}
       >
-        <Image src={currentPage.imageUrl} alt="이야기 이미지" />
+        {!loaded && <Loader />} {/* 로딩 중 보여줄 요소 (선택) */}
+        {loaded && (
+          <StoryImage
+            key={currentPage.imageUrl}
+            src={currentPage.imageUrl}
+            alt="이야기 이미지"
+          />
+        )}
       </ImageContainer>
 
       {font && <FontFaceStyle font={font} />}
@@ -390,13 +407,21 @@ const ImageContainer = styled.div<{ $transition: string | null }>`
   }
 `;
 
-const Image = styled.img`
+const StoryImage = styled.img`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
 `;
 
 const SwipeCapture = styled.div`
