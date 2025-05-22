@@ -106,7 +106,6 @@ export default function LibScreen() {
                 <CharacterCard
                   key={idx}
                   name={c.title || "이름 없음"}
-                  data={"정보 없음"}
                   avatarUrl={c.imageUrl || ""}
                 />
               ))}

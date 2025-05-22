@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 interface CharacterCardProps {
   name: string;
-  data: string;
+  data?: string;
   avatarUrl: string;
 }
 
@@ -19,7 +19,7 @@ export default function CharacterCard({
       </ImageBox>
       <Info>
         <Name>{name}</Name>
-        <Data>{data}</Data>
+        {data && <Data>{data}</Data>}
       </Info>
     </Card>
   );
