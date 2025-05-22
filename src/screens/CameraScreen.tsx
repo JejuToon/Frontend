@@ -50,6 +50,8 @@ export default function CameraScreen() {
   const gestureRef = useRef<{
     initialDistance: number;
     initialAngle: number;
+    initialScale: number;
+    initialRotation: number;
   } | null>(null);
 
   useEffect(() => {
@@ -160,6 +162,8 @@ export default function CameraScreen() {
       gestureRef.current = {
         initialDistance: getDistance(touches),
         initialAngle: getAngle(touches),
+        initialScale: scale,
+        initialRotation: rotation,
       };
     }
   };
@@ -168,14 +172,16 @@ export default function CameraScreen() {
     if (e.touches.length === 2 && gestureRef.current) {
       e.preventDefault();
       const touches = e.touches as unknown as TouchList;
-      const newDistance = getDistance(touches);
-      const newAngle = getAngle(touches);
+      const currentDistance = getDistance(touches);
+      const currentAngle = getAngle(touches);
 
-      const newScale = newDistance / gestureRef.current.initialDistance;
-      const rotationDelta = newAngle - gestureRef.current.initialAngle;
+      const scaleRatio = currentDistance / gestureRef.current.initialDistance;
+      const angleDelta = currentAngle - gestureRef.current.initialAngle;
 
-      setScale(Math.max(0.5, Math.min(newScale, 3)));
-      setRotation(rotationDelta);
+      setScale(
+        Math.max(0.2, Math.min(gestureRef.current.initialScale * scaleRatio, 5))
+      );
+      setRotation(gestureRef.current.initialRotation + angleDelta);
     }
   };
 

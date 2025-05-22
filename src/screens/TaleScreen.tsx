@@ -50,9 +50,25 @@ export default function TaleScreen() {
   const pointerStart = useRef({ x: 0, y: 0 });
   const SWIPE_THRESHOLD = 50;
 
-  const [page, setPage] = useState(0);
-  const talePages = talePagesInfo.totalPage;
-  const currentPage = talePages[page];
+  // 현재 페이지 (정수)
+  const [page, setPage] = useState(1);
+  const [pageKey, setPageKey] = useState<keyof typeof seolmun>("1");
+
+  const currentPageInfo = talePagesInfo[pageKey];
+  /*
+  "1": {
+      imageUrl: "/assets/stories/seolmun/seolmun1.png",
+      text:
+        "아주 오래전, 세상이 지금처럼 만들어지기 전. " +
+        "하늘과 땅의 경계가 아직 분명하지 않던 시절, " +
+        "커다란 몸집과 굉장한 힘을 지닌 한 여신이 탐라에 살고 있었습니다. " +
+        "그녀의 이름은 설문대할망. 하늘보다 키가 크고, " +
+        "바다보다 넓은 품을 가진 존재였습니다. 사람들은 그녀를 섬을 만든 할망, " +
+        "생명을 불어넣은 어머니, 모든 것의 시작이자 끝이라 불렀습니다.",
+      audioUrl: "",
+      next: "2",
+    },
+  */
 
   const [volume, setVolume] = useState(ttsConfig.volume);
   const [rate, setRate] = useState(ttsConfig.rate);
@@ -67,7 +83,7 @@ export default function TaleScreen() {
   );
 
   const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
-    audioUrl ? audioUrl : currentPage.audioUrl,
+    audioUrl ? audioUrl : currentPageInfo.audioUrl,
     volume,
     rate,
     isLoading,
