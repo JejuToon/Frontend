@@ -7,7 +7,7 @@ const titleToEngMap: Record<string, string> = {
 export function parseAudioPath(
   koreanTitle: string,
   ttsIndex: number,
-  pageIndex: number
+  pageKey: string
 ): string {
   const engTitle = titleToEngMap[koreanTitle];
   if (!engTitle) return "";
@@ -15,5 +15,5 @@ export function parseAudioPath(
   const ttsName = TTSInfo[ttsIndex]?.name;
   if (!ttsName) return "";
 
-  return `/assets/audios/${engTitle}/${ttsName}/${engTitle}${pageIndex}.wav`;
+  return `/assets/audios/${engTitle}/${ttsName}/${engTitle}${pageKey}.wav`;
 }

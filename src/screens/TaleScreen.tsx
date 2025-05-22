@@ -12,7 +12,6 @@ import { IoChevronUp } from "react-icons/io5";
 import styled from "styled-components";
 
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
-import { useChoiceHandler } from "../hooks/useChoiceHandler";
 import { useStoryStore } from "../stores/useStoryStore";
 
 import ThemeToggle from "../components/ThemeToggle";
@@ -27,6 +26,8 @@ import seolmun from "../mocks/scriptInfo";
 import { parseAudioPath } from "../utils/parseAudioPath";
 
 const talePagesInfo = seolmun;
+const totalPageNum = 8;
+type PageKey = keyof typeof seolmun;
 
 interface Choice {
   text: string;
@@ -51,10 +52,12 @@ export default function TaleScreen() {
   const SWIPE_THRESHOLD = 50;
 
   // 현재 페이지 (정수)
-  const [page, setPage] = useState(1);
-  const [pageKey, setPageKey] = useState<keyof typeof seolmun>("1");
+  const [pageNum, setPageNum] = useState(0);
+  const [pageKey, setPageKey] = useState<PageKey>("1");
+  const [history, setHistory] = useState<PageKey[]>([]);
 
-  const currentPageInfo = talePagesInfo[pageKey];
+  const currentPage = seolmun[pageKey];
+  const hasChoices = currentPage.choices && currentPage.choices.length > 0;
   /*
   "1": {
       imageUrl: "/assets/stories/seolmun/seolmun1.png",
@@ -79,11 +82,11 @@ export default function TaleScreen() {
   const audioUrl = parseAudioPath(
     selectedTaleDetail?.title || "",
     selectedVoiceIndex,
-    page + 1
+    pageKey
   );
 
   const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
-    audioUrl ? audioUrl : currentPageInfo.audioUrl,
+    audioUrl ? audioUrl : currentPage.audioUrl,
     volume,
     rate,
     isLoading,
@@ -93,9 +96,6 @@ export default function TaleScreen() {
   const [showControlBar, setShowControlBar] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [rating, setRating] = useState(0); //별점
-
-  const { showChoiceModal, setShowChoiceModal, handleChoice } =
-    useChoiceHandler(setPage);
 
   // 로딩 테스트
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function TaleScreen() {
     }
   }, [rate]);
 
-  // 1) showNav가 true가 될 때마다 타이머 재설정
+  // showNav가 true가 될 때마다 타이머 재설정
   useEffect(() => {
     if (!showNav || showControlBar) return;
     const timer = setTimeout(() => setShowNav(false), 5000); // 5초 후 숨김
@@ -134,19 +134,40 @@ export default function TaleScreen() {
     const dy = e.clientY - pointerStart.current.y;
 
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-      if (dx > 0 && page > 0) handlePrev();
-      else if (dx < 0 && page < talePages.length - 1 && !hasChoices)
-        handleNext();
+      if (dx > 0 && pageNum > 0) handlePrev();
+      else if (dx < 0 && pageNum < totalPageNum && !hasChoices) handleNext();
     } else if (dy < -SWIPE_THRESHOLD) {
       setShowNav(true);
     }
   };
 
-  const current = talePages[page];
+  const handleNext = () => {
+    if (currentPage.next && currentPage.next !== "end") {
+      setHistory((prev) => [...prev, pageKey]);
+      setPageKey(currentPage.next as PageKey);
+      setPageNum(pageNum + 1);
+    } else if (currentPage.next === "end") {
+      alert("설화가 끝났습니다!");
+    }
+  };
 
-  const hasChoices = current.choices && current.choices.length > 0;
-  const handlePrev = () => page > 0 && setPage(page - 1);
-  const handleNext = () => page < talePages.length - 1 && setPage(page + 1);
+  const handleChoice = (nextKey: string) => {
+    setHistory((prev) => [...prev, pageKey]);
+    setPageKey(nextKey as PageKey);
+    setPageNum(pageNum + 1);
+  };
+
+  const handlePrev = () => {
+    setHistory((prev) => {
+      const newHistory = [...prev];
+      const last = newHistory.pop();
+      if (last) {
+        setPageNum(pageNum - 1);
+        setPageKey(last);
+      }
+      return newHistory;
+    });
+  };
 
   const handleGoToLibrary = () => {
     const storedTale = localStorage.getItem("myTales");
@@ -169,45 +190,22 @@ export default function TaleScreen() {
     >
       <SwipeCapture />
       <ImageContainer>
-        <Image src={current.imageUrl} alt="이야기 이미지" />
+        <Image src={currentPage.imageUrl} alt="이야기 이미지" />
       </ImageContainer>
 
       {font && <FontFaceStyle font={font} />}
       <TextSection>
-        <TextContainer $font={font}>{current.text}</TextContainer>
+        <TextContainer $font={font}>{currentPage.text}</TextContainer>
 
         {/* 직접 선택 버튼 노출 */}
-        {hasChoices && (
+        {currentPage.choices && (
           <SelectContainer>
-            {current.choices.map((c, idx) => (
-              <ChoiceButton
-                key={idx}
-                onClick={() =>
-                  handleNext() && setTimeout(() => handleChoice(c), 0)
-                }
-              >
+            {currentPage.choices.map((c, idx) => (
+              <ChoiceButton key={idx} onClick={() => handleChoice(c.next)}>
                 {c.text}
               </ChoiceButton>
             ))}
           </SelectContainer>
-        )}
-
-        {showChoiceModal && (
-          <ModalOverlay>
-            <ModalContent>
-              <h2>어떤 선택을 하시겠어요?</h2>
-              <SelectContainer>
-                {current.choices!.map((c, idx) => (
-                  <ChoiceButton key={idx} onClick={() => handleChoice(c)}>
-                    {c.text}
-                  </ChoiceButton>
-                ))}
-              </SelectContainer>
-              <CloseButton onClick={() => setShowChoiceModal(false)}>
-                닫기
-              </CloseButton>
-            </ModalContent>
-          </ModalOverlay>
         )}
         <NavWrapper
           style={{
@@ -221,15 +219,15 @@ export default function TaleScreen() {
             </IconButton>
 
             <PageIndicator>
-              {page + 1} / {talePages.length}
+              {pageNum + 1} / {totalPageNum}
             </PageIndicator>
 
             <ButtonGroupRight>
-              <NavButton onClick={handlePrev} disabled={page === 0}>
+              <NavButton onClick={handlePrev} disabled={pageNum === 0}>
                 이전
               </NavButton>
 
-              {page === talePages.length - 1 ? (
+              {pageNum === totalPageNum ? (
                 <NavButton onClick={() => setShowCompleteModal(true)}>
                   완료
                 </NavButton>
