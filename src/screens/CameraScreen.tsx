@@ -51,6 +51,8 @@ export default function CameraScreen() {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
 
+  const [isCapturing, setIsCapturing] = useState(false);
+
   const gestureRef = useRef<{
     initialDistance: number;
     initialAngle: number;
@@ -89,8 +91,57 @@ export default function CameraScreen() {
   };
 
   const handleCapture = () => {
-    console.log("캡처 버튼 클릭됨");
-  };
+  setIsCapturing(true);
+  
+  const video = videoRef.current;
+  const videoWrapper = videoWrapperRef.current;
+  if (!video || !videoWrapper) return;
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+  canvas.width = width;
+  canvas.height = height;
+
+  // 1. 비디오 프레임 그리기
+  ctx.drawImage(video, 0, 0, width, height);
+
+  // 2. 캐릭터 위치 계산 (비율 기반)
+  const posX = (characterPos.x / videoWrapper.offsetWidth) * width;
+  const posY = (characterPos.y / videoWrapper.offsetHeight) * height;
+  const size = 120 * scale;
+
+  const character = characters[selectedIndex];
+
+  if (character.type === "image") {
+    const img = new Image();
+    img.src = character.src;
+    img.onload = () => {
+      ctx.save();
+      ctx.translate(posX, posY);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      ctx.restore();
+
+      const dataUrl = canvas.toDataURL("image/png");
+      console.log("CAPTURED PNG:", dataUrl); // 일단 로그로 확인
+      // downloadImage(dataUrl); // 원하면 이거 실행
+
+      setTimeout(() => setIsCapturing(false), 100);
+    };
+  } else if (character.type === "icon") {
+    // 아이콘일 경우: 비디오 프레임만 캡처
+    const dataUrl = canvas.toDataURL("image/png");
+    console.log("Captured PNG (no overlay):", dataUrl);
+    // downloadImage(dataUrl);
+
+    setTimeout(() => setIsCapturing(false), 100);
+  }
+};
+
 
   const handleCharacterClick = (index: number) => {
     const node = characterRefs.current[index];
@@ -245,8 +296,8 @@ const SelectedCharacter = characters[selectedIndex];
             <Spacer />
           </CharacterMenu>
         </CharacterMenuContainer>
-
-        <CaptureButton onClick={handleCapture} />
+        
+        <CaptureButton onClick={handleCapture} active={isCapturing} />
         <SwitchButton onClick={toggleCamera}>
           <MdFlipCameraIos size={24} />
         </SwitchButton>
@@ -290,11 +341,11 @@ const OverlayCharacter = styled.div`
   touch-action: none;
 `;
 
-const CaptureButton = styled.div`
+const CaptureButton = styled.div<{ active?: boolean }>`
   position: absolute;
   bottom: 30px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(${({ active }) => (active ? 0.92 : 1)});
   width: 70px;
   height: 70px;
   background-color: #e0e0e0;
@@ -302,7 +353,9 @@ const CaptureButton = styled.div`
   border-radius: 50%;
   z-index: 10;
   cursor: pointer;
+  transition: transform 0.1s ease;
 `;
+
 
 const SwitchButton = styled.div`
   position: absolute;
