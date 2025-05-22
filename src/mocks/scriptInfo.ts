@@ -132,7 +132,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: "/assets/stories/seolmun/seolmun7-3.png",
+      imageUrl: "/assets/stories/seolmun/seolmun8.png",
       text:
         "세상은 어느 정도 자리를 잡아가고 있었습니다. " +
         "산도 있고, 바다도 있고, 사람들도 삶을 이어갔습니다. " +
