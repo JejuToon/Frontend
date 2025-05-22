@@ -62,7 +62,8 @@ export default function HomeScreen() {
     useNearbyTalesStore();
   const { allTales, fetchAllTalesData } = useAllTalesStore();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
-  const { initializeCategory, setExtras } = useFilterChipsStore();
+  const { initializeCategory, setExtras, setIsAllCategorySelected } =
+    useFilterChipsStore();
 
   // 상단 캐러셀 상태
   const nextButtonRef = useRef<(() => void) | null>(null);
@@ -147,6 +148,8 @@ export default function HomeScreen() {
   const handleCategoryClick = (categoryKey: string) => {
     initializeCategory([categoryKey]);
     setSelectedMarker(null);
+    setIsAllCategorySelected(false);
+
     setSheetPos("collapsed");
     navigate("/search");
   };

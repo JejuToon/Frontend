@@ -22,11 +22,11 @@ import TTSSettings from "../components/TTSSettings";
 
 import { fontOptions } from "../constants/fonts";
 
-import scripts from "../mocks/scriptInfo";
+import seolmun from "../mocks/scriptInfo";
 
 import { parseAudioPath } from "../utils/parseAudioPath";
 
-const talePagesInfo = scripts[0];
+const talePagesInfo = seolmun;
 
 interface Choice {
   text: string;
@@ -51,7 +51,7 @@ export default function TaleScreen() {
   const SWIPE_THRESHOLD = 50;
 
   const [page, setPage] = useState(0);
-  const talePages = talePagesInfo;
+  const talePages = talePagesInfo.totalPage;
   const currentPage = talePages[page];
 
   const [volume, setVolume] = useState(ttsConfig.volume);
@@ -105,10 +105,10 @@ export default function TaleScreen() {
 
   // 1) showNav가 true가 될 때마다 타이머 재설정
   useEffect(() => {
-    if (!showNav) return;
+    if (!showNav || showControlBar) return;
     const timer = setTimeout(() => setShowNav(false), 5000); // 5초 후 숨김
     return () => clearTimeout(timer);
-  }, [showNav]);
+  }, [showNav, showControlBar]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerStart.current = { x: e.clientX, y: e.clientY };
@@ -160,10 +160,20 @@ export default function TaleScreen() {
       <TextSection>
         <TextContainer $font={font}>{current.text}</TextContainer>
 
+        {/* 직접 선택 버튼 노출 */}
         {hasChoices && (
-          <ChoiceTriggerButton onClick={() => setShowChoiceModal(true)}>
-            선택하기
-          </ChoiceTriggerButton>
+          <SelectContainer>
+            {current.choices.map((c, idx) => (
+              <ChoiceButton
+                key={idx}
+                onClick={() =>
+                  handleNext() && setTimeout(() => handleChoice(c), 0)
+                }
+              >
+                {c.text}
+              </ChoiceButton>
+            ))}
+          </SelectContainer>
         )}
 
         {showChoiceModal && (
@@ -351,15 +361,14 @@ const ControlBarWrapper = styled.div`
 
 const ControlBar = styled.div`
   position: fixed;
-  bottom: 53px;
+  bottom: 40px;
   left: 0;
   width: 100%;
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.bottomTabsBackground};
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid ${({ theme }) => theme.border};
 
   z-index: 52;
 
@@ -372,6 +381,7 @@ const ControlBar = styled.div`
 
 const Group = styled.div`
   display: flex;
+  align-items: center;
 `;
 
 const LeftGroup = styled.div`
@@ -420,6 +430,7 @@ const ButtonGroupRight = styled.div`
   margin-left: auto;
   display: flex;
   gap: 12px;
+  align-items: center;
 `;
 
 const ImageContainer = styled.div`
@@ -453,8 +464,8 @@ const TextSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 
   @media (orientation: landscape) {
     width: 50%;
@@ -465,7 +476,7 @@ const TextSection = styled.div`
 const TextContainer = styled.div<{ $font?: any }>`
   width: 100%;
   padding: 16px;
-  background: ${({ theme }) => theme.taleTextBackground};
+  background: ${({ theme }) => theme.taleBackground};
   border-radius: 12px;
 
   font-family: ${({ $font }) =>
@@ -476,12 +487,10 @@ const TextContainer = styled.div<{ $font?: any }>`
 
 const SelectContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
   width: 100%;
-  max-width: 480px;
-  margin-top: 12px;
-  margin-bottom: 12px;
+  padding: 0 16px;
 `;
 
 const ChoiceButton = styled.button`
@@ -492,6 +501,8 @@ const ChoiceButton = styled.button`
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  flex: 1;
+  text-align: center;
 
   &:hover {
     background: ${({ theme }) => theme.primaryDark};
@@ -500,22 +511,26 @@ const ChoiceButton = styled.button`
 
 const NavWrapper = styled.div`
   position: fixed;
-  bottom: 0px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   height: 40px;
 
   @media (orientation: landscape) {
     width: 50%;
+    left: 50%;
     height: auto;
     aspect-ratio: auto;
+    right: 0;
     transform: translateX(-50%);
   }
 `;
 
 const UpButton = styled.button`
   position: absolute;
-  bottom: 8px; /* SwipeArea 안쪽에서 살짝 위로 */
-  right: 12px; /* 왼쪽 구석 */
+  bottom: 8px;
+  right: 12px;
   background: rgba(0, 0, 0, 0.5);
   border: none;
   border-radius: 50%;
@@ -532,12 +547,12 @@ const UpButton = styled.button`
 `;
 
 const NavButtons = styled.div`
-  position: fixed;
+  position: relative; 
   display: flex;
+  width: 100%
   align-items: center;
   padding: 5px 16px;
   background: ${({ theme }) => theme.bottomTabsBackground};
-  border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
 const NavButton = styled.button`
@@ -546,6 +561,7 @@ const NavButton = styled.button`
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+
   color: ${({ theme }) => theme.text};
 
   &:disabled {
@@ -557,7 +573,8 @@ const NavButton = styled.button`
 const PageIndicator = styled.span`
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-size: 1rem;
   font-weight: 500;
   color: ${({ theme }) => theme.textSoft};

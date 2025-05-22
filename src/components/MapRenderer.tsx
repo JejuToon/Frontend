@@ -1,9 +1,11 @@
 import React, { useState, memo, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import CustomOverlay from "./CustomOverlay";
 import CustomOverlayAbove from "./CustomOverlayAbove";
 import NowLocation from "./NowLocation";
 import { useTheme } from "styled-components";
+import { useStoryStore } from "../stores/useStoryStore";
 import type { TaleContent, TaleMarker } from "../types/tale";
 
 interface MapRendererProps {
@@ -39,6 +41,9 @@ const MapRenderer: React.FC<MapRendererProps> = ({
   onMapLoad,
   defaultCenter,
 }) => {
+  const navigate = useNavigate();
+  const { setTaleId } = useStoryStore();
+
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const theme = useTheme();
@@ -151,12 +156,31 @@ const MapRenderer: React.FC<MapRendererProps> = ({
         </CustomOverlay>
       )}
 
+      {/* 선택된 마커는 무조건 따로 그려줌 */}
+      {selectedMarker && (
+        <Marker
+          key={`selected-${selectedMarker.id}`}
+          position={{
+            lat: selectedMarker.location.latitude,
+            lng: selectedMarker.location.longitude,
+          }}
+          title={selectedMarker.title}
+          icon={undefined} // 기본 빨간 마커 사용
+          zIndex={999}
+          onClick={() => onMarkerClick(selectedMarker, mapRef)}
+        />
+      )}
+
       {selectedMarker && mapRef.current && (
         <CustomOverlayAbove
           map={mapRef.current}
           position={{
             lat: selectedMarker.location.latitude,
             lng: selectedMarker.location.longitude,
+          }}
+          onClick={() => {
+            setTaleId(selectedMarker.id);
+            navigate("/tale");
           }}
         >
           <div
