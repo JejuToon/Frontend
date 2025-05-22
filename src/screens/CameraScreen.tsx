@@ -35,8 +35,12 @@ const characters: CharacterItem[] = [
   { type: "icon", component: GiSamuraiHelmet },
 ];
 
-
 export default function CameraScreen() {
+  const shutterAudio = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    shutterAudio.current = new Audio("/assets/audios/shutter.mp3");
+  }, []);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
@@ -91,57 +95,70 @@ export default function CameraScreen() {
   };
 
   const handleCapture = () => {
-  setIsCapturing(true);
-  
-  const video = videoRef.current;
-  const videoWrapper = videoWrapperRef.current;
-  if (!video || !videoWrapper) return;
+    setIsCapturing(true);
 
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+    if (shutterAudio.current) {
+      shutterAudio.current.currentTime = 0;
+      shutterAudio.current.play();
+    }
 
-  const width = video.videoWidth;
-  const height = video.videoHeight;
-  canvas.width = width;
-  canvas.height = height;
+    const video = videoRef.current;
+    const videoWrapper = videoWrapperRef.current;
+    if (!video || !videoWrapper) return;
 
-  // 1. 비디오 프레임 그리기
-  ctx.drawImage(video, 0, 0, width, height);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  // 2. 캐릭터 위치 계산 (비율 기반)
-  const posX = (characterPos.x / videoWrapper.offsetWidth) * width;
-  const posY = (characterPos.y / videoWrapper.offsetHeight) * height;
-  const size = 120 * scale;
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-  const character = characters[selectedIndex];
+    // 1. 비디오 프레임 그리기
+    ctx.drawImage(video, 0, 0, width, height);
 
-  if (character.type === "image") {
-    const img = new Image();
-    img.src = character.src;
-    img.onload = () => {
-      ctx.save();
-      ctx.translate(posX, posY);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.drawImage(img, -size / 2, -size / 2, size, size);
-      ctx.restore();
+    // 2. 캐릭터 위치 계산 (비율 기반)
+    const posX = (characterPos.x / videoWrapper.offsetWidth) * width;
+    const posY = (characterPos.y / videoWrapper.offsetHeight) * height;
+    const size = 120 * scale;
 
+    const character = characters[selectedIndex];
+
+    if (character.type === "image") {
+      const img = new Image();
+      img.src = character.src;
+      img.onload = () => {
+        ctx.save();
+        ctx.translate(posX, posY);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.drawImage(img, -size / 2, -size / 2, size, size);
+        ctx.restore();
+
+        const dataUrl = canvas.toDataURL("image/png");
+        console.log("CAPTURED PNG:", dataUrl); // 일단 로그로 확인
+        downloadImage(dataUrl); // 다운로드하는 함수, 테스트용으로 풀었음. 사용 안할 시 주석 처리
+
+        setTimeout(() => setIsCapturing(false), 100);
+      };
+    } else if (character.type === "icon") {
+      // 아이콘일 경우: 비디오 프레임만 캡처
       const dataUrl = canvas.toDataURL("image/png");
-      console.log("CAPTURED PNG:", dataUrl); // 일단 로그로 확인
-      // downloadImage(dataUrl); // 원하면 이거 실행
+      console.log("Captured PNG (no overlay):", dataUrl);
+      // downloadImage(dataUrl);
 
       setTimeout(() => setIsCapturing(false), 100);
-    };
-  } else if (character.type === "icon") {
-    // 아이콘일 경우: 비디오 프레임만 캡처
-    const dataUrl = canvas.toDataURL("image/png");
-    console.log("Captured PNG (no overlay):", dataUrl);
-    // downloadImage(dataUrl);
+    }
+  };
 
-    setTimeout(() => setIsCapturing(false), 100);
-  }
-};
-
+  const downloadImage = (dataUrl: string) => {
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "capture.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleCharacterClick = (index: number) => {
     const node = characterRefs.current[index];
@@ -236,7 +253,7 @@ export default function CameraScreen() {
     gestureRef.current = null;
   };
 
-const SelectedCharacter = characters[selectedIndex];
+  const SelectedCharacter = characters[selectedIndex];
 
   return (
     <Container>
@@ -296,7 +313,7 @@ const SelectedCharacter = characters[selectedIndex];
             <Spacer />
           </CharacterMenu>
         </CharacterMenuContainer>
-        
+
         <CaptureButton onClick={handleCapture} active={isCapturing} />
         <SwitchButton onClick={toggleCamera}>
           <MdFlipCameraIos size={24} />
