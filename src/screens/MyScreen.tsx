@@ -28,28 +28,6 @@ export default function MyScreen() {
           </MyListItem>
         </MyList>
       </Section>
-
-      <Section>
-        <SectionHeader></SectionHeader>
-        <MyList>
-          {[...Array(3)].map((_, i) => (
-            <MyListItem key={i}>
-              <ItemText>설정 {i}</ItemText>
-            </MyListItem>
-          ))}
-        </MyList>
-      </Section>
-
-      <Section>
-        <SectionHeader></SectionHeader>
-        <MyList>
-          {[...Array(3)].map((_, i) => (
-            <MyListItem key={i}>
-              <ItemText>설정 {i}</ItemText>
-            </MyListItem>
-          ))}
-        </MyList>
-      </Section>
     </MyScreenContainer>
   );
 }
@@ -87,7 +65,7 @@ const LoginButton = styled.button`
 `;
 
 const Section = styled.section`
-  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
+  border-bottom: 4px solid ${({ theme }) => theme.border || "#f3e7c5"};
 `;
 
 const SectionHeader = styled.div`

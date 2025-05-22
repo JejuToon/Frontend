@@ -67,8 +67,7 @@ export default function LibScreen() {
             icon={<RiLoginBoxLine />}
             title="연결된 정보가 없어요"
             description="로그인하면 이용할 수 있어요"
-            linkUrl="/auth"
-            navigateOnDescriptionClick={true}
+            onIconClick={() => navigate("/auth")}
           />
           <LoginButton onClick={() => navigate("/auth")}>로그인</LoginButton>
         </EmptyStateGrid>
@@ -106,8 +105,8 @@ export default function LibScreen() {
                   icon={<TbMapSearch />}
                   title="저장된 설화가 없어요"
                   description="설화를 감상해 보세요"
-                  linkUrl="/search"
-                  navigateOnDescriptionClick={true}
+                  onIconClick={() => navigate("/search")}
+                  onDescriptionClick={() => navigate("/search")}
                 />
               </EmptyStateGrid>
             )
@@ -128,8 +127,8 @@ export default function LibScreen() {
                 icon={<TbMapSearch />}
                 title="저장된 캐릭터가 없어요"
                 description="설화를 감상하고 캐릭터를 만들어 보세요"
-                linkUrl="/search"
-                navigateOnDescriptionClick={true}
+                onIconClick={() => navigate("/search")}
+                onDescriptionClick={() => navigate("/search")}
               />
             </EmptyStateGrid>
           )}

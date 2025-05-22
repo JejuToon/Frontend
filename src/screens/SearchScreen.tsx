@@ -589,7 +589,7 @@ const LocBoxWrapper = styled.div`
 
 const Section = styled.section`
   padding: 16px;
-  border-bottom: 8px solid ${({ theme }) => theme.border || "#f3e7c5"};
+  border-bottom: 4px solid ${({ theme }) => theme.border || "#f3e7c5"};
 `;
 
 const SectionHeader = styled.div`
