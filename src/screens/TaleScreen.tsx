@@ -117,6 +117,7 @@ export default function TaleScreen() {
     pointerStart.current = { x: e.clientX, y: e.clientY };
   };
   const handlePointerUp = (e: React.PointerEvent) => {
+    if (showControlBar) return;
     const dx = e.clientX - pointerStart.current.x;
     const dy = e.clientY - pointerStart.current.y;
 
