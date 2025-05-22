@@ -44,7 +44,11 @@ export default function CameraScreen() {
     type: "image",
     src: char.imageUrl,
   }));
-  const characters: CharacterItem[] = [...storedItems, ...charactersDummy];
+  const characters: CharacterItem[] = [
+    charactersDummy[0],
+    ...storedItems,
+    ...charactersDummy.slice(1),
+  ];
 
   const shutterAudio = useRef<HTMLAudioElement | null>(null);
 
