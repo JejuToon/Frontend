@@ -16,19 +16,25 @@ import {
   GiSamuraiHelmet,
 } from "react-icons/gi";
 
-const characters = [
-  MdBlock,
-  CgGhostCharacter,
-  FaUserAstronaut,
-  FaRobot,
-  FaUserNinja,
-  FaUserSecret,
-  FaUserTie,
-  GiFairyWand,
-  GiPirateCaptain,
-  GiAlienStare,
-  GiSamuraiHelmet,
+type CharacterItem =
+  | { type: "icon"; component: React.ComponentType<{ size?: number }> }
+  | { type: "image"; src: string };
+
+const characters: CharacterItem[] = [
+  { type: "icon", component: MdBlock }, // 기본 아이콘: 캐릭터 선택 안함
+  { type: "image", src: "/assets/images/ar-char1.png" }, // PNG 캐릭터 추가
+  { type: "icon", component: CgGhostCharacter },
+  { type: "icon", component: FaUserAstronaut },
+  { type: "icon", component: FaRobot },
+  { type: "icon", component: FaUserNinja },
+  { type: "icon", component: FaUserSecret },
+  { type: "icon", component: FaUserTie },
+  { type: "icon", component: GiFairyWand },
+  { type: "icon", component: GiPirateCaptain },
+  { type: "icon", component: GiAlienStare },
+  { type: "icon", component: GiSamuraiHelmet },
 ];
+
 
 export default function CameraScreen() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -179,7 +185,7 @@ export default function CameraScreen() {
     gestureRef.current = null;
   };
 
-  const SelectedCharacter = selectedIndex > 0 ? characters[selectedIndex] : null;
+const SelectedCharacter = characters[selectedIndex];
 
   return (
     <Container>
@@ -206,15 +212,20 @@ export default function CameraScreen() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <SelectedCharacter size={120} />
+            {SelectedCharacter.type === "icon" ? (
+              <SelectedCharacter.component size={120} />
+            ) : (
+              <img src={SelectedCharacter.src} alt="character" width={120} />
+            )}
           </OverlayCharacter>
         )}
+
 
         <CharacterMenuContainer>
           <SelectionIndicator />
           <CharacterMenu ref={characterMenuRef} onScroll={handleScroll}>
             <Spacer />
-            {characters.map((Icon, index) => (
+            {characters.map((char, index) => (
               <CharacterItem
                 key={index}
                 ref={(el) => {
@@ -223,9 +234,14 @@ export default function CameraScreen() {
                 onClick={() => handleCharacterClick(index)}
                 selected={selectedIndex === index}
               >
-                <Icon size={72} />
+                {char.type === "icon" ? (
+                  <char.component size={56} />
+                ) : (
+                  <img src={char.src} alt="character" width={56} />
+                )}
               </CharacterItem>
             ))}
+
             <Spacer />
           </CharacterMenu>
         </CharacterMenuContainer>
