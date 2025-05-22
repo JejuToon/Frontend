@@ -266,7 +266,7 @@ export default function CameraScreen() {
           flipped={facingMode === "user"}
         />
 
-        {SelectedCharacter && (
+        {selectedIndex !== 0 && SelectedCharacter && (
           <OverlayCharacter
             style={{
               left: characterPos.x || "50%",
