@@ -4,7 +4,7 @@ const testAudioUrl = "/assets/audios/watsonSample.wav";
 const scripts = [
   [
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun1.png",
       text:
         "아주 오래전, 세상이 지금처럼 만들어지기 전. " +
         "하늘과 땅의 경계가 아직 분명하지 않던 시절, " +
@@ -15,7 +15,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun2.png",
       text:
         "어느 날, 설문대할망은 하늘 아래 누워 잠을 자고 있었습니다. " +
         "갑자기 벌떡 일어나 앉은 그녀는, 아주 큰 방귀를 한 번 뀌었습니다. " +
@@ -26,7 +26,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun3.png",
       text:
         "설문대할망은 흙을 퍼서 높은 산을 만들기로 결심합니다. " +
         "하지만 흙을 날라야 할 만큼 땅은 넓고, 손은 바쁩니다. " +
@@ -40,7 +40,7 @@ const scripts = [
       ],
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun4-1.png",
       text:
         "설문대할망은 자신의 치마폭을 활짝 펼쳐 " +
         "그 안에 흙을 가득 담아 나르기 시작했습니다. " +
@@ -51,7 +51,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun4-2.png",
       text:
         "설문대할망은 포크레인의 시동을 켜고 삽을 움직이며 흙을 퍼 담기 시작했습니다. " +
         "덜컹거리는 기계 소리와 함께 포크레인은 땅을 파고, 옮기고, 또 퍼올렸습니다. " +
@@ -61,7 +61,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun4-3.png",
       text:
         "설문대할망은 평범한 쇠삽 하나를 들었습니다. " +
         "말없이 땅을 파고, 흙을 퍼 담기 시작했습니다.  " +
@@ -72,7 +72,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun5.png",
       text:
         "산을 세운 설문대할망은 이번엔 바다를 바라보았습니다. " +
         '"이제는 바다에도 생명이 있어야지." 할망은 바다에 앉아 ' +
@@ -83,7 +83,7 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun5.png",
       text:
         "어느 날, 할망은 사람들과 육지를 오갈 수 있게 다리를 놓아 주겠다고 사람들에게 말했습니다. " +
         '"내가 육지까지 다리를 놓아 줄 테니, 대신 나에게 뭘 하나 만들어 줘야 한다" ' +
@@ -96,7 +96,7 @@ const scripts = [
       ],
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun7-1.png",
       text:
         "사람들은 설문대할망이 말한 대로  속옷 한 벌을 만들기로 했습니다. " +
         "속옷을 짓기 위해선 명주실 100통이 필요했습니다. " +
@@ -106,7 +106,20 @@ const scripts = [
       audioUrl: "",
     },
     {
-      imageUrl: taleThumb,
+      imageUrl: "/assets/stories/seolmun/seolmun7-2.png",
+      text:
+        "사람들은 설문대할망이 말한 대로, 아주 값비싼 명품 가방을 만들기 시작했습니다. " +
+        "최고급 가죽과 황금 실을 이용해 정성껏 손바늘질을 해 무늬를 새기고 " +
+        "버클에 보석도 박았습니다. 하지만 마무리를 하던 날, " +
+        "가장 중요한 로고 장식이 빠졌다는 사실을 깨달았습니다. " +
+        "로고가 없는 명품 가방은 명품이 아니라며, 설문대할망은 실망한 얼굴로 " +
+        `고개를 저었습니다. "이건 그냥 가방이지. 나는 명품을 갖고 싶었어." ` +
+        "설문대할망은 결국 다리 놓기를 그만두었습니다. " +
+        "그렇게 탐라는 육지에서 떨어진 외로운 섬으로 남게 되었습니다.",
+      audioUrl: "",
+    },
+    {
+      imageUrl: "/assets/stories/seolmun/seolmun7-3.png",
       text:
         "사람들은 설문대할망의 부탁을 듣고 고급 스포츠카를 만들기로 했습니다. " +
         "바퀴부터 차체까지 하나 하나, 엔진에는 바람의 정렬을 불어넣고" +
@@ -116,6 +129,19 @@ const scripts = [
         `"이러면 못 달리잖아. 다리도 못놓겠네." ` +
         "설문대할망은 결국 다리 놓기를 그만두었습니다. " +
         "그렇게 탐라는 육지에서 떨어진 외로운 섬으로 남게 되었습니다.",
+      audioUrl: "",
+    },
+    {
+      imageUrl: "/assets/stories/seolmun/seolmun7-3.png",
+      text:
+        "세상은 어느 정도 자리를 잡아가고 있었습니다. " +
+        "산도 있고, 바다도 있고, 사람들도 삶을 이어갔습니다. " +
+        "설문대할망은 여전히 그 한가운데에서 사람들을 살피고, " +
+        "바람을 맞으며 지냈습니다. 설문대할망은 세상 곳곳에 " +
+        "자신의 몸과 손길을 남겨두었습니다. 한라산, 오름, 성산봉, 바다, 해녀, 사람들... " +
+        `모두 그녀가 지나간 자리에서 태어났습니다.` +
+        "그녀는 더 이상 사람들 곁에 없지만, 바람이 불고, 구름이 흐르고, " +
+        "땅이 숨쉴 때마다 그녀의 흔적은 여전히 이 땅 위에서 살아 움직이고 있습니다.",
       audioUrl: "",
     },
   ],

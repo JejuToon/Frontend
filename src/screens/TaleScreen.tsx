@@ -532,10 +532,10 @@ const UpButton = styled.button`
 `;
 
 const NavButtons = styled.div`
-  position: relative;
+  position: fixed;
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 5px 16px;
   background: ${({ theme }) => theme.bottomTabsBackground};
   border-top: 1px solid ${({ theme }) => theme.border};
 `;
