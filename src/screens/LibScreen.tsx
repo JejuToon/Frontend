@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/useAuth";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
 import { RiLoginBoxLine } from "react-icons/ri";
+import { useCharacterStore } from "../stores/useCharacterStore";
 
 import { TaleContent } from "../types/tale";
 
@@ -29,7 +30,7 @@ export default function LibScreen() {
   const [tab, setTab] = useState<"tale" | "character">("tale");
   const navigate = useNavigate();
   const [myTales, setMyTales] = useState<TaleContent[]>([]);
-  const [myCharacters, setMyCharacters] = useState<CharacterCardProps[]>([]);
+  const myCharacters = useCharacterStore((state) => state.characters);
 
   const handleTaleClick = (tale: TaleContent) => {
     console.log("설화 리플레이");
@@ -43,17 +44,6 @@ export default function LibScreen() {
     } catch (e) {
       console.error("myTales JSON 파싱 실패:", e);
       setMyTales([]);
-    }
-
-    try {
-      const storedCharacter = localStorage.getItem("myCharacters");
-      const parsedCharacter = storedCharacter
-        ? JSON.parse(storedCharacter)
-        : [];
-      setMyCharacters(parsedCharacter);
-    } catch (e) {
-      console.error("myCharacters JSON 파싱 실패:", e);
-      setMyCharacters([]);
     }
   }, []);
 
@@ -115,9 +105,9 @@ export default function LibScreen() {
               {myCharacters.map((c, idx) => (
                 <CharacterCard
                   key={idx}
-                  name={c.name || "이름 없음"}
-                  data={c.data || "정보 없음"}
-                  avatarUrl={c.avatarUrl || ""}
+                  name={c.title || "이름 없음"}
+                  data={"정보 없음"}
+                  avatarUrl={c.imageUrl || ""}
                 />
               ))}
             </CharacterGrid>

@@ -14,10 +14,9 @@ export default function CharacterCard({
 }: CharacterCardProps) {
   return (
     <Card>
-      <ImageContainer>
+      <ImageBox>
         <Avatar src={avatarUrl} alt={name} />
-      </ImageContainer>
-
+      </ImageBox>
       <Info>
         <Name>{name}</Name>
         <Data>{data}</Data>
@@ -29,43 +28,54 @@ export default function CharacterCard({
 const Card = styled.div`
   display: flex;
   flex-direction: column;
-  height: 200px; /* 전체 높이 고정 */
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
   overflow: hidden;
-  text-align: center;
+  background-color: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  box-shadow: 0px 3px 10px rgba(50, 50, 50, 0.1);
 `;
 
-const ImageContainer = styled.div`
-  flex: 1 1 auto; // 남은 공간 차지
-  position: relative;
+const ImageBox = styled.div`
   width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #f8f8f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 `;
 
 const Avatar = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  height: 80%;
   object-fit: contain;
 `;
 
 const Info = styled.div`
-  padding: 8px;
-  background: #fff;
-  border-top: 1px solid #eee;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
-const Name = styled.p`
-  font-weight: bold;
-  margin-bottom: 4px;
-`;
-
-const Data = styled.p`
-  color: #666;
+const Name = styled.div`
   font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const Data = styled.div`
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;

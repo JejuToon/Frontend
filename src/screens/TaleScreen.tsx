@@ -13,6 +13,7 @@ import styled, { keyframes } from "styled-components";
 
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useStoryStore } from "../stores/useStoryStore";
+import { useCharacterStore } from "../stores/useCharacterStore";
 
 import ThemeToggle from "../components/ThemeToggle";
 import Loader from "../components/Loader";
@@ -28,11 +29,11 @@ import { parseAudioPath } from "../utils/parseAudioPath";
 const talePagesInfo = seolmun;
 const totalPageNum = 8;
 type PageKey = keyof typeof seolmun;
-
-interface Choice {
-  text: string;
-  next: number;
-}
+const seolmunCharacter = {
+  taleId: 1,
+  title: "설문대할망",
+  imageUrl: "/assets/images/ar-char1.png",
+};
 
 export default function TaleScreen() {
   const { ttsConfig, selectedTaleDetail, fontConfig, ttsEnabled } =
@@ -158,13 +159,24 @@ export default function TaleScreen() {
   };
 
   const handleGoToLibrary = () => {
+    handleCompleteTale();
+
+    navigate("/lib");
+  };
+
+  const handleCompleteTale = () => {
     const storedTale = localStorage.getItem("myTales");
     const parsedTale = storedTale ? JSON.parse(storedTale) : [];
     parsedTale.push(tale);
     localStorage.setItem("myTales", JSON.stringify(parsedTale));
 
+    const taleId = selectedTaleDetail?.id;
+    const { hasCharacter, addCharacter } = useCharacterStore.getState();
+
+    if (!hasCharacter(taleId!)) {
+      addCharacter(seolmunCharacter);
+    }
     setShowCompleteModal(false);
-    navigate("/lib");
   };
 
   // 로딩 테스트
@@ -306,7 +318,7 @@ export default function TaleScreen() {
             <ButtonContainer>
               <CloseButton
                 onClick={() => {
-                  setShowCompleteModal(false);
+                  handleCompleteTale();
                   navigate("/home");
                 }}
               >
@@ -318,6 +330,7 @@ export default function TaleScreen() {
               </LibButton>
               <ARButton
                 onClick={() => {
+                  handleCompleteTale();
                   navigate("/camera");
                 }}
               >
