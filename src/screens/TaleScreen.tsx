@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa6";
 import { TbHome } from "react-icons/tb";
 import { IoChevronUp } from "react-icons/io5";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useStoryStore } from "../stores/useStoryStore";
@@ -58,20 +58,6 @@ export default function TaleScreen() {
 
   const currentPage = seolmun[pageKey];
   const hasChoices = currentPage.choices && currentPage.choices.length > 0;
-  /*
-  "1": {
-      imageUrl: "/assets/stories/seolmun/seolmun1.png",
-      text:
-        "아주 오래전, 세상이 지금처럼 만들어지기 전. " +
-        "하늘과 땅의 경계가 아직 분명하지 않던 시절, " +
-        "커다란 몸집과 굉장한 힘을 지닌 한 여신이 탐라에 살고 있었습니다. " +
-        "그녀의 이름은 설문대할망. 하늘보다 키가 크고, " +
-        "바다보다 넓은 품을 가진 존재였습니다. 사람들은 그녀를 섬을 만든 할망, " +
-        "생명을 불어넣은 어머니, 모든 것의 시작이자 끝이라 불렀습니다.",
-      audioUrl: "",
-      next: "2",
-    },
-  */
 
   const [volume, setVolume] = useState(ttsConfig.volume);
   const [rate, setRate] = useState(ttsConfig.rate);
@@ -97,13 +83,14 @@ export default function TaleScreen() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [rating, setRating] = useState(0); //별점
 
+  const [pageTransition, setPageTransition] = useState<string | null>(null);
+
   // 로딩 테스트
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoading(false);
       setTimeout(() => setIsVisible(true), 100);
     }, 1000);
-
     return () => clearTimeout(timeout);
   }, []);
 
@@ -147,7 +134,7 @@ export default function TaleScreen() {
       setPageKey(currentPage.next as PageKey);
       setPageNum(pageNum + 1);
     } else if (currentPage.next === "end") {
-      alert("설화가 끝났습니다!");
+      setShowCompleteModal(true);
     }
   };
 
@@ -189,7 +176,10 @@ export default function TaleScreen() {
       onPointerUp={handlePointerUp}
     >
       <SwipeCapture />
-      <ImageContainer>
+      <ImageContainer
+        $transition={pageTransition}
+        onAnimationEnd={() => setPageTransition(null)}
+      >
         <Image src={currentPage.imageUrl} alt="이야기 이미지" />
       </ImageContainer>
 
@@ -356,6 +346,45 @@ const Screen = styled.main<{ $isVisible: boolean }>`
   }
 `;
 
+const slideLeft = keyframes`
+  from { transform: translateX(100%); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
+`;
+
+const slideRight = keyframes`
+  from { transform: translateX(-100%); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
+`;
+
+const ImageContainer = styled.div<{ $transition: string | null }>`
+  aspect-ratio: 1/1;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  animation: ${({ $transition }) =>
+      $transition === "left"
+        ? slideLeft
+        : $transition === "right"
+        ? slideRight
+        : "none"}
+    0.6s ease;
+
+  @media (orientation: landscape) {
+    width: 50%;
+    height: auto;
+    aspect-ratio: auto;
+  }
+`;
+
+const Image = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const SwipeCapture = styled.div`
   position: fixed;
   inset: 0;
@@ -447,28 +476,6 @@ const ButtonGroupRight = styled.div`
   align-items: center;
 `;
 
-const ImageContainer = styled.div`
-  aspect-ratio: 1/1;
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-
-  @media (orientation: landscape) {
-    width: 50%;
-    height: auto;
-    aspect-ratio: auto;
-  }
-`;
-
-const Image = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
 const TextSection = styled.div`
   position: relative;
   flex: 1 1 auto;
@@ -489,13 +496,13 @@ const TextSection = styled.div`
 
 const TextContainer = styled.div<{ $font?: any }>`
   width: 100%;
-  padding: 16px;
+  padding: 12px;
   background: ${({ theme }) => theme.taleBackground};
   border-radius: 12px;
 
   font-family: ${({ $font }) =>
     $font ? `${$font.name}, ${$font.style}` : "system-ui, sans-serif"};
-  line-height: 1.75;
+  line-height: 1.5;
   word-break: keep-all;
 `;
 
@@ -504,7 +511,7 @@ const SelectContainer = styled.div`
   flex-direction: row;
   gap: 12px;
   width: 100%;
-  padding: 0 16px;
+  padding: 0 12px;
 `;
 
 const ChoiceButton = styled.button`
@@ -673,20 +680,5 @@ const LibButton = styled(CloseButton)`
   background: #ff8a3d;
   &:hover {
     background: #ff8a3d;
-  }
-`;
-
-const ChoiceTriggerButton = styled.button`
-  padding: 10px 16px;
-  background: ${({ theme }) => theme.primary};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 8px;
-
-  &:hover {
-    background: ${({ theme }) => theme.primaryDark};
   }
 `;

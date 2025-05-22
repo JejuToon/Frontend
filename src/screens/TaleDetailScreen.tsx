@@ -82,6 +82,7 @@ export default function TaleDetailScreen() {
       <CardSection>
         <BlurSection $imageUrl={taleDetail?.thumbnail ?? ""} />
         <WhiteSection />
+
         <CardImage src={taleDetail?.thumbnail} alt="cover" />
         <PlayButtonOverlay onClick={handlePlayClick}>
           <FaPlay />

@@ -84,7 +84,8 @@ export default function HomeScreen() {
     }, 1000);
 
     startAutoScroll(); // 상단 캐러셀 스크롤 시작
-    fetchAllTalesData(0); // 전체 설화 목록 가져오기 (여기서는 1페이지만)
+    fetchAllTalesData(0); // 전체 설화 목록 가져오기 (1페이지)
+    fetchAllTalesData(1); // (2페이지)
 
     return () => {
       clearTimeout(timeout);
