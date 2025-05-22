@@ -467,7 +467,7 @@ const TextContainer = styled.div<{ $font?: any }>`
   padding: 16px;
   background: ${({ theme }) => theme.taleTextBackground};
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+
   font-family: ${({ $font }) =>
     $font ? `${$font.name}, ${$font.style}` : "system-ui, sans-serif"};
   line-height: 1.75;

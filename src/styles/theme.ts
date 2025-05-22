@@ -6,8 +6,8 @@ export const lightTheme = {
   cardBackground: " #fff",
   inputBackground: colors.BEIGE_500,
   sheetBackground: colors.BEIGE_500,
-  taleBackground: colors.KHAKI_500,
-  bottomTabsBackground: colors.BEIGE_300,
+  taleBackground: " #fff",
+  bottomTabsBackground: "rgb(245, 233, 206)",
 
   taleTextBackground: " #fff",
 

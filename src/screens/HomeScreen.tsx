@@ -222,7 +222,12 @@ export default function HomeScreen() {
             icon={<MdOutlineWrongLocation />}
             title="주변 설화를 찾을 수 없어요"
             description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
-            onIconClick={() => fetchCurrentLocation(null)}
+            onIconClick={async () => {
+              const status = await fetchCurrentLocation(null);
+              if (status === "denied") {
+                setShowLocationModal(true);
+              }
+            }}
           />
         )}
       </Section>

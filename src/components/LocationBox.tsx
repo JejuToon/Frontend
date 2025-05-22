@@ -61,10 +61,6 @@ const Button = styled.button`
       : " rgba(209, 163, 94, 0.8)"};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.primaryHover};
-  }
 `;
 
 const Label = styled.span`

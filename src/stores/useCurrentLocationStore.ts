@@ -20,6 +20,7 @@ export const useCurrentLocationStore = create<CurrentLocationStore>((set) => ({
   async fetchCurrentLocation(mapRef) {
     if (!navigator.geolocation) return "error";
 
+    /*
     // 권한 확인 (권한 API가 지원되는 경우에만)
     try {
       if ("permissions" in navigator && navigator.permissions.query) {
@@ -34,6 +35,7 @@ export const useCurrentLocationStore = create<CurrentLocationStore>((set) => ({
     } catch {
       // 권한 API 미지원 → 무시하고 진행
     }
+    */
 
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
