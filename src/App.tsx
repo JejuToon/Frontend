@@ -5,6 +5,7 @@ import SearchScreen from "./screens/SearchScreen";
 import LibScreen from "./screens/LibScreen";
 import MyScreen from "./screens/MyScreen";
 import AuthScreen from "./screens/AuthScreen";
+import KakaoCallbackScreen from "./screens/KakaoCallbackScreen";
 import TaleScreen from "./screens/TaleScreen";
 import BottomTabs from "./components/BottomTabs";
 import TaleSetupScreen from "./screens/TaleSetupScreen";
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/lib" element={<LibScreen />} />
           <Route path="/my" element={<MyScreen />} />
           <Route path="/auth" element={<AuthScreen />} />
+          <Route path="/auth/kakao" element={<KakaoCallbackScreen />} />
           <Route path="/tale" element={<TaleDetailScreen />} />
           <Route path="/tale/play" element={<TaleScreen />} />
           <Route path="/tale/setup" element={<TaleSetupScreen />} />

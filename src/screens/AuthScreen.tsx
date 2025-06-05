@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import Header from "../components/Header";
 import { useAuth } from "../hooks/useAuth";
@@ -13,37 +13,6 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const authorizationCode = urlParams.get("code");
-
-    if (authorizationCode) {
-      sendAuthorizationCode(authorizationCode);
-    }
-  }, []);
-
-  const sendAuthorizationCode = async (authorizationCode: string) => {
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/v1/auth/kakao?authorizationCode=${encodeURIComponent(
-          authorizationCode
-        )}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-      localStorage.setItem("accessToken", data.token.accessToken);
-      navigate("/home");
-    } catch (error) {
-      setError("카카오 로그인 실패");
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +30,7 @@ export default function AuthScreen() {
   };
 
   const handleKakaoLogin = () => {
-    window.location.href = getKakaoLoginUrl();
+    window.location.href = getKakaoLoginUrl(); // Redirect to /auth/kakao
   };
 
   return (
@@ -117,6 +86,7 @@ export default function AuthScreen() {
   );
 }
 
+// styled-components
 const AuthScreenWrapper = styled.div`
   display: flex;
   flex-direction: column;
