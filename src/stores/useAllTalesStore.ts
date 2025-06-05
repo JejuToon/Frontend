@@ -19,7 +19,7 @@ export const useAllTalesStore = create<AllTalesStore>((set) => ({
   fetchAllTalesData: async (page: number) => {
     set({ allTalesLoading: true });
     try {
-      console.log("전체 설화 목록 요청");
+      //console.log("전체 설화 목록 요청");
       const res = await fetchAllTales(page);
       set({
         allTales: res.contents,
@@ -27,9 +27,9 @@ export const useAllTalesStore = create<AllTalesStore>((set) => ({
         allTalesTotalPages: res.meta.totalPage,
       });
     } catch (err) {
-      console.error("전체 설화 목록 로딩 실패:", err);
+      //console.error("전체 설화 목록 로딩 실패:", err);
     } finally {
-      console.log("전체 설화 목록 로딩 완료");
+      //console.log("전체 설화 목록 로딩 완료");
       set({ allTalesLoading: false });
     }
   },

@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdOutlineWrongLocation } from "react-icons/md";
 import { FaPlus } from "react-icons/fa6";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
+import { useAuthStore } from "../stores/useAuthStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
@@ -11,6 +12,7 @@ import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
 
 import Header from "../components/Header";
+import OnboardingRecommendForm from "../components/onboardingRecommendForm";
 import LocationBox from "../components/LocationBox";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
@@ -48,19 +50,14 @@ const categories = [
   },
 ];
 
-// 데모용 접근 제어
-import { useAccessControl } from "../components/AccessControlProvider";
-
 export default function HomeScreen() {
-  // 데모용 접근 제어
-  const { openModal } = useAccessControl();
-
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuthStore();
 
   const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
   const { nearbyTales, nearbyTalesLoading, fetchNearbyTalesData } =
     useNearbyTalesStore();
-  const { allTales, fetchAllTalesData } = useAllTalesStore();
+  const { allTales, fetchAllTalesData, allTalesLoading } = useAllTalesStore();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
   const { initializeCategory, setExtras, setIsAllCategorySelected } =
     useFilterChipsStore();
@@ -75,6 +72,8 @@ export default function HomeScreen() {
   const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
   const [recommendedTales, setrecommendTales] = useState<TaleContent[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showRecommendForm, setShowRecommendForm] = useState(false);
+  const [animateOut, setAnimateOut] = useState(false);
 
   useEffect(() => {
     // 로딩 테스트
@@ -84,10 +83,18 @@ export default function HomeScreen() {
     }, 1000);
 
     startAutoScroll(); // 상단 캐러셀 스크롤 시작
+
     fetchAllTalesData(0); // 전체 설화 목록 가져오기 (1페이지)
     fetchAllTalesData(1); // (2페이지)
 
+    const handlePopState = () => {
+      setAnimateOut(true);
+      setTimeout(() => setShowRecommendForm(false), 300);
+    };
+    window.addEventListener("popstate", handlePopState);
+
     return () => {
+      window.removeEventListener("popstate", handlePopState);
       clearTimeout(timeout);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -155,120 +162,139 @@ export default function HomeScreen() {
     navigate("/search");
   };
 
+  const openRecommendForm = () => {
+    setAnimateOut(false);
+    window.history.pushState(null, "", window.location.href);
+    setShowRecommendForm(true);
+  };
+
+  const closeRecommendForm = () => {
+    setAnimateOut(true);
+    window.history.back();
+    setTimeout(() => setShowRecommendForm(false), 300);
+  };
+
   if (isLoading) return <Loader />;
 
   return (
-    <Container $isVisible={isVisible}>
-      <Header
-        left={
-          <ImgWrapper>
-            <ImgIcon src={"/icons/icon.png"} alt={"탐라담"} />
-            <Img src={"/icons/title-icon.png"} alt={"탐라담"} />
-          </ImgWrapper>
-        }
-        center={null}
-        right={
-          <LocationBox
-            onClick={async () => {
-              const status = await fetchCurrentLocation(null);
-              if (status === "denied") {
-                setShowLocationModal(true);
-              }
-            }}
-          />
-        }
-      />
-
-      <EmblaCarousel
-        slides={carouselTales}
-        options={OPTIONS}
-        onNextRef={(fn) => {
-          nextButtonRef.current = fn;
-          isReady.current = true;
-        }}
-        onUserInteraction={startAutoScroll}
-        onSlideClick={(t) => handleTaleClick(t)}
-      />
-
-      <Section>
-        <SectionHeader>
-          <h3>추천 설화</h3>
-          <FaPlus
-            title="맞춤형 설화 추천 받기"
-            onClick={() => {
-              // 데모용 접근 제어
-              openModal();
-            }}
-          />
-        </SectionHeader>
-        <EmblaCarouselDragFree
-          slides={recommendedTales}
-          options={{ dragFree: true, containScroll: "trimSnaps" }}
-          onTaleClick={(t) => handleTaleClick(t)}
+    <>
+      <Container $isVisible={isVisible}>
+        <Header
+          left={
+            <ImgWrapper>
+              <ImgIcon src={"/icons/icon.png"} alt={"탐라담"} />
+              <Img src={"/icons/title-icon.png"} alt={"탐라담"} />
+            </ImgWrapper>
+          }
+          center={null}
+          right={
+            <LocationBox
+              onClick={async () => {
+                const status = await fetchCurrentLocation(null);
+                if (status === "denied") {
+                  setShowLocationModal(true);
+                }
+              }}
+            />
+          }
         />
-      </Section>
 
-      <Section>
-        <SectionHeader>
-          <h3>현재 위치와 가까운 설화</h3>
-          <SeeAllBtn onClick={nearbyButtonClick}>&gt;</SeeAllBtn>
-        </SectionHeader>
-        {nearbyTalesLoading ? (
-          <Loader type="inline" />
-        ) : nearbyTales.length > 0 ? (
+        <EmblaCarousel
+          slides={carouselTales}
+          options={OPTIONS}
+          onNextRef={(fn) => {
+            nextButtonRef.current = fn;
+            isReady.current = true;
+          }}
+          onUserInteraction={startAutoScroll}
+          onSlideClick={(t) => handleTaleClick(t)}
+        />
+
+        <Section>
+          <SectionHeader>
+            <h3>추천 설화</h3>
+            <FaPlus title="맞춤형 설화 추천 받기" onClick={openRecommendForm} />
+          </SectionHeader>
           <EmblaCarouselDragFree
-            slides={nearbyTales}
+            slides={recommendedTales}
             options={{ dragFree: true, containScroll: "trimSnaps" }}
             onTaleClick={(t) => handleTaleClick(t)}
           />
-        ) : (
-          <EmptyState
-            icon={<MdOutlineWrongLocation />}
-            title="주변 설화를 찾을 수 없어요"
-            description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
-            onIconClick={async () => {
-              const status = await fetchCurrentLocation(null);
-              if (status === "denied") {
-                setShowLocationModal(true);
-              }
-            }}
-          />
+        </Section>
+
+        <Section>
+          <SectionHeader>
+            <h3>현재 위치와 가까운 설화</h3>
+            <SeeAllBtn onClick={nearbyButtonClick}>&gt;</SeeAllBtn>
+          </SectionHeader>
+          {nearbyTalesLoading ? (
+            <Loader type="inline" />
+          ) : nearbyTales.length > 0 ? (
+            <EmblaCarouselDragFree
+              slides={nearbyTales}
+              options={{ dragFree: true, containScroll: "trimSnaps" }}
+              onTaleClick={(t) => handleTaleClick(t)}
+            />
+          ) : (
+            <EmptyState
+              icon={<MdOutlineWrongLocation />}
+              title="주변 설화를 찾을 수 없어요"
+              description="위치 권한을 허용하면, 근처에 어떤 설화가 있는지 볼 수 있어요"
+              onIconClick={async () => {
+                const status = await fetchCurrentLocation(null);
+                if (status === "denied") {
+                  setShowLocationModal(true);
+                }
+              }}
+            />
+          )}
+        </Section>
+
+        <Section>
+          <SectionHeader>
+            <h3>카테고리</h3>
+          </SectionHeader>
+          <CategoryGrid>
+            {categories.map((cat) => (
+              <CategoryCard
+                key={cat.key}
+                style={{ backgroundImage: `url(${cat.imageUrl})` }}
+                onClick={() => handleCategoryClick(cat.key)}
+              >
+                <CategoryLabel>{cat.label}</CategoryLabel>
+              </CategoryCard>
+            ))}
+          </CategoryGrid>
+        </Section>
+
+        {showLocationModal && (
+          <ModalOverlay onClick={() => setShowLocationModal(false)}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <ModalText>
+                위치 권한이 차단되어 있어 설화를 추천할 수 없습니다.
+              </ModalText>
+              <ModalText>
+                브라우저 설정에서 위치 권한을 <strong>허용</strong>해 주세요.
+              </ModalText>
+              <CloseButton onClick={() => setShowLocationModal(false)}>
+                확인
+              </CloseButton>
+            </ModalContent>
+          </ModalOverlay>
         )}
-      </Section>
+      </Container>
 
-      <Section>
-        <SectionHeader>
-          <h3>카테고리</h3>
-        </SectionHeader>
-        <CategoryGrid>
-          {categories.map((cat) => (
-            <CategoryCard
-              key={cat.key}
-              style={{ backgroundImage: `url(${cat.imageUrl})` }}
-              onClick={() => handleCategoryClick(cat.key)}
-            >
-              <CategoryLabel>{cat.label}</CategoryLabel>
-            </CategoryCard>
-          ))}
-        </CategoryGrid>
-      </Section>
-
-      {showLocationModal && (
-        <ModalOverlay onClick={() => setShowLocationModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalText>
-              위치 권한이 차단되어 있어 설화를 추천할 수 없습니다.
-            </ModalText>
-            <ModalText>
-              브라우저 설정에서 위치 권한을 <strong>허용</strong>해 주세요.
-            </ModalText>
-            <CloseButton onClick={() => setShowLocationModal(false)}>
-              확인
-            </CloseButton>
-          </ModalContent>
-        </ModalOverlay>
+      {showRecommendForm && (
+        <RecommendOverlay onClick={closeRecommendForm}>
+          <RecommendContent
+            className={animateOut ? "hide" : "show"}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <OnboardingRecommendForm onClose={closeRecommendForm} />
+          </RecommendContent>
+        </RecommendOverlay>
       )}
-    </Container>
+    </>
   );
 }
 
@@ -393,4 +419,51 @@ const CategoryLabel = styled.div`
   color: white;
   text-align: center;
   font-weight: bold;
+`;
+
+const RecommendOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+`;
+
+const RecommendContent = styled.div`
+  width: 100%;
+  max-width: none;
+  background: white;
+  border-radius: 16px;
+  box-sizing: border-box;
+  animation: ${fadeIn} 0.4s ease forwards;
+  &.hide {
+    animation: ${fadeOut} 1s ease forwards;
+  }
 `;

@@ -8,6 +8,7 @@ import {
   TbBook,
   TbUser,
 } from "react-icons/tb";
+import { IoLibraryOutline } from "react-icons/io5";
 import styled from "styled-components";
 
 export default function BottomTabs() {
@@ -50,7 +51,7 @@ export default function BottomTabs() {
         {({ isActive }) => (
           <Tab className={isActive ? "active" : ""}>
             <IconWrapper>
-              <TbBook />
+              <IoLibraryOutline />
             </IconWrapper>
             <Label>설화</Label>
           </Tab>

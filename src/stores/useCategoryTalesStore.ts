@@ -17,7 +17,7 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
 
     // 이미 로딩 중이면 요청 생략
     if (loadingByCategory[category]) {
-      console.log(`${category} 이미 불러오는 중...`);
+      //console.log(`${category} 이미 불러오는 중...`);
       return;
     }
 
@@ -26,7 +26,7 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
     }));
 
     try {
-      console.log(`${category} 설화 목록 요청`);
+      //console.log(`${category} 설화 목록 요청`);
       const response: TaleListResponse = await fetchTalesByCategory(
         category,
         page
@@ -45,9 +45,9 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
         },
       }));
     } catch (err) {
-      console.error(`카테고리(${category}) 설화 목록 로딩 실패:`, err);
+      //console.error(`카테고리(${category}) 설화 목록 로딩 실패:`, err);
     } finally {
-      console.log(`${category} 설화 목록 로딩 완료`);
+      //console.log(`${category} 설화 목록 로딩 완료`);
       set((state) => ({
         loadingByCategory: { ...state.loadingByCategory, [category]: false },
       }));

@@ -4,11 +4,13 @@ const GlobalStyle = createGlobalStyle`
   :root {
     --dot-bg: ${({ theme }) => theme.emblaDotBg};
     --dot-selected-bg: ${({ theme }) => theme.emblaDotSelectedBg};
+
   }
 
   * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+
   }
 
   html, body {

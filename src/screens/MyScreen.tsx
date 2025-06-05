@@ -3,24 +3,31 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
 import ThemeToggle from "../components/ThemeToggle";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthStore } from "../stores/useAuthStore";
 
 export default function MyScreen() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   return (
     <MyScreenContainer>
       <Header left={<h1>정보</h1>} center={null} right={null} />
 
+      <UserInfoSection>
+        {user?.profileImageUrl && <Avatar src={user.profileImageUrl} />}
+        <UserText>{user?.name || "로그인되지 않음"}</UserText>
+      </UserInfoSection>
+
       <ButtonWrapper>
-        <LoginButton onClick={user ? logout : () => navigate("/auth")}>
-          {user ? "로그아웃" : "로그인"}
+        <LoginButton onClick={isLoggedIn ? logout : () => navigate("/auth")}>
+          {isLoggedIn ? "로그아웃" : "로그인"}
         </LoginButton>
       </ButtonWrapper>
 
       <Section>
-        <SectionHeader></SectionHeader>
+        <SectionHeader />
         <MyList>
           <MyListItem>
             <ItemText>다크 모드</ItemText>
@@ -39,6 +46,30 @@ const MyScreenContainer = styled.main`
   padding-bottom: 60px;
   transition: opacity 0.6s ease;
   background-color: ${({ theme }) => theme.background};
+`;
+
+const UserInfoSection = styled.section`
+  margin: 24px auto 8px;
+  text-align: center;
+`;
+
+const Avatar = styled.img`
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+`;
+
+const UserText = styled.h2`
+  font-size: 20px;
+  color: ${({ theme }) => theme.text};
+  margin: 0;
+`;
+
+const UserSubText = styled.p`
+  font-size: 14px;
+  color: ${({ theme }) => theme.textSecondary || "#888"};
+  margin: 4px 0 0;
 `;
 
 const ButtonWrapper = styled.div`
@@ -64,9 +95,7 @@ const LoginButton = styled.button`
   }
 `;
 
-const Section = styled.section`
-  border-bottom: 4px solid ${({ theme }) => theme.border || "#f3e7c5"};
-`;
+const Section = styled.section``;
 
 const SectionHeader = styled.div`
   display: flex;
@@ -89,7 +118,6 @@ const MyListItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const ItemText = styled.div`

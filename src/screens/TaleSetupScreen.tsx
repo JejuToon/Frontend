@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/Header";
 import { FaArrowLeft } from "react-icons/fa6";
-import { useAuth } from "../hooks/useAuth";
 import { useStoryStore } from "../stores/useStoryStore";
 import TTSPreviewCard from "../components/TTSPreviewCard";
 import TTSChip from "../components/TTSChip";
@@ -268,7 +267,7 @@ const Section = styled.section`
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  border-bottom: 10px solid ${({ theme }) => theme.border || "#eee"};
+  border-bottom: 5px solid ${({ theme }) => theme.border || "#eee"};
 `;
 
 const Content = styled.div`

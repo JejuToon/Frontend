@@ -47,7 +47,7 @@ export default function AuthScreen() {
       />
 
       <AuthContainer>
-        <LogoPlaceholder />
+        <LogoImage src="/main_logo.svg" alt="main logo" />
         <FormContainer onSubmit={handleSubmit}>
           <Input
             type="email"
@@ -104,16 +104,15 @@ const AuthContainer = styled.div`
   box-sizing: border-box;
 `;
 
-const LogoPlaceholder = styled.div`
+const LogoImage = styled.img`
   width: 200px;
   height: 120px;
-  background: ${({ theme }) => theme.cardBackground || "#e0e0e0"};
-  border-radius: 8px;
+  object-fit: contain;
   margin-bottom: 40px;
 `;
 
 const FormContainer = styled.form`
-  width: 100%;
+  width: 80%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
