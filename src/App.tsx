@@ -20,6 +20,7 @@ export default function App() {
   const location = useLocation();
   const prevLocation = usePreviousLocation();
   const isAuthRoute = location.pathname === "/auth";
+  const isCallbackRoute = location.pathname.startsWith("/oauth/");
 
   const shouldHideTabs = ["/auth", "/tale", "/tale/setup", "/tale/play"].some(
     (p) => location.pathname.startsWith(p)
@@ -29,7 +30,9 @@ export default function App() {
     <div>
       <AccessControlProvider>
         {/* 기본 라우트 화면 (탭 포함) */}
-        <Routes location={isAuthRoute ? prevLocation : location}>
+        <Routes
+          location={isAuthRoute && !isCallbackRoute ? prevLocation : location}
+        >
           <Route path="/home" element={<HomeScreen />} />
           <Route path="/search" element={<SearchScreen />} />
           <Route path="/camera" element={<CameraScreen />} />

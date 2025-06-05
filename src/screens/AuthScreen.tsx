@@ -30,7 +30,7 @@ export default function AuthScreen() {
   };
 
   const handleKakaoLogin = () => {
-    window.location.href = getKakaoLoginUrl(); // Redirect to /auth/kakao
+    window.location.href = getKakaoLoginUrl();
   };
 
   return (
