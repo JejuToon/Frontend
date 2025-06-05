@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface User {
   id: number;
@@ -21,28 +22,22 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isLoggedIn: false,
-
-  login: (user, token) => {
-    set({
-      user,
-      token,
-      isLoggedIn: true,
-    });
-
-    localStorage.setItem("accessToken", token.accessToken);
-  },
-
-  logout: () => {
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       token: null,
       isLoggedIn: false,
-    });
-
-    localStorage.removeItem("accessToken");
-  },
-}));
+      login: (user, token) => set({ user, token, isLoggedIn: true }),
+      logout: () => set({ user: null, token: null, isLoggedIn: false }),
+    }),
+    {
+      name: "auth-storage", // localStorage key
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isLoggedIn: state.isLoggedIn,
+      }),
+    }
+  )
+);
