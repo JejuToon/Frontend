@@ -12,6 +12,18 @@ export default function KakaoCallbackScreen() {
     hasFetchedRef.current = true;
 
     const code = new URLSearchParams(window.location.search).get("code");
+
+    if (!code) {
+      alert("인가 코드 없음");
+      navigate("/auth");
+      return;
+    }
+
+    const encodedCode = encodeURIComponent(code);
+
+    console.log("인가 코드:", code);
+    console.log("인코딩된 코드:", encodedCode);
+
     if (code) {
       fetch(
         `https://jeju-folktale.r-e.kr/api/v1/auth/kakao?authorizationCode=${encodeURIComponent(
@@ -26,7 +38,7 @@ export default function KakaoCallbackScreen() {
       )
         .then(async (res) => {
           const data = await res.json();
-          //console.log("응답 데이터:", data);
+          console.log("응답 데이터:", data);
 
           if (!res.ok) {
             //console.error("서버 에러 상태코드:", res.status);
