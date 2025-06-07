@@ -10,6 +10,7 @@ import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
 import { RiLoginBoxLine } from "react-icons/ri";
 import { useCharacterStore } from "../stores/useCharacterStore";
+import { useAuthStore } from "../stores/useAuthStore";
 
 import { TaleContent } from "../types/tale";
 
@@ -25,7 +26,8 @@ const TAB_ITEMS: TabItem[] = [
 ];
 
 export default function LibScreen() {
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [tab, setTab] = useState<"tale" | "character">("tale");
   const navigate = useNavigate();
@@ -51,7 +53,7 @@ export default function LibScreen() {
     <LibScreenContainer>
       <Header left={<h1>설화</h1>} center={null} right={null} />
 
-      {!user ? (
+      {!isLoggedIn || !user ? (
         <EmptyStateGrid>
           <EmptyState
             icon={<RiLoginBoxLine />}

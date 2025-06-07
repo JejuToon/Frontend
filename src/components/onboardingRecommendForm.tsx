@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa6";
 import Loader from "../components/Loader";
+import { useUserInfoStore } from "../stores/useUserInfoStore";
 
 const interestsOptions = ["설화", "모험", "로맨스", "공포", "신화"];
 const options1 = ["옵션1", "옵션2", "옵션3"];
@@ -13,6 +14,9 @@ export default function OnboardingRecommendForm({
 }: {
   onClose: () => void;
 }) {
+  const { hasCompletedRecommendForm, setHasCompletedRecommendForm } =
+    useUserInfoStore();
+
   const [step, setStep] = useState(0);
   const [stepDirection, setStepDirection] = useState<"forward" | "backward">(
     "forward"
@@ -51,6 +55,7 @@ export default function OnboardingRecommendForm({
   const handleSubmit = () => {
     setShowProgressStep(false);
     setLoading(true);
+    setHasCompletedRecommendForm(true);
     setStep(4);
     setTimeout(() => {
       setLoading(false);
@@ -69,7 +74,9 @@ export default function OnboardingRecommendForm({
           <BackButton onClick={onClose}>
             <FaArrowLeft></FaArrowLeft>
           </BackButton>
-          <SkipButton onClick={handleSkip}>건너뛰기</SkipButton>
+          {step !== onboardingSteps.length - 2 && (
+            <SkipButton onClick={handleSkip}>건너뛰기</SkipButton>
+          )}
         </HeaderRow>
       )}
 
@@ -261,7 +268,9 @@ const ProgressBar = styled.div`
   padding: 16px;
 `;
 
-const ProgressStep = styled.div<{ active: boolean }>`
+const ProgressStep = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "active",
+})<{ active: boolean }>`
   flex: 1;
   height: 6px;
   border-radius: 3px;

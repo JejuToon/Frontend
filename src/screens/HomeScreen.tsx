@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdOutlineWrongLocation } from "react-icons/md";
-import { FaPlus } from "react-icons/fa6";
+import { FaPlus, FaAngleRight } from "react-icons/fa6";
 import styled, { keyframes } from "styled-components";
+
+import { fetchHomeData } from "../api/home";
+
+import { useRecommendForm } from "../hooks/useRecommendForm";
 
 import { useAuthStore } from "../stores/useAuthStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
@@ -27,28 +31,7 @@ import type { TaleContent } from "../types/tale";
 
 import { getRandomSlice } from "../utils/shuffleArray";
 
-const categories = [
-  {
-    key: "개척담",
-    label: "개척담",
-    imageUrl: "assets/images/category/category1.png",
-  },
-  {
-    key: "인물담",
-    label: "인물담",
-    imageUrl: "assets/images/category/category2.png",
-  },
-  {
-    key: "연애담",
-    label: "연애담",
-    imageUrl: "assets/images/category/category3.png",
-  },
-  {
-    key: "신앙담",
-    label: "신앙담",
-    imageUrl: "assets/images/category/category4.png",
-  },
-];
+import { categories } from "../constants/categories";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -57,7 +40,8 @@ export default function HomeScreen() {
   const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
   const { nearbyTales, nearbyTalesLoading, fetchNearbyTalesData } =
     useNearbyTalesStore();
-  const { allTales, fetchAllTalesData, allTalesLoading } = useAllTalesStore();
+  const { allTales, setAllTales, fetchAllTalesData, allTalesLoading } =
+    useAllTalesStore();
   const { setSelectedMarker, setSheetPos } = useSelectedMarkerStore();
   const { initializeCategory, setExtras, setIsAllCategorySelected } =
     useFilterChipsStore();
@@ -67,49 +51,42 @@ export default function HomeScreen() {
   const isReady = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
   const [recommendedTales, setrecommendTales] = useState<TaleContent[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [showRecommendForm, setShowRecommendForm] = useState(false);
-  const [animateOut, setAnimateOut] = useState(false);
+  const [homeData, sethomeData] = useState(false);
+
+  const {
+    showRecommendForm,
+    animateOut,
+    openRecommendForm,
+    closeRecommendForm,
+  } = useRecommendForm();
 
   useEffect(() => {
-    // 로딩 테스트
-    const timeout = setTimeout(() => {
+    const loadHomeData = async () => {
+      setIsLoading(true);
+      const homeData = await fetchHomeData();
+      setCarouselTales(getRandomSlice(homeData.allTales, 5));
+      setrecommendTales(getRandomSlice(homeData.allTales, 4));
       setIsLoading(false);
-      setTimeout(() => setIsVisible(true), 100);
-    }, 1000);
+      setAllTales(homeData.allTales);
+    };
+    loadHomeData();
 
     startAutoScroll(); // 상단 캐러셀 스크롤 시작
-
-    fetchAllTalesData(0); // 전체 설화 목록 가져오기 (1페이지)
-    fetchAllTalesData(1); // (2페이지)
-
-    const handlePopState = () => {
-      setAnimateOut(true);
-      setTimeout(() => setShowRecommendForm(false), 300);
-    };
-    window.addEventListener("popstate", handlePopState);
-
     return () => {
-      window.removeEventListener("popstate", handlePopState);
-      clearTimeout(timeout);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
   useEffect(() => {
-    // 마운트 이후 설화 목록을 가져오면 랜덤으로 추출하여 상단 캐러셀에 삽입
-    if (allTales.length >= 5) {
-      const shuffled = [...allTales].sort(() => Math.random() - 0.5);
-      setCarouselTales(shuffled.slice(0, 5));
+    if (!isLoading) {
+      setTimeout(() => setIsVisible(true), 100);
     }
-
-    // 가져온 설화 목록 중 랜덤으로 꺼내 추천 설화의 기본설화값으로 삽입
-    setrecommendTales(getRandomSlice(allTales, 4));
-  }, [allTales]);
+  }, [isLoading]);
 
   useEffect(() => {
     // 현재 위치가 설정되면, 근처 위치 설화 받아 오기
@@ -129,7 +106,6 @@ export default function HomeScreen() {
 
   const nearbyButtonClick = () => {
     setExtras(["근처"]);
-    initializeCategory([]);
     setSheetPos("collapsed");
     navigate("/search", { state: { fromHomeNearby: true } });
   };
@@ -162,22 +138,14 @@ export default function HomeScreen() {
     navigate("/search");
   };
 
-  const openRecommendForm = () => {
-    setAnimateOut(false);
-    window.history.pushState(null, "", window.location.href);
-    setShowRecommendForm(true);
-  };
-
-  const closeRecommendForm = () => {
-    setAnimateOut(true);
-    window.history.back();
-    setTimeout(() => setShowRecommendForm(false), 300);
-  };
-
-  if (isLoading) return <Loader />;
-
   return (
     <>
+      {isLoading && (
+        <LoaderOverlay>
+          <Loader />
+        </LoaderOverlay>
+      )}
+
       <Container $isVisible={isVisible}>
         <Header
           left={
@@ -225,7 +193,8 @@ export default function HomeScreen() {
         <Section>
           <SectionHeader>
             <h3>현재 위치와 가까운 설화</h3>
-            <SeeAllBtn onClick={nearbyButtonClick}>&gt;</SeeAllBtn>
+
+            <FaAngleRight onClick={nearbyButtonClick} />
           </SectionHeader>
           {nearbyTalesLoading ? (
             <Loader type="inline" />
@@ -298,12 +267,23 @@ export default function HomeScreen() {
   );
 }
 
+const LoaderOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background-color: ${({ theme }) => theme.background};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.4s ease;
+`;
+
 const Container = styled.div<{ $isVisible: boolean }>`
   display: flex;
   flex-direction: column;
   height: 100%;
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
-  transition: opacity 0.6s ease;
+  transition: opacity 0.6s ease-in-out;
   padding-bottom: 60px;
   background-color: ${({ theme }) => theme.background};
 `;

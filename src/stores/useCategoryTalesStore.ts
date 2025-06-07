@@ -5,12 +5,16 @@ import { TaleListResponse, TaleContent } from "../types/tale";
 interface CategoryTalesStore {
   talesByCategory: Record<string, TaleContent[]>;
   loadingByCategory: Record<string, boolean>;
+  totalPagesByCategory: Record<string, number>;
+  currentPageByCategory: Record<string, number>;
   fetchTalesForCategory: (category: string, page: number) => Promise<void>;
 }
 
 export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
   talesByCategory: {},
   loadingByCategory: {},
+  totalPagesByCategory: {},
+  currentPageByCategory: {},
 
   fetchTalesForCategory: async (category, page) => {
     const { talesByCategory, loadingByCategory } = get();
@@ -32,22 +36,28 @@ export const useCategoryTalesStore = create<CategoryTalesStore>((set, get) => ({
         page
       );
 
+      const isFirstPage = page === 0;
+      const existingTales = get().talesByCategory[category] || [];
+
       set((state) => ({
         talesByCategory: {
           ...state.talesByCategory,
-          [category]:
-            page === 0
-              ? response.contents
-              : [
-                  ...(state.talesByCategory[category] || []),
-                  ...response.contents,
-                ],
+          [category]: isFirstPage
+            ? response.contents
+            : [...existingTales, ...response.contents],
+        },
+        totalPagesByCategory: {
+          ...state.totalPagesByCategory,
+          [category]: response.meta.totalPage,
+        },
+        currentPageByCategory: {
+          ...state.currentPageByCategory,
+          [category]: page,
         },
       }));
     } catch (err) {
-      //console.error(`카테고리(${category}) 설화 목록 로딩 실패:`, err);
+      console.error(`카테고리(${category}) 설화 목록 로딩 실패:`, err);
     } finally {
-      //console.log(`${category} 설화 목록 로딩 완료`);
       set((state) => ({
         loadingByCategory: { ...state.loadingByCategory, [category]: false },
       }));

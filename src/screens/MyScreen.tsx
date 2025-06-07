@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaArrowRotateRight } from "react-icons/fa6";
 import styled from "styled-components";
 import Header from "../components/Header";
+import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuthStore } from "../stores/useAuthStore";
+import { useUserInfoStore } from "../stores/useUserInfoStore";
 
 export default function MyScreen() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const resetUserInfo = useUserInfoStore((state) => state.resetUserInfo);
+
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <MyScreenContainer>
@@ -30,9 +36,26 @@ export default function MyScreen() {
         <SectionHeader />
         <MyList>
           <MyListItem>
-            <ItemText>다크 모드</ItemText>
+            <ItemText>테마</ItemText>
             <ThemeToggle variant="medium" />
           </MyListItem>
+
+          <MyListItem>
+            <ItemText>맞춤 추천 초기화</ItemText>
+            <FaArrowRotateRight onClick={() => setShowModal(true)} />
+          </MyListItem>
+
+          {showModal && (
+            <ConfirmModal
+              mainTitle="정말 초기화할까요?"
+              subTitle="초기화 시 추천 설정 정보가 사라집니다."
+              onClose={() => setShowModal(false)}
+              onConfirm={() => {
+                resetUserInfo();
+                setShowModal(false);
+              }}
+            />
+          )}
         </MyList>
       </Section>
     </MyScreenContainer>

@@ -14,9 +14,10 @@ import { RiSparkling2Fill } from "react-icons/ri";
 import { MdNearMe } from "react-icons/md";
 import { IoLocationSharp } from "react-icons/io5";
 import { TbPlayerPlayFilled } from "react-icons/tb";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 import { useMapLoader } from "../hooks/useMapLoader";
+import { useRecommendForm } from "../hooks/useRecommendForm";
 
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useStoryStore } from "../stores/useStoryStore";
@@ -26,6 +27,8 @@ import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 
+import CategorySection from "../components/CategorySection";
+import OnboardingRecommendForm from "../components/onboardingRecommendForm";
 import Chip from "../components/Chip";
 import LocationBox from "../components/LocationBox";
 import BottomSheet from "../components/BottomSheet";
@@ -43,13 +46,7 @@ const categoriesIcons = [FaPersonHiking, FaUser, FaHeart, FaCross];
 const extraChips = ["근처", "맞춤 추천"];
 const extrasIcons = [MdNearMe, RiSparkling2Fill];
 
-// 데모용 접근 제어
-import { useAccessControl } from "../components/AccessControlProvider";
-
 export default function SearchScreen() {
-  // 데모용 접근 제어
-  const { openModal } = useAccessControl();
-
   const navigate = useNavigate();
   const location = useLocation();
   const fromHomeNearby = (location.state as any)?.fromHomeNearby;
@@ -66,7 +63,7 @@ export default function SearchScreen() {
   } = useSelectedMarkerStore();
 
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
-  const [keyword, setKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const mapRef = useRef<google.maps.Map | null>(null);
 
   // 바텀 시트 내부 스크롤 영역을 가리킬 ref
@@ -91,6 +88,13 @@ export default function SearchScreen() {
     clearAllCategories,
     selectAllCategories,
   } = useFilterChipsStore();
+
+  const {
+    showRecommendForm,
+    animateOut,
+    openRecommendForm,
+    closeRecommendForm,
+  } = useRecommendForm();
 
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {
@@ -143,7 +147,6 @@ export default function SearchScreen() {
         fetchTalesForCategory(category, 0);
       }
     });
-
     if (fromHomeNearby && selectedExtras.includes("근처")) {
       setTimeout(() => setSheetPos("full"), 300);
     } else if (selectedMarker) {
@@ -190,8 +193,6 @@ export default function SearchScreen() {
     setSelectedMarker(null);
   };
 
-  const handlePlayButton = () => {};
-
   const handleViewLocation = (t: TaleContent) => {
     const marker = allMarkers.find((m) => m.id === t.id);
     if (!marker) return;
@@ -218,8 +219,8 @@ export default function SearchScreen() {
           <SearchInput
             type="text"
             placeholder="설화 검색"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             onFocus={() => setShowSearchOverlay(true)}
           />
         </SearchBox>
@@ -227,9 +228,12 @@ export default function SearchScreen() {
 
       {showSearchOverlay && (
         <SearchOverlay
-          keyword={keyword}
-          onKeywordChange={setKeyword}
-          onClose={() => setShowSearchOverlay(false)}
+          keyword={searchInput}
+          onKeywordChange={setSearchInput}
+          onClose={() => {
+            setSearchInput("");
+            setShowSearchOverlay(false);
+          }}
         />
       )}
 
@@ -303,7 +307,6 @@ export default function SearchScreen() {
         onToggle={handleSheetToggle}
         onChangePosition={setSheetPos}
       >
-        {/* 바텀 시트 내부 최상단에 스크롤 가능한 wrapper */}
         <SheetScrollWrapper ref={sheetScrollRef}>
           <LocBoxWrapper>
             <LocationBox onClick={() => fetchCurrentLocation(mapRef.current)} />
@@ -334,13 +337,6 @@ export default function SearchScreen() {
                   onCloseClick={() => handleCloseClick()}
                 >
                   <CustomButton
-                    label="재생"
-                    icon={<TbPlayerPlayFilled />}
-                    size="small"
-                    variant="filled"
-                    onClick={() => console.log("tts설정 페이지 이동")}
-                  />
-                  <CustomButton
                     label="위치 보기"
                     icon={<IoLocationSharp />}
                     size="small"
@@ -363,46 +359,14 @@ export default function SearchScreen() {
             </Section>
           )}
 
-          {selectedCategories.map((cat) => {
-            const talesInCategory = talesByCategory[cat] || [];
-
-            if (talesInCategory.length === 0) return null;
-
-            return (
-              <Section key={cat}>
-                <SectionHeader>
-                  <span>{cat}</span>
-                </SectionHeader>
-                <TaleList>
-                  {talesInCategory.map((t) => (
-                    <TaleCard
-                      key={`${cat}-${t.id}`}
-                      id={t.id}
-                      title={t.title}
-                      description={t.description}
-                      thumbnailUrl={t.thumbnail}
-                      onClick={() => handleTaleClick(t.id)}
-                    >
-                      <CustomButton
-                        label="재생"
-                        icon={<TbPlayerPlayFilled />}
-                        size="small"
-                        variant="filled"
-                        onClick={() => console.log("tts설정 페이지 이동")}
-                      />
-                      <CustomButton
-                        label="위치 보기"
-                        icon={<IoLocationSharp />}
-                        size="small"
-                        variant="filled"
-                        onClick={() => handleViewLocation(t)}
-                      />
-                    </TaleCard>
-                  ))}
-                </TaleList>
-              </Section>
-            );
-          })}
+          {selectedCategories.map((cat) => (
+            <CategorySection
+              key={cat}
+              category={cat}
+              onTaleClick={handleTaleClick}
+              onViewLocation={handleViewLocation}
+            />
+          ))}
 
           {/* 근처 */}
           {selectedExtras.includes("근처") && (
@@ -435,13 +399,6 @@ export default function SearchScreen() {
                         onClick={() => handleTaleClick(t.id)}
                       >
                         <CustomButton
-                          label="재생"
-                          icon={<TbPlayerPlayFilled />}
-                          size="small"
-                          variant="filled"
-                          onClick={() => console.log("tts설정 페이지 이동")}
-                        />
-                        <CustomButton
                           label="위치 보기"
                           icon={<IoLocationSharp />}
                           size="small"
@@ -463,19 +420,24 @@ export default function SearchScreen() {
                 icon={<RiSparkling2Fill />}
                 title="맞춤형 추천 정보가 없어요"
                 description="맞춤형 추천 받기"
-                onIconClick={() => {
-                  // 데모용 접근 제어
-                  openModal();
-                }}
-                onDescriptionClick={() => {
-                  // 데모용 접근 제어
-                  openModal();
-                }}
+                onIconClick={openRecommendForm}
+                onDescriptionClick={openRecommendForm}
               />
             </Section>
           )}
         </SheetScrollWrapper>
       </BottomSheet>
+
+      {showRecommendForm && (
+        <RecommendOverlay onClick={closeRecommendForm}>
+          <RecommendContent
+            className={animateOut ? "hide" : "show"}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <OnboardingRecommendForm onClose={closeRecommendForm} />
+          </RecommendContent>
+        </RecommendOverlay>
+      )}
     </Screen>
   );
 }
@@ -589,7 +551,6 @@ const LocBoxWrapper = styled.div`
 
 const Section = styled.section`
   padding: 16px;
-  border-bottom: 4px solid ${({ theme }) => theme.border || "#f3e7c5"};
 `;
 
 const SectionHeader = styled.div`
@@ -607,4 +568,51 @@ const TaleList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+`;
+
+const RecommendOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+`;
+
+const RecommendContent = styled.div`
+  width: 100%;
+  max-width: none;
+  background: white;
+  border-radius: 16px;
+  box-sizing: border-box;
+  animation: ${fadeIn} 0.4s ease forwards;
+  &.hide {
+    animation: ${fadeOut} 1s ease forwards;
+  }
 `;

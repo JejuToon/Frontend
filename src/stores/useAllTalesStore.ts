@@ -8,6 +8,7 @@ interface AllTalesStore {
   allTalesPage: number;
   allTalesTotalPages: number;
   fetchAllTalesData: (page: number) => Promise<void>;
+  setAllTales: (tales: TaleContent[]) => void;
 }
 
 export const useAllTalesStore = create<AllTalesStore>((set) => ({
@@ -33,4 +34,6 @@ export const useAllTalesStore = create<AllTalesStore>((set) => ({
       set({ allTalesLoading: false });
     }
   },
+
+  setAllTales: (tales: TaleContent[]) => set({ allTales: tales }),
 }));

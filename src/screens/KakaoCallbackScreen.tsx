@@ -14,15 +14,14 @@ export default function KakaoCallbackScreen() {
     const code = new URLSearchParams(window.location.search).get("code");
 
     if (!code) {
-      alert("인가 코드 없음");
+      //alert("인가 코드 없음");
       navigate("/auth");
       return;
     }
 
-    const encodedCode = encodeURIComponent(code);
-
-    console.log("인가 코드:", code);
-    console.log("인코딩된 코드:", encodedCode);
+    //const encodedCode = encodeURIComponent(code);
+    //console.log("인가 코드:", code);
+    //console.log("인코딩된 코드:", encodedCode);
 
     if (code) {
       fetch(

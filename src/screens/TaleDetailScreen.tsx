@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlay } from "react-icons/fa6";
 import styled from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useStoryStore } from "../stores/useStoryStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
+
 import Chip from "../components/Chip";
+import OriginTale from "../components/OriginTale";
 
 import { TaleDetailResponse } from "../types/tale";
 import { fetchTaleDetail } from "../api/tale";
@@ -25,6 +28,7 @@ export default function TaleDetailScreen() {
     useStoryStore();
   const [descExpanded, setDescExpanded] = useState(false);
   const [originExpanded, setOriginExpanded] = useState(false);
+  const [showOriginTale, setShowOriginTale] = useState(false);
 
   const [taleDetail, setTaleDetail] = useState<TaleDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +53,7 @@ export default function TaleDetailScreen() {
   useEffect(() => {
     if (taleDetail !== null) {
       setSelectedTaleDetail(taleDetail);
-      console.log(`taleDetail: ${JSON.stringify(selectedTaleDetail)}`);
+      //console.log(`taleDetail: ${JSON.stringify(selectedTaleDetail)}`);
     }
   }, [taleDetail]);
 
@@ -73,70 +77,74 @@ export default function TaleDetailScreen() {
   };
 
   return (
-    <Screen>
-      <Header>
-        <Icon onClick={() => navigate(-1)}>
-          <FaArrowLeft />
-        </Icon>
-      </Header>
-      <CardSection>
-        <BlurSection $imageUrl={taleDetail?.thumbnail ?? ""} />
-        <WhiteSection />
+    <>
+      <Screen>
+        <Header>
+          <Icon onClick={() => navigate(-1)}>
+            <FaArrowLeft />
+          </Icon>
+        </Header>
+        <CardSection>
+          <BlurSection $imageUrl={taleDetail?.thumbnail ?? ""} />
+          <WhiteSection />
 
-        <CardImage src={taleDetail?.thumbnail} alt="cover" />
-        <PlayButtonOverlay onClick={handlePlayClick}>
-          <FaPlay />
-        </PlayButtonOverlay>
-      </CardSection>
-      <ContentArea>
-        <ContentSection>
-          <TaleTitle>{taleDetail?.title}</TaleTitle>
-          <TaleDescription>{taleDetail?.description}</TaleDescription>
-          <ButtonWrapper>
-            <PlayButton onClick={handlePlayClick}>설화 보러 가기</PlayButton>
-          </ButtonWrapper>
-        </ContentSection>
+          <CardImage src={taleDetail?.thumbnail} alt="cover" />
+          <PlayButtonOverlay onClick={handlePlayClick}>
+            <FaPlay />
+          </PlayButtonOverlay>
+        </CardSection>
+        <ContentArea>
+          <ContentSection>
+            <TaleTitle>{taleDetail?.title}</TaleTitle>
+            <TaleDescription>{taleDetail?.description}</TaleDescription>
+            <ButtonWrapper>
+              <PlayButton onClick={handlePlayClick}>설화 보러 가기</PlayButton>
+            </ButtonWrapper>
+          </ContentSection>
 
-        <ContentSection>
-          <TaleTitle>요약</TaleTitle>
-          <TaleDescription $expanded={descExpanded}>
-            {taleDetail?.summary ?? "내용 없음"}
-          </TaleDescription>
+          <ContentSection>
+            <TaleTitle>요약</TaleTitle>
+            <TaleDescription $expanded={descExpanded}>
+              {taleDetail?.summary ?? "내용 없음"}
+            </TaleDescription>
 
-          <MoreButton onClick={() => setDescExpanded(!descExpanded)}>
-            {descExpanded ? "접기" : "더보기"}
-          </MoreButton>
-        </ContentSection>
+            <MoreButton onClick={() => setDescExpanded(!descExpanded)}>
+              {descExpanded ? "접기" : "더보기"}
+            </MoreButton>
+          </ContentSection>
 
-        <ContentSection>
-          <TaleTitle>카테고리</TaleTitle>
-          <ChipContainer>
-            {taleDetail?.categories?.map((cat) => (
-              <Chip
-                key={cat}
-                selected={false}
-                onToggle={() => handleCategoryClick(cat)}
-              >
-                {cat}
-              </Chip>
-            ))}
-          </ChipContainer>
-        </ContentSection>
+          <ContentSection>
+            <TaleTitle>카테고리</TaleTitle>
+            <ChipContainer>
+              {taleDetail?.categories?.map((cat) => (
+                <Chip
+                  key={cat}
+                  selected={false}
+                  onToggle={() => handleCategoryClick(cat)}
+                >
+                  {cat}
+                </Chip>
+              ))}
+            </ChipContainer>
+          </ContentSection>
 
-        <Divider />
+          <Divider />
 
-        <ContentSection>
-          <TaleTitle>원본</TaleTitle>
-          <TaleDescription $expanded={originExpanded}>
-            {"원본 설화 내용..."}
-          </TaleDescription>
-
-          <MoreButton onClick={() => setOriginExpanded(!originExpanded)}>
-            {originExpanded ? "접기" : "더보기"}
-          </MoreButton>
-        </ContentSection>
-      </ContentArea>
-    </Screen>
+          <ContentSection>
+            <TaleTitle>원본</TaleTitle>
+            <MoreButton onClick={() => setShowOriginTale(true)}>
+              원본 설화 보기
+            </MoreButton>
+          </ContentSection>
+        </ContentArea>
+      </Screen>
+      {showOriginTale && (
+        <OriginTale
+          text={"원본 설화 제공 화면"}
+          onClose={() => setShowOriginTale(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -268,7 +276,7 @@ const TaleDescription = styled.div<{ $expanded?: boolean }>`
   margin: 4px 0 0;
   font-size: 14px;
   line-height: 1.5;
-  color: ${({ theme }) => theme.textSecondary || "#555"};
+  color: ${({ theme }) => theme.textSecondary};
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;

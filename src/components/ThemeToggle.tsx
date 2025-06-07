@@ -41,7 +41,7 @@ export default function ThemeToggle({ variant = "medium" }: ThemeToggleProps) {
   );
 }
 
-const ToggleWrapper = styled.button`
+const ToggleWrapper = styled.div`
   background: none;
   border: none;
   cursor: pointer;
