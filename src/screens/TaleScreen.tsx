@@ -298,14 +298,7 @@ export default function TaleScreen() {
               </RightGroup>
             </Group>
             <Collapsible open={ttsEnabled}>
-              <TTSSettings
-                volume={volume}
-                rate={rate}
-                selectedVoiceIndex={selectedVoiceIndex}
-                onVolumeChange={setVolume}
-                onRateChange={setRate}
-                onVoiceSelect={setSelectedVoiceIndex}
-              />
+              <TTSSettings type="simple" />
             </Collapsible>
           </ControlBar>
         </ControlBarWrapper>

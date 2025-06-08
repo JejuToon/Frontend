@@ -9,7 +9,6 @@ import MyScreen from "./screens/MyScreen";
 import AuthScreen from "./screens/AuthScreen";
 import KakaoCallbackScreen from "./screens/KakaoCallbackScreen";
 import TaleScreen from "./screens/TaleScreen";
-import TaleSetupScreen from "./screens/TaleSetupScreen";
 import TaleDetailScreen from "./screens/TaleDetailScreen";
 import CameraScreen from "./screens/CameraScreen";
 import BottomTabs from "./components/BottomTabs";
@@ -22,8 +21,8 @@ export default function App() {
   const isAuthRoute = location.pathname === "/auth";
   const isCallbackRoute = location.pathname.startsWith("/oauth/");
 
-  const shouldHideTabs = ["/auth", "/tale", "/tale/setup", "/tale/play"].some(
-    (p) => location.pathname.startsWith(p)
+  const shouldHideTabs = ["/auth", "/tale", "/tale/play"].some((p) =>
+    location.pathname.startsWith(p)
   );
 
   return (
@@ -41,7 +40,6 @@ export default function App() {
           <Route path="/oauth/kakao" element={<KakaoCallbackScreen />} />
           <Route path="/tale" element={<TaleDetailScreen />} />
           <Route path="/tale/play" element={<TaleScreen />} />
-          <Route path="/tale/setup" element={<TaleSetupScreen />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
 

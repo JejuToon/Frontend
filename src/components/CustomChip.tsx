@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-interface TTSChipProps {
+interface CustomChipProps {
   profileUrl?: string;
   icon?: React.ReactNode;
   name: string;
@@ -9,13 +9,13 @@ interface TTSChipProps {
   onClick?: () => void;
 }
 
-export default function TTSChip({
+export default function CustomChip({
   profileUrl,
   icon,
   name,
   selected = false,
   onClick,
-}: TTSChipProps) {
+}: CustomChipProps) {
   const hasIcon = Boolean(icon);
   const hasProfile = Boolean(profileUrl);
 

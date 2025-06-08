@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowRotateRight } from "react-icons/fa6";
+import { FaAngleRight } from "react-icons/fa6";
 import styled from "styled-components";
 import Header from "../components/Header";
+import TTSSettings from "../components/TTSSettings";
 import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuthStore } from "../stores/useAuthStore";
@@ -10,12 +11,13 @@ import { useUserInfoStore } from "../stores/useUserInfoStore";
 
 export default function MyScreen() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const resetUserInfo = useUserInfoStore((state) => state.resetUserInfo);
+  const { user, isLoggedIn, logout } = useAuthStore();
 
-  const [showModal, setShowModal] = useState(false);
+  const { resetHasCompletedRecommendForm, resetSkipTaleSetup } =
+    useUserInfoStore();
+
+  const [showRecModal, setShowRecModal] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
 
   return (
     <MyScreenContainer>
@@ -40,19 +42,40 @@ export default function MyScreen() {
             <ThemeToggle variant="medium" />
           </MyListItem>
 
-          <MyListItem>
+          <MyListItem2>
+            <TTSSettings type="detail" expanded={false} />
+          </MyListItem2>
+
+          <MyListItem onClick={() => setShowRecModal(true)}>
             <ItemText>맞춤 추천 초기화</ItemText>
-            <FaArrowRotateRight onClick={() => setShowModal(true)} />
+            <FaAngleRight />
           </MyListItem>
 
-          {showModal && (
+          <MyListItem onClick={() => setShowSetupModal(true)}>
+            <ItemText>설화 설정 초기화</ItemText>
+            <FaAngleRight />
+          </MyListItem>
+
+          {showRecModal && (
             <ConfirmModal
               mainTitle="정말 초기화할까요?"
               subTitle="초기화 시 추천 설정 정보가 사라집니다."
-              onClose={() => setShowModal(false)}
+              onClose={() => setShowRecModal(false)}
               onConfirm={() => {
-                resetUserInfo();
-                setShowModal(false);
+                resetHasCompletedRecommendForm();
+                setShowRecModal(false);
+              }}
+            />
+          )}
+
+          {showSetupModal && (
+            <ConfirmModal
+              mainTitle="정말 초기화할까요?"
+              subTitle="초기화 시 설화 설정 정보가 사라집니다."
+              onClose={() => setShowSetupModal(false)}
+              onConfirm={() => {
+                resetSkipTaleSetup();
+                setShowSetupModal(false);
               }}
             />
           )}
@@ -87,12 +110,6 @@ const UserText = styled.h2`
   font-size: 20px;
   color: ${({ theme }) => theme.text};
   margin: 0;
-`;
-
-const UserSubText = styled.p`
-  font-size: 14px;
-  color: ${({ theme }) => theme.textSecondary || "#888"};
-  margin: 4px 0 0;
 `;
 
 const ButtonWrapper = styled.div`
@@ -143,7 +160,12 @@ const MyListItem = styled.div`
   padding: 16px;
 `;
 
+const MyListItem2 = styled.div`
+  padding: 16px;
+`;
+
 const ItemText = styled.div`
+  font-weight: 600;
   font-size: 20px;
-  color: ${({ theme }) => theme.text || "#333"};
+  color: ${({ theme }) => theme.text};
 `;

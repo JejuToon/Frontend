@@ -206,6 +206,31 @@ export default function SearchScreen() {
     setSheetPos("half");
   };
 
+  // 1. 오버레이 열기
+  const openSearchOverlay = () => {
+    window.history.pushState({ overlay: true }, ""); // 히스토리에 상태 push
+    setShowSearchOverlay(true);
+  };
+
+  // 2. 오버레이 닫기
+  const closeSearchOverlay = useCallback(() => {
+    setShowSearchOverlay(false);
+    if (window.history.state?.overlay) {
+      window.history.back(); // 히스토리 정리
+    }
+  }, []);
+
+  // 3. 뒤로가기(popstate) 이벤트 감지
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showSearchOverlay) {
+        setShowSearchOverlay(false); // 뒤로가기로 오버레이만 닫기
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [showSearchOverlay]);
+
   if (loadError) return <div>Map load failed…</div>;
   if (!isLoaded || isLoading) return <Loader type="full" />;
 
@@ -221,7 +246,7 @@ export default function SearchScreen() {
             placeholder="설화 검색"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            onFocus={() => setShowSearchOverlay(true)}
+            onFocus={openSearchOverlay}
           />
         </SearchBox>
       </SearchHeader>
@@ -232,7 +257,7 @@ export default function SearchScreen() {
           onKeywordChange={setSearchInput}
           onClose={() => {
             setSearchInput("");
-            setShowSearchOverlay(false);
+            closeSearchOverlay();
           }}
         />
       )}

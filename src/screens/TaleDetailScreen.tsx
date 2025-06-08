@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlay } from "react-icons/fa6";
 import styled from "styled-components";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 import { useStoryStore } from "../stores/useStoryStore";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
+import { useUserInfoStore } from "../stores/useUserInfoStore";
 
 import Chip from "../components/Chip";
 import OriginTale from "../components/OriginTale";
+import TaleSetup from "../components/TaleSetup";
 
 import { TaleDetailResponse } from "../types/tale";
 import { fetchTaleDetail } from "../api/tale";
@@ -26,9 +28,10 @@ export default function TaleDetailScreen() {
   const { initializeCategory } = useFilterChipsStore();
   const { selectedTaleId, selectedTaleDetail, setSelectedTaleDetail } =
     useStoryStore();
+  const { skipTaleSetup } = useUserInfoStore();
   const [descExpanded, setDescExpanded] = useState(false);
-  const [originExpanded, setOriginExpanded] = useState(false);
   const [showOriginTale, setShowOriginTale] = useState(false);
+  const [showTaleSetup, setShowTaleSetup] = useState(false);
 
   const [taleDetail, setTaleDetail] = useState<TaleDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +69,11 @@ export default function TaleDetailScreen() {
       return;
     }
 
-    navigate("/tale/setup");
+    if (skipTaleSetup) {
+      navigate("/tale/play");
+    }
+
+    setShowTaleSetup(true);
   };
 
   const handleCategoryClick = (categoryKey: string) => {
@@ -78,6 +85,10 @@ export default function TaleDetailScreen() {
 
   return (
     <>
+      <AnimatePresence>
+        {showTaleSetup && <TaleSetup onClose={() => setShowTaleSetup(false)} />}
+      </AnimatePresence>
+
       <Screen>
         <Header>
           <Icon onClick={() => navigate(-1)}>
