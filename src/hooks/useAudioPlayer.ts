@@ -1,41 +1,44 @@
-// hooks/useAudioPlayer.ts
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useStoryStore } from "../stores/useStoryStore";
 
-export function useAudioPlayer(
-  url: string,
-  volume: number,
-  rate: number,
-  isLoading: boolean,
-  ttsEnabled: boolean
-) {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+export function useAudioPlayer(url: string, isLoading: boolean) {
+  const { ttsConfig, ttsEnabled } = useStoryStore();
+  const { volume, rate } = ttsConfig;
+
   const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // 오디오 객체 생성 및 재생
   useEffect(() => {
     if (isLoading || !ttsEnabled) {
-      setAudio(null);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      audioRef.current = null;
+      setIsPlaying(false);
       return;
     }
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
+
+    // 기존 오디오 정지
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
 
-    const newAudio = new Audio(url);
-    newAudio.volume = volume;
-    newAudio.playbackRate = rate;
+    const audio = new Audio(url);
+    audio.volume = volume;
+    audio.playbackRate = rate;
 
-    newAudio.play().catch((err) => console.warn("Audio play error:", err));
-    setAudio(newAudio);
+    audio
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => {
+        console.warn("Audio play error:", err);
+        setIsPlaying(false);
+      });
 
-    return () => {
-      newAudio.pause();
-      newAudio.currentTime = 0;
-    };
-  }, [url, isLoading, ttsEnabled]);
-
-  useEffect(() => {
-    if (!audio) return;
+    audioRef.current = audio;
 
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
@@ -46,21 +49,36 @@ export function useAudioPlayer(
     audio.addEventListener("ended", handleEnded);
 
     return () => {
+      audio.pause();
+      audio.currentTime = 0;
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [audio]);
+  }, [url, isLoading, ttsEnabled]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  }, [rate]);
 
   return {
-    audio,
+    audio: audioRef.current,
     isPlaying,
-    setAudio,
     toggleAudio: () => {
+      const audio = audioRef.current;
       if (!audio || !ttsEnabled) return;
       audio.paused ? audio.play() : audio.pause();
     },
     replay: () => {
+      const audio = audioRef.current;
       if (audio && ttsEnabled) {
         audio.currentTime = 0;
         audio.play();

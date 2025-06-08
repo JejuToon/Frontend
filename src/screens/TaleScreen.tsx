@@ -55,7 +55,7 @@ export default function TaleScreen() {
   const pointerStart = useRef({ x: 0, y: 0 });
   const SWIPE_THRESHOLD = 50;
 
-  // 현재 페이지 (정수)
+  // 현재 페이지 (정수, 문자열)
   const [pageNum, setPageNum] = useState(0);
   const [pageKey, setPageKey] = useState<PageKey>("1");
   const [history, setHistory] = useState<PageKey[]>([]);
@@ -63,24 +63,16 @@ export default function TaleScreen() {
   const currentPage = seolmun[pageKey];
   const hasChoices = currentPage.choices && currentPage.choices.length > 0;
 
-  const [volume, setVolume] = useState(ttsConfig.volume);
-  const [rate, setRate] = useState(ttsConfig.rate);
-  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(
-    ttsConfig.voiceIndex
-  );
-
   const audioUrl = parseAudioPath(
     selectedTaleDetail?.title || "",
-    selectedVoiceIndex,
+    ttsConfig.voiceIndex,
     pageKey
   );
 
-  const { audio, isPlaying, toggleAudio, replay } = useAudioPlayer(
+  // loading이 끝난 후 tts가 재생되도록
+  const { audio, toggleAudio, replay } = useAudioPlayer(
     audioUrl ? audioUrl : currentPage.audioUrl,
-    volume,
-    rate,
-    isLoading,
-    ttsEnabled
+    isLoading
   );
 
   const [showControlBar, setShowControlBar] = useState(false);
@@ -105,18 +97,6 @@ export default function TaleScreen() {
     img.onload = () => setLoaded(true);
   }, [currentPage]);
 
-  useEffect(() => {
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    if (audio) {
-      audio.playbackRate = rate;
-    }
-  }, [rate]);
-
   // showNav가 true가 될 때마다 타이머 재설정
   useEffect(() => {
     if (!showNav || showControlBar) return;
@@ -127,6 +107,7 @@ export default function TaleScreen() {
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerStart.current = { x: e.clientX, y: e.clientY };
   };
+
   const handlePointerUp = (e: React.PointerEvent) => {
     if (showControlBar) return;
     const dx = e.clientX - pointerStart.current.x;
@@ -276,10 +257,10 @@ export default function TaleScreen() {
                 <IconButton onClick={() => navigate(-1)}>
                   <FaArrowLeft />
                 </IconButton>
-                <TitleText>{tale?.title || "설화"}</TitleText>
                 <IconButton onClick={() => navigate("/")}>
                   <TbHome />
                 </IconButton>
+                <TitleText>{tale?.title || "설화"}</TitleText>
               </LeftGroup>
 
               {ttsEnabled && (
@@ -297,9 +278,8 @@ export default function TaleScreen() {
                 <ThemeToggle variant="small" />
               </RightGroup>
             </Group>
-            <Collapsible open={ttsEnabled}>
-              <TTSSettings type="simple" />
-            </Collapsible>
+
+            <TTSSettings type="simple" expanded={ttsEnabled} />
           </ControlBar>
         </ControlBarWrapper>
       )}
@@ -430,7 +410,7 @@ const ControlBarWrapper = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  bottom: 53px;
+  bottom: 40px;
   z-index: 51;
 `;
 
@@ -440,11 +420,10 @@ const ControlBar = styled.div`
   left: 0;
   width: 100%;
   background: ${({ theme }) => theme.bottomTabsBackground};
-  padding: 12px 16px;
+  padding: 12px 16px 0px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-
+  gap: 8px;
   z-index: 52;
 
   @media (orientation: landscape) {
@@ -456,7 +435,7 @@ const ControlBar = styled.div`
 
 const Group = styled.div`
   display: flex;
-  align-items: center;
+  justify-content: space-between;
 `;
 
 const LeftGroup = styled.div`
@@ -473,13 +452,6 @@ const CenterGroup = styled.div`
 const RightGroup = styled.div`
   display: flex;
   align-items: center;
-`;
-
-const Collapsible = styled.div<{ open: boolean }>`
-  overflow: hidden;
-  max-height: ${({ open }) => (open ? "800px" : "0")};
-  opacity: ${({ open }) => (open ? 1 : 0)};
-  transition: max-height 0.3s ease, opacity 0.3s ease;
 `;
 
 const TitleText = styled.h1`

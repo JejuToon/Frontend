@@ -90,7 +90,7 @@ const MyScreenContainer = styled.main`
   height: 100%;
   flex-direction: column;
   padding-bottom: 60px;
-  transition: opacity 0.6s ease;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
   background-color: ${({ theme }) => theme.background};
 `;
 

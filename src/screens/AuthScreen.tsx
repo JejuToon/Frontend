@@ -1,33 +1,12 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import Header from "../components/Header";
-import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa6";
 import { getKakaoLoginUrl } from "../components/KakaoLogin";
 
 export default function AuthScreen() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      await login(email, password);
-      navigate("/home");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleKakaoLogin = () => {
     window.location.href = getKakaoLoginUrl();
@@ -47,46 +26,31 @@ export default function AuthScreen() {
       />
 
       <AuthContainer>
-        <LogoImage src="/main_logo.svg" alt="main logo" />
-        <FormContainer onSubmit={handleSubmit}>
-          <Input
-            type="email"
-            placeholder="이메일"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {error && <ErrorText>{error}</ErrorText>}
-          <LoginButton type="submit" disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
-          </LoginButton>
-        </FormContainer>
+        <ImageContainer>
+          <LogoImage src="/icons/icon.png" alt="main logo" />
+          <LogoImage src="/icons/title-icon.png" alt="main logo" />
+        </ImageContainer>
 
         <SocialContainer>
-          <SocialButton onClick={handleKakaoLogin}>
-            <img src="assets/icons/ico_login_kakao.png" alt="kakao" />
-          </SocialButton>
           <SocialButton>
-            <img src="assets/icons/ico_login_google.png" alt="google" />
+            <img src="assets/icons/ico_login_google.png" alt="login logo" />
+            Google로 계속하기
+          </SocialButton>
+
+          <SocialButton
+            bgColor="#fddc3f"
+            fontColor="#000"
+            onClick={handleKakaoLogin}
+          >
+            <img src="assets/icons/ico_login_kakao.png" alt="login logo" />
+            카카오로 계속하기
           </SocialButton>
         </SocialContainer>
-
-        <AuthLinks>
-          <AuthLink href="#">아이디 찾기</AuthLink>
-          <AuthLink href="#">비밀번호 찾기</AuthLink>
-          <AuthLink href="#">회원가입</AuthLink>
-        </AuthLinks>
       </AuthContainer>
     </AuthScreenWrapper>
   );
 }
 
-// styled-components
 const AuthScreenWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -104,83 +68,60 @@ const AuthContainer = styled.div`
   box-sizing: border-box;
 `;
 
+const ImageContainer = styled.div`
+  flex: 6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+`;
+
 const LogoImage = styled.img`
   width: 200px;
   height: 120px;
   object-fit: contain;
-  margin-bottom: 40px;
-`;
-
-const FormContainer = styled.form`
-  width: 80%;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid ${({ theme }) => theme.border || "#ddd"};
-  border-radius: 6px;
-  font-size: 1rem;
-  background-color: ${({ theme }) => theme.inputBackground || theme.background};
-  color: ${({ theme }) => theme.text};
-  box-sizing: border-box;
-`;
-
-const LoginButton = styled.button`
-  width: 100%;
-  padding: 14px;
-  background: ${({ theme }) => theme.buttonBackground || "#e2e8f0"};
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.buttonText || "#333"};
-  cursor: pointer;
 `;
 
 const SocialContainer = styled.div`
+  flex: 4;
   display: flex;
-  gap: 32px;
-  margin: 32px 0 24px;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 48px;
+  width: 100%;
+  max-width: 300px;
 `;
 
-const SocialButton = styled.button`
-  width: 48px;
-  height: 48px;
-  background: ${({ theme }) => theme.background};
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  padding: 0;
+const SocialButton = styled.button<{
+  bgColor?: string;
+  fontColor?: string;
+  border?: boolean;
+}>`
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  background-color: ${({ bgColor }) => bgColor || "#fff"};
+  color: ${({ fontColor }) => fontColor || "#000"};
+  border: ${({ border }) => (border ? "1px solid #000" : "none")};
+  transition: background-color 0.2s;
 
   img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+    position: absolute;
+    left: 16px;
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
   }
-`;
 
-const AuthLinks = styled.div`
-  display: flex;
-  gap: 32px;
-`;
-
-const AuthLink = styled.a`
-  font-size: 0.875rem;
-  color: ${({ theme }) => theme.textSecondary || "#555"};
-  text-decoration: none;
-`;
-
-const ErrorText = styled.p`
-  color: red;
-  font-size: 0.875rem;
-  margin: -10px 0 10px;
+  &:hover {
+    opacity: 0.85;
+  }
 `;

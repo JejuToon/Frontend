@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useStoryStore } from "../stores/useStoryStore";
+import { TTSInfo } from "../constants/ttsInfo";
 
 export function useTTSSetup() {
   const { ttsConfig, setTTSConfig, ttsEnabled, setTtsEnabled } =

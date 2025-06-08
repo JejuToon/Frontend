@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/useAuthStore";
 
+import Loader from "../components/Loader";
+
 export default function KakaoCallbackScreen() {
   const navigate = useNavigate();
   const hasFetchedRef = useRef(false);
@@ -61,5 +63,5 @@ export default function KakaoCallbackScreen() {
     }
   }, []);
 
-  return <p>카카오 로그인 처리 중입니다...</p>;
+  return <Loader type="full" />;
 }

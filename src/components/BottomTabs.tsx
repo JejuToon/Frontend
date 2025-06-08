@@ -1,13 +1,7 @@
 import React from "react";
 import { colors } from "../constants/colors";
 import { NavLink } from "react-router-dom";
-import {
-  TbMapSearch,
-  TbHome,
-  TbCameraPin,
-  TbBook,
-  TbUser,
-} from "react-icons/tb";
+import { TbMapSearch, TbHome, TbCameraPin, TbUser } from "react-icons/tb";
 import { IoLibraryOutline } from "react-icons/io5";
 import styled from "styled-components";
 

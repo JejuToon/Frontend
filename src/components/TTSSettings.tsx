@@ -39,12 +39,10 @@ export default function TTSSettings({
 
   return (
     <>
-      <ToggleContainerWrapper>
-        <ToggleContainer onClick={() => setSettingExpanded(!settingExpanded)}>
-          <ToggleLabel>TTS</ToggleLabel>
-          <ToggleSwitch checked={ttsEnabled} onChange={handleToggleTts} />
-        </ToggleContainer>
-      </ToggleContainerWrapper>
+      <ToggleContainer onClick={() => setSettingExpanded(!settingExpanded)}>
+        <ToggleLabel>TTS</ToggleLabel>
+        <ToggleSwitch checked={ttsEnabled} onChange={handleToggleTts} />
+      </ToggleContainer>
 
       <Collapsible open={settingExpanded}>
         <SliderContainer>
@@ -121,10 +119,6 @@ const Collapsible = styled.div<{ open: boolean }>`
   max-height: ${({ open }) => (open ? "800px" : "0")};
   opacity: ${({ open }) => (open ? 1 : 0)};
   transition: max-height 0.3s ease, opacity 0.3s ease;
-`;
-
-const ToggleContainerWrapper = styled.div`
-  margin-bottom: 8px;
 `;
 
 const ToggleContainer = styled.div`
