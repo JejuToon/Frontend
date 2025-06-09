@@ -103,7 +103,18 @@ export default function CameraScreen() {
   }, []);
 
   useEffect(() => {
-    startCamera(facingMode);
+    let isMounted = true;
+
+    const start = async () => {
+      if (!isMounted) return;
+      await startCamera(facingMode);
+    };
+
+    start();
+
+    return () => {
+      isMounted = false;
+    };
   }, [facingMode]);
 
   const startCamera = async (mode: "environment" | "user") => {
@@ -127,21 +138,27 @@ export default function CameraScreen() {
   };
 
   const stopCamera = () => {
-    const video = videoRef.current;
     setCameraActive(false);
 
-    if (video && video.srcObject) {
-      const stream = video.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => {
-        track.stop();
-      });
+    setTimeout(() => {
+      const video = videoRef.current;
+      if (video) {
+        const stream = video.srcObject as MediaStream;
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
 
-      video.srcObject = null;
-      video.removeAttribute("src");
-      video.load();
+        video.srcObject = null;
+        video.removeAttribute("src");
+        video.load();
 
-      videoRef.current = null;
-    }
+        if (video.parentNode) {
+          video.parentNode.removeChild(video);
+        }
+
+        videoRef.current = null;
+      }
+    }, 1000); // delay로 브라우저 반영 시간 확보
   };
 
   const toggleCamera = () => {
