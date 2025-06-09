@@ -62,6 +62,7 @@ export default function CameraScreen() {
     shutterAudio.current = new Audio("/assets/audios/shutter.mp3");
   }, []);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null); // 스트림 추적용 ref
   const [cameraActive, setCameraActive] = useState(true);
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
@@ -87,98 +88,55 @@ export default function CameraScreen() {
     initialRotation: number;
   } | null>(null);
 
-  // 컴포넌트 언마운트 시 카메라 정지
-  useEffect(() => {
-    return () => {
-      stopCamera();
-      forceStopCameraWithIframe(); // optional: PWA/WebView용
-    };
-  }, []);
-
-  // 마운트 시 시작
-  useEffect(() => {
-    let isMounted = true;
-
-    const start = async () => {
-      if (!isMounted) return;
-      await startCamera(facingMode);
-    };
-
-    start();
-
-    return () => {
-      isMounted = false;
-      stopCamera(); // 언마운트 시 강제 종료
-    };
-  }, [facingMode]);
-
   const startCamera = async (mode: "environment" | "user") => {
     try {
-      // 이미 존재하는 MediaStream 정지
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream)
-          .getTracks()
-          .forEach((track) => track.stop());
-      }
+      // 기존 스트림 정지
+      stopCamera();
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: mode } },
         audio: false,
       });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
+
+      streamRef.current = stream; // 새 스트림 저장
+      setCameraActive(true);
     } catch (err) {
-      //alert("카메라 접근 실패: " + (err as Error).message);
+      console.error("카메라 접근 실패:", err);
     }
   };
 
   const stopCamera = () => {
-    setCameraActive(false);
-
-    setTimeout(() => {
-      const video = videoRef.current;
-      if (video) {
-        const stream = video.srcObject as MediaStream;
-        if (stream) {
-          stream.getTracks().forEach((track) => {
-            if (track.readyState === "live") {
-              track.stop(); // 트랙이 살아있는 경우만 stop
-            }
-          });
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        if (track.readyState === "live") {
+          track.stop();
         }
-
-        // 브라우저 반영 위한 처리
-        video.pause();
-        video.srcObject = null;
-        video.removeAttribute("src");
-        video.load();
-
-        // DOM에서 제거
-        if (video.parentNode) {
-          video.parentNode.removeChild(video);
-        }
-
-        // 참조 제거
-        videoRef.current = null;
-      }
-    }, 500); // delay로 충분한 반영 시간 확보
-  };
-
-  const forceStopCameraWithIframe = () => {
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    iframe.contentWindow?.navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        stream.getTracks().forEach((track) => track.stop());
-        document.body.removeChild(iframe);
-      })
-      .catch(() => {
-        document.body.removeChild(iframe);
       });
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+      videoRef.current.removeAttribute("src");
+      videoRef.current.load();
+    }
+
+    setCameraActive(false);
   };
+
+  // 카메라 시작 및 종료
+  useEffect(() => {
+    startCamera(facingMode);
+
+    return () => {
+      stopCamera(); // 컴포넌트 언마운트 시 정확하게 호출
+    };
+  }, [facingMode]);
 
   const toggleCamera = () => {
     setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
