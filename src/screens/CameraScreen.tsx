@@ -102,6 +102,7 @@ export default function CameraScreen() {
     };
   }, []);
 
+  // 마운트 시 시작
   useEffect(() => {
     let isMounted = true;
 
@@ -114,6 +115,7 @@ export default function CameraScreen() {
 
     return () => {
       isMounted = false;
+      stopCamera(); // 언마운트 시 강제 종료
     };
   }, [facingMode]);
 
@@ -145,20 +147,28 @@ export default function CameraScreen() {
       if (video) {
         const stream = video.srcObject as MediaStream;
         if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
+          stream.getTracks().forEach((track) => {
+            if (track.readyState === "live") {
+              track.stop(); // 트랙이 살아있는 경우만 stop
+            }
+          });
         }
 
+        // 브라우저 반영 위한 처리
+        video.pause();
         video.srcObject = null;
         video.removeAttribute("src");
         video.load();
 
+        // DOM에서 제거
         if (video.parentNode) {
           video.parentNode.removeChild(video);
         }
 
+        // 참조 제거
         videoRef.current = null;
       }
-    }, 1000); // delay로 브라우저 반영 시간 확보
+    }, 500); // delay로 충분한 반영 시간 확보
   };
 
   const toggleCamera = () => {
