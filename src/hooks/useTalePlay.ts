@@ -153,7 +153,7 @@ export function useTalePlay({
     if (user && selectedTaleDetail) {
       const finalStoryId = [...history, pageKey];
 
-      const storedTale = localStorage.getItem("myTales");
+      const storedTale = localStorage.getItem("myTale-storage");
       const parsedTale = storedTale ? JSON.parse(storedTale) : [];
 
       const tale: TaleContent = {

@@ -193,7 +193,12 @@ export default function TaleScreen() {
                 홈으로
               </CloseButton>
 
-              <LibButton onClick={handleGoToLibrary}>
+              <LibButton
+                onClick={() => {
+                  handleCompleteTale();
+                  navigate("/lib");
+                }}
+              >
                 내 설화 보러가기
               </LibButton>
               <ARButton

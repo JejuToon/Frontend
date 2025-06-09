@@ -77,7 +77,7 @@ export default function LibScreen() {
   const handleRemoveTale = (index: number) => {
     const updatedTales = myTales.filter((_, i) => i !== index);
     setMyTales(updatedTales);
-    localStorage.setItem("myTales", JSON.stringify(updatedTales));
+    localStorage.setItem("myTale-storage", JSON.stringify(updatedTales));
     setShowDeleteTaleModal(false);
   };
 
