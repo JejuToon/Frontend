@@ -62,8 +62,11 @@ export default function CameraScreen() {
     shutterAudio.current = new Audio("/assets/audios/shutter.mp3");
   }, []);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null); // 스트림 추적용 ref
+  const streamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(false);
+  const isStarting = useRef(false);
   const [cameraActive, setCameraActive] = useState(true);
+
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -88,30 +91,73 @@ export default function CameraScreen() {
     initialRotation: number;
   } | null>(null);
 
-  const startCamera = async (mode: "environment" | "user") => {
-    try {
-      // 기존 스트림 정지
-      stopCamera();
+  // 1. 마운트 시 첫 카메라 시작
+  useEffect(() => {
+    console.log("카메라 호출 시작");
+    startCamera("environment");
+    return () => stopCamera();
+  }, []);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+  // 2. facingMode 바뀌면 stop 후 start
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    stopCamera(); // 여기서 stop
+    startCamera(facingMode);
+  }, [facingMode]);
+
+  const startCamera = async (mode: "environment" | "user") => {
+    if (isStarting.current) return;
+    isStarting.current = true;
+
+    try {
+      await new Promise((res) => setTimeout(res, 200)); // 🔧 stop 후 delay
+
+      const constraints = {
         video: { facingMode: { ideal: mode } },
         audio: false,
-      });
+      };
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("기본 카메라 접근 실패. user로 fallback...");
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false,
+        });
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await videoRef.current.play();
       }
 
-      streamRef.current = stream; // 새 스트림 저장
+      streamRef.current = stream;
       setCameraActive(true);
+      console.log("[startCamera] 성공");
     } catch (err) {
-      console.error("카메라 접근 실패:", err);
+      console.error("카메라 접근 실패 (최종):", err);
+    } finally {
+      isStarting.current = false;
     }
   };
 
   const stopCamera = () => {
+    console.log("[stopCamera] 호출됨");
+
+    if (videoRef.current?.srcObject instanceof MediaStream) {
+      videoRef.current.srcObject.getTracks().forEach((track) => {
+        console.log(`[stopCamera] video 트랙 중지: ${track.kind}`);
+        if (track.readyState === "live") {
+          track.stop();
+        }
+      });
+    }
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
+        console.log(`[stopCamera] streamRef 트랙 중지: ${track.kind}`);
         if (track.readyState === "live") {
           track.stop();
         }
@@ -127,16 +173,8 @@ export default function CameraScreen() {
     }
 
     setCameraActive(false);
+    console.log("[stopCamera] 완료, cameraActive = false");
   };
-
-  // 카메라 시작 및 종료
-  useEffect(() => {
-    startCamera(facingMode);
-
-    return () => {
-      stopCamera(); // 컴포넌트 언마운트 시 정확하게 호출
-    };
-  }, [facingMode]);
 
   const toggleCamera = () => {
     setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
