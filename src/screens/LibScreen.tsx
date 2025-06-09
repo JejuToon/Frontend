@@ -70,10 +70,6 @@ export default function LibScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    console.log(myChars);
-  }, [myChars]);
-
   const handleRemoveTale = (index: number) => {
     const updatedTales = myTales.filter((_, i) => i !== index);
     setMyTales(updatedTales);

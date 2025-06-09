@@ -88,13 +88,10 @@ export default function CameraScreen() {
 
   // 컴포넌트 언마운트 시 카메라 정지
   useEffect(() => {
+    console.log("MOUNTED");
     return () => {
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream)
-          .getTracks()
-          .forEach((track) => track.stop());
-        videoRef.current.srcObject = null;
-      }
+      console.log("UNMOUNTED");
+      stopCamera();
     };
   }, []);
 
@@ -118,6 +115,23 @@ export default function CameraScreen() {
       }
     } catch (err) {
       //alert("카메라 접근 실패: " + (err as Error).message);
+    }
+  };
+
+  const stopCamera = () => {
+    console.log(">> STOP CAMERA");
+    const video = videoRef.current;
+
+    if (video && video.srcObject) {
+      const stream = video.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => {
+        track.stop();
+      });
+
+      video.srcObject = null;
+      video.removeAttribute("src");
+      video.load();
     }
   };
 
