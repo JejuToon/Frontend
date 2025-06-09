@@ -91,7 +91,14 @@ export default function CameraScreen() {
   useEffect(() => {
     return () => {
       stopCamera();
-      setCameraActive(false);
+
+      // DOM에서 video 태그 완전 제거
+      if (videoRef.current && videoRef.current.parentNode) {
+        videoRef.current.parentNode.removeChild(videoRef.current);
+      }
+
+      // 참조도 제거
+      videoRef.current = null;
     };
   }, []);
 
@@ -101,6 +108,7 @@ export default function CameraScreen() {
 
   const startCamera = async (mode: "environment" | "user") => {
     try {
+      // 이미 존재하는 MediaStream 정지
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream)
           .getTracks()
@@ -120,18 +128,19 @@ export default function CameraScreen() {
 
   const stopCamera = () => {
     const video = videoRef.current;
+    setCameraActive(false);
 
     if (video && video.srcObject) {
       const stream = video.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-
-      tracks.forEach((track) => {
+      stream.getTracks().forEach((track) => {
         track.stop();
       });
 
       video.srcObject = null;
       video.removeAttribute("src");
-      video.load(); // 일부 브라우저에서 필수
+      video.load();
+
+      videoRef.current = null;
     }
   };
 
