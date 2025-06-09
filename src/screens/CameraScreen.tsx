@@ -91,14 +91,7 @@ export default function CameraScreen() {
   useEffect(() => {
     return () => {
       stopCamera();
-
-      // DOM에서 video 태그 완전 제거
-      if (videoRef.current && videoRef.current.parentNode) {
-        videoRef.current.parentNode.removeChild(videoRef.current);
-      }
-
-      // 참조도 제거
-      videoRef.current = null;
+      forceStopCameraWithIframe(); // optional: PWA/WebView용
     };
   }, []);
 
@@ -169,6 +162,22 @@ export default function CameraScreen() {
         videoRef.current = null;
       }
     }, 500); // delay로 충분한 반영 시간 확보
+  };
+
+  const forceStopCameraWithIframe = () => {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    iframe.contentWindow?.navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        stream.getTracks().forEach((track) => track.stop());
+        document.body.removeChild(iframe);
+      })
+      .catch(() => {
+        document.body.removeChild(iframe);
+      });
   };
 
   const toggleCamera = () => {
