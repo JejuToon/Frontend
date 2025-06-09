@@ -62,6 +62,7 @@ export default function CameraScreen() {
     shutterAudio.current = new Audio("/assets/audios/shutter.mp3");
   }, []);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [cameraActive, setCameraActive] = useState(true);
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -88,10 +89,9 @@ export default function CameraScreen() {
 
   // 컴포넌트 언마운트 시 카메라 정지
   useEffect(() => {
-    console.log("MOUNTED");
     return () => {
-      console.log("UNMOUNTED");
       stopCamera();
+      setCameraActive(false);
     };
   }, []);
 
@@ -119,19 +119,19 @@ export default function CameraScreen() {
   };
 
   const stopCamera = () => {
-    console.log(">> STOP CAMERA");
     const video = videoRef.current;
 
     if (video && video.srcObject) {
       const stream = video.srcObject as MediaStream;
       const tracks = stream.getTracks();
+
       tracks.forEach((track) => {
         track.stop();
       });
 
       video.srcObject = null;
       video.removeAttribute("src");
-      video.load();
+      video.load(); // 일부 브라우저에서 필수
     }
   };
 
@@ -307,13 +307,15 @@ export default function CameraScreen() {
   return (
     <Container>
       <VideoWrapper ref={videoWrapperRef}>
-        <Video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          $flipped={facingMode === "user"}
-        />
+        {cameraActive && (
+          <Video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            $flipped={facingMode === "user"}
+          />
+        )}
 
         {selectedIndex !== 0 && SelectedCharacter && (
           <OverlayCharacter
