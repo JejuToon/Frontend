@@ -160,6 +160,7 @@ const Screen = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
   background-color: ${({ theme }) => theme.background};
   z-index: 9999;
