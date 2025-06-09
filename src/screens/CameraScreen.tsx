@@ -86,15 +86,20 @@ export default function CameraScreen() {
     initialRotation: number;
   } | null>(null);
 
+  // 컴포넌트 언마운트 시 카메라 정지
   useEffect(() => {
-    startCamera(facingMode);
     return () => {
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream)
           .getTracks()
           .forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    startCamera(facingMode);
   }, [facingMode]);
 
   const startCamera = async (mode: "environment" | "user") => {
