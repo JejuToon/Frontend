@@ -45,15 +45,6 @@ export default function TaleSetup({ onClose }: TaleSetupProps) {
   }, [onClose]);
 
   const handleButtonClick = () => {
-    setTTSConfig({
-      voiceIndex: selectedTTSIndex,
-      rate,
-      volume,
-    });
-    setFontConfig({
-      fontName: selectedFontName,
-    });
-
     if (skipNextTime) {
       setSkipTaleSetup(true);
     }
