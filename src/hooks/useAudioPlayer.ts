@@ -30,14 +30,6 @@ export function useAudioPlayer(url: string, isLoading: boolean) {
     audio.volume = volume;
     audio.playbackRate = rate;
 
-    audio
-      .play()
-      .then(() => setIsPlaying(true))
-      .catch((err) => {
-        console.warn("Audio play error:", err);
-        setIsPlaying(false);
-      });
-
     audioRef.current = audio;
 
     const handlePlay = () => setIsPlaying(true);
@@ -69,6 +61,20 @@ export function useAudioPlayer(url: string, isLoading: boolean) {
     }
   }, [rate]);
 
+  // 외부 수동 재생용 함수
+  const playManually = () => {
+    const audio = audioRef.current;
+    if (!audio || !ttsEnabled) return;
+    audio.currentTime = 0;
+    audio
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => {
+        console.warn("Audio play error:", err);
+        setIsPlaying(false);
+      });
+  };
+
   return {
     audio: audioRef.current,
     isPlaying,
@@ -84,5 +90,6 @@ export function useAudioPlayer(url: string, isLoading: boolean) {
         audio.play();
       }
     },
+    playManually, // 외부에서 지연 재생 시 사용
   };
 }

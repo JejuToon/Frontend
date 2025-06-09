@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { IoChevronUp } from "react-icons/io5";
 import styled, { keyframes } from "styled-components";
 
@@ -13,28 +13,22 @@ import { FontFaceStyle } from "../components/FontFaceStyle";
 
 import { fontOptions } from "../constants/fonts";
 
-import seolmun from "../mocks/scriptInfo";
+import { getTaleReplayPages } from "../utils/getTaleReplayPages";
 
-const seolmunCharacter = {
-  taleId: 1,
-  title: "설문대할망",
-  imageUrl: "/assets/images/ar-char1.png",
-};
+import { TaleContent, TalePage } from "../types/tale";
 
-export default function TaleScreen() {
+export default function TaleReplayScreen() {
   const navigate = useNavigate();
-
   const { selectedTaleDetail, ttsEnabled } = useStoryStore();
 
-  const [isTaleScreenLoading, setIsTaleScreenLoading] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
+  const [talePages, setTalePages] = useState<Record<string, TalePage>>({});
+  const [initialPageKey, setInitialPageKey] = useState<string>("1");
 
   const {
     audio,
     toggleAudio,
     replay,
     totalPageNum,
-    playManually,
     pageKey,
     pageNum,
     currentPage,
@@ -52,12 +46,15 @@ export default function TaleScreen() {
     handleGoToLibrary,
     handleCompleteTale,
   } = useTalePlay({
-    talePages: seolmun,
-    totalPageNum: 8,
-    isParentLoading: isTaleScreenLoading,
+    talePages,
+    totalPageNum: Object.keys(talePages).length,
+    initialPageKey,
   });
 
   const font = fontOptions.find((f) => f.name === fontConfig.fontName);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   // 스와이프 감지
   const [showNav, setShowNav] = useState(true);
@@ -69,9 +66,27 @@ export default function TaleScreen() {
   useEffect(() => {
     // 로딩 테스트
     const timeout = setTimeout(() => {
-      setIsTaleScreenLoading(false);
+      setIsLoading(false);
       setTimeout(() => setIsVisible(true), 100);
     }, 1000);
+
+    const replayData = localStorage.getItem("replayTale");
+    if (replayData) {
+      try {
+        const parsed = JSON.parse(replayData);
+        const pages = getTaleReplayPages(parsed.userTale.storyId);
+        setTalePages(pages);
+
+        // storyId의 첫 번째 값을 초기 키로 설정
+        const firstKey = parsed.userTale.storyId?.[0];
+        if (firstKey) {
+          setInitialPageKey(firstKey);
+        }
+      } catch (e) {
+        console.error("replayTale 파싱 실패:", e);
+      }
+    }
+
     return () => clearTimeout(timeout);
   }, []);
 
@@ -99,7 +114,7 @@ export default function TaleScreen() {
     }
   };
 
-  if (isTaleScreenLoading) return <Loader />;
+  if (isLoading) return <Loader />;
 
   return (
     <Screen
@@ -165,45 +180,31 @@ export default function TaleScreen() {
       {showCompleteModal && (
         <ModalOverlay>
           <ModalContent>
-            <h2>이 설화는 어땠나요?</h2>
+            <h2>설화 다시보기 완료</h2>
 
-            <Section>
-              <strong>설화 만족도</strong>
-              <StarRating>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Star
-                    key={n}
-                    onClick={() => setRating(n)}
-                    $active={n <= rating}
-                  >
-                    ★
-                  </Star>
-                ))}
-              </StarRating>
-            </Section>
-
-            <Section></Section>
             <ButtonContainer>
-              <CloseButton
+              <HomeButton
                 onClick={() => {
-                  handleCompleteTale();
+                  setShowCompleteModal(false);
+                }}
+              >
+                닫기
+              </HomeButton>
+              <HomeButton
+                onClick={() => {
                   navigate("/home");
                 }}
               >
                 홈으로
-              </CloseButton>
+              </HomeButton>
 
-              <LibButton onClick={handleGoToLibrary}>
-                내 설화 보러가기
-              </LibButton>
-              <ARButton
+              <LibButton
                 onClick={() => {
-                  handleCompleteTale();
-                  navigate("/camera");
+                  navigate("/lib");
                 }}
               >
-                캐릭터와 사진 찍기
-              </ARButton>
+                내 설화
+              </LibButton>
             </ButtonContainer>
           </ModalContent>
         </ModalOverlay>
@@ -379,29 +380,6 @@ const ModalContent = styled.div`
   text-align: center;
 `;
 
-const Section = styled.div`
-  margin: 16px 0;
-
-  ul {
-    list-style: none; //
-    padding: 0;
-    margin: 8px 0;
-  }
-
-  li {
-    margin-bottom: 6px;
-  }
-`;
-
-const StarRating = styled.div`
-  font-size: 24px;
-`;
-
-const Star = styled.span<{ $active: boolean }>`
-  cursor: pointer;
-  color: ${({ $active }) => ($active ? "#ffc107" : "#ddd")};
-`;
-
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -410,7 +388,7 @@ const ButtonContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-const CloseButton = styled.button`
+const HomeButton = styled.button`
   padding: 10px 20px;
   background: #aaa;
   color: white;
@@ -424,14 +402,7 @@ const CloseButton = styled.button`
   }
 `;
 
-const ARButton = styled(CloseButton)`
-  background: #ff8a3d;
-  &:hover {
-    background: #ff8a3d;
-  }
-`;
-
-const LibButton = styled(CloseButton)`
+const LibButton = styled(HomeButton)`
   background: #ff8a3d;
   &:hover {
     background: #ff8a3d;

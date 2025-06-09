@@ -49,4 +49,12 @@ export interface TaleDetailResponse {
   thumbnail: string;
 }
 
+export interface TalePage {
+  imageUrl: string;
+  text: string;
+  audioUrl: string;
+  next?: string; // 단일 다음 페이지
+  choices?: { text: string; next: string }[]; // 분기 선택지
+}
+
 export interface TaleResponse extends TaleListResponse {} // Nearby와 구조 같을 경우

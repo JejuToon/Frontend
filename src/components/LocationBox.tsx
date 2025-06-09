@@ -1,27 +1,41 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { IoLocationSharp } from "react-icons/io5";
+
+import { useUserInfoStore } from "../stores/useUserInfoStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { reverseGeocode } from "../utils/reverseGeocode";
 
 interface LocationBoxProps {
   onClick?: () => void;
-  label?: string; // 외부에서 직접 label을 주면 우선 사용
 }
 
-export default function LocationBox({ onClick, label }: LocationBoxProps) {
-  const { currentLocation } = useCurrentLocationStore();
-  const [resolvedLabel, setResolvedLabel] = useState("위치 정보 없음");
+export default function LocationBox({ onClick }: LocationBoxProps) {
+  const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
+  const { addressLabel, addressLabelCoords, setAddressLabel } =
+    useUserInfoStore();
+  const [resolvedLabel, setResolvedLabel] =
+    useState("위치 정보를 불러오는 중...");
+
+  useEffect(() => {
+    fetchCurrentLocation(null);
+  }, []);
 
   useEffect(() => {
     const fetchAddress = async () => {
-      if (label) {
-        setResolvedLabel(label); // 외부에서 전달된 label이 있으면 그걸 사용
+      if (!currentLocation) {
+        setResolvedLabel("위치 정보 없음");
         return;
       }
 
-      if (!currentLocation) {
-        setResolvedLabel("위치 정보 없음");
+      const isSameLocation =
+        addressLabel &&
+        addressLabelCoords &&
+        Math.abs(currentLocation.lat - addressLabelCoords.lat) < 0.0001 &&
+        Math.abs(currentLocation.lng - addressLabelCoords.lng) < 0.0001;
+
+      if (isSameLocation) {
+        setResolvedLabel(addressLabel);
         return;
       }
 
@@ -31,18 +45,18 @@ export default function LocationBox({ onClick, label }: LocationBoxProps) {
       );
       if (result) {
         setResolvedLabel(result);
+        setAddressLabel(result, currentLocation);
       } else {
         setResolvedLabel("위치 정보 없음");
       }
     };
 
     fetchAddress();
-  }, [currentLocation, label]);
+  }, [currentLocation]);
 
   return (
     <Button onClick={onClick}>
       <IoLocationSharp />
-
       <Label>{resolvedLabel}</Label>
     </Button>
   );
@@ -56,9 +70,9 @@ const Button = styled.button`
   border: 1px solid ${({ theme }) => "rgba(209, 163, 94, 0.8)"};
   border-radius: 20px;
   background: ${({ theme }) =>
-    theme.mode == "dark"
-      ? " rgba(226, 195, 147, 0.8)"
-      : " rgba(209, 163, 94, 0.8)"};
+    theme.mode === "dark"
+      ? "rgba(226, 195, 147, 0.8)"
+      : "rgba(209, 163, 94, 0.8)"};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
 `;

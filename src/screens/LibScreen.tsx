@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaBars, FaEllipsisVertical } from "react-icons/fa6";
 import styled from "styled-components";
 import Header from "../components/Header";
 import TaleCard from "../components/TaleCard";
 import CharacterCard from "../components/CharacterCard";
+import ConfirmModal from "../components/ConfirmModal";
 import Tabs, { TabItem } from "../components/Tabs";
-import { useAuth } from "../hooks/useAuth";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
 import { RiLoginBoxLine } from "react-icons/ri";
@@ -14,10 +15,10 @@ import { useAuthStore } from "../stores/useAuthStore";
 
 import { TaleContent } from "../types/tale";
 
-interface CharacterCardProps {
-  name: string;
-  data: string;
-  avatarUrl: string;
+interface userTaleContent {
+  storyId: string[];
+  userId: number;
+  tale: TaleContent;
 }
 
 const TAB_ITEMS: TabItem[] = [
@@ -31,23 +32,63 @@ export default function LibScreen() {
 
   const [tab, setTab] = useState<"tale" | "character">("tale");
   const navigate = useNavigate();
-  const [myTales, setMyTales] = useState<TaleContent[]>([]);
-  const myCharacters = useCharacterStore((state) => state.characters);
+  const [myTales, setMyTales] = useState<userTaleContent[]>([]);
+  const [myChars, setMyChars] = useState<any>([]);
+  const [showDeleteTaleModal, setShowDeleteTaleModal] = useState(false);
+  const [showDeleteCharModal, setShowDeleteCharModal] = useState(false);
+  const [selectedTaleIndex, setSelectedTaleIndex] = useState<number | null>(
+    null
+  );
+  const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(
+    null
+  );
+  const { characters, setSelectedCharacterId } = useCharacterStore();
 
-  const handleTaleClick = (tale: TaleContent) => {
-    console.log("설화 리플레이");
+  const handleTaleClick = (userTale: userTaleContent) => {
+    localStorage.setItem("replayTale", JSON.stringify({ userTale }));
+    navigate(`/tale/replay`);
+  };
+
+  const handleCharacterClick = (taleId: number) => {
+    setSelectedCharacterId(taleId);
+    navigate("/camera", { state: { selectedCharacterId: taleId } });
   };
 
   useEffect(() => {
     try {
-      const storedTale = localStorage.getItem("myTales");
+      const storedTale = localStorage.getItem("myTale-storage");
       const parsedTale = storedTale ? JSON.parse(storedTale) : [];
       setMyTales(parsedTale);
+
+      const storedChar = localStorage.getItem("charcter-storage");
+      const parsedChar = storedChar ? JSON.parse(storedChar) : [];
+      setMyChars(parsedChar);
     } catch (e) {
-      console.error("myTales JSON 파싱 실패:", e);
+      console.error("JSON 파싱 실패:", e);
       setMyTales([]);
+      setMyChars([]);
     }
   }, []);
+
+  useEffect(() => {
+    console.log(myChars);
+  }, [myChars]);
+
+  const handleRemoveTale = (index: number) => {
+    const updatedTales = myTales.filter((_, i) => i !== index);
+    setMyTales(updatedTales);
+    localStorage.setItem("myTales", JSON.stringify(updatedTales));
+    setShowDeleteTaleModal(false);
+  };
+
+  const handleRemoveCharacter = (index: number) => {
+    const target = characters[index];
+    if (!target) return;
+
+    useCharacterStore.getState().removeCharacter(target.taleId);
+
+    setShowDeleteCharModal(false);
+  };
 
   return (
     <LibScreenContainer>
@@ -80,16 +121,36 @@ export default function LibScreen() {
           {tab === "tale" ? (
             myTales.length > 0 ? (
               <TaleList>
-                {myTales.map((t) => (
+                {myTales.map((t, index) => (
                   <TaleCard
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    thumbnailUrl={t.thumbnail}
+                    key={t.tale.id}
+                    id={t.tale.id}
+                    title={t.tale.title}
+                    description={t.tale.description}
+                    thumbnailUrl={t.tale.thumbnail}
                     onClick={() => handleTaleClick(t)}
+                    icon={<FaBars />}
+                    onIconClick={() => {
+                      setShowDeleteTaleModal(true);
+                      setSelectedTaleIndex(index);
+                    }}
                   />
                 ))}
+                {showDeleteTaleModal && (
+                  <ConfirmModal
+                    mainTitle="설화를 삭제할까요?"
+                    subTitle="삭제 시 되돌릴 수 없어요"
+                    onClose={() => {
+                      setShowDeleteTaleModal(false);
+                      setSelectedTaleIndex(null);
+                    }}
+                    onConfirm={() => {
+                      if (selectedTaleIndex !== null) {
+                        handleRemoveTale(selectedTaleIndex);
+                      }
+                    }}
+                  />
+                )}
               </TaleList>
             ) : (
               <EmptyStateGrid>
@@ -102,22 +163,43 @@ export default function LibScreen() {
                 />
               </EmptyStateGrid>
             )
-          ) : myCharacters.length > 0 ? (
+          ) : characters.length > 0 ? (
             <CharacterGrid>
-              {myCharacters.map((c, idx) => (
+              {characters.map((c, idx) => (
                 <CharacterCard
                   key={idx}
                   name={c.title || "이름 없음"}
                   avatarUrl={c.imageUrl || ""}
+                  icon={<FaBars />}
+                  onClickIcon={() => {
+                    setShowDeleteCharModal(true);
+                    setSelectedCharIndex(idx);
+                  }}
+                  onClick={() => handleCharacterClick(c.taleId)}
                 />
               ))}
+              {showDeleteCharModal && (
+                <ConfirmModal
+                  mainTitle="캐릭터를 삭제할까요?"
+                  subTitle="삭제 시 되돌릴 수 없어요"
+                  onClose={() => {
+                    setShowDeleteCharModal(false);
+                    setSelectedCharIndex(null);
+                  }}
+                  onConfirm={() => {
+                    if (selectedCharIndex !== null) {
+                      handleRemoveCharacter(selectedCharIndex);
+                    }
+                  }}
+                />
+              )}
             </CharacterGrid>
           ) : (
             <EmptyStateGrid>
               <EmptyState
                 icon={<TbMapSearch />}
                 title="저장된 캐릭터가 없어요"
-                description="설화를 감상하고 캐릭터를 만들어 보세요"
+                description="설화를 감상하고 캐릭터를 모아보세요"
                 onIconClick={() => navigate("/search")}
                 onDescriptionClick={() => navigate("/search")}
               />

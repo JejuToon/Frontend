@@ -19,28 +19,34 @@ import {
 import { useCharacterStore } from "../stores/useCharacterStore";
 
 type CharacterItem =
-  | { type: "icon"; component: React.ComponentType<{ size?: number }> }
-  | { type: "image"; src: string };
+  | {
+      id: number;
+      type: "icon";
+      component: React.ComponentType<{ size?: number }>;
+    }
+  | { id: number; type: "image"; src: string };
 
 const charactersDummy: CharacterItem[] = [
-  { type: "icon", component: MdBlock }, // 기본 아이콘: 캐릭터 선택 안함
+  { id: 99999, type: "icon", component: MdBlock }, // 기본 아이콘: 캐릭터 선택 안함
   //{ type: "image", src: "/assets/images/ar-char1.png" }, // PNG 캐릭터 추가
-  { type: "icon", component: CgGhostCharacter },
-  { type: "icon", component: FaUserAstronaut },
-  { type: "icon", component: FaRobot },
-  { type: "icon", component: FaUserNinja },
-  { type: "icon", component: FaUserSecret },
-  { type: "icon", component: FaUserTie },
-  { type: "icon", component: GiFairyWand },
-  { type: "icon", component: GiPirateCaptain },
-  { type: "icon", component: GiAlienStare },
-  { type: "icon", component: GiSamuraiHelmet },
+  { id: 99998, type: "icon", component: CgGhostCharacter },
+  { id: 99997, type: "icon", component: FaUserAstronaut },
+  { id: 99996, type: "icon", component: FaRobot },
+  { id: 99995, type: "icon", component: FaUserNinja },
+  { id: 99994, type: "icon", component: FaUserSecret },
+  { id: 99993, type: "icon", component: FaUserTie },
+  { id: 99992, type: "icon", component: GiFairyWand },
+  { id: 99991, type: "icon", component: GiPirateCaptain },
+  { id: 99990, type: "icon", component: GiAlienStare },
+  { id: 99989, type: "icon", component: GiSamuraiHelmet },
 ];
 
 export default function CameraScreen() {
   //
-  const { characters: storedCharacters } = useCharacterStore();
+  const { characters: storedCharacters, selectedCharacterId } =
+    useCharacterStore();
   const storedItems: CharacterItem[] = storedCharacters.map((char) => ({
+    id: char.taleId,
     type: "image",
     src: char.imageUrl,
   }));
@@ -106,7 +112,7 @@ export default function CameraScreen() {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      alert("카메라 접근 실패: " + (err as Error).message);
+      //alert("카메라 접근 실패: " + (err as Error).message);
     }
   };
 
@@ -287,7 +293,7 @@ export default function CameraScreen() {
           autoPlay
           playsInline
           muted
-          flipped={facingMode === "user"}
+          $flipped={facingMode === "user"}
         />
 
         {selectedIndex !== 0 && SelectedCharacter && (
@@ -319,7 +325,7 @@ export default function CameraScreen() {
 
             {characters.map((char, index) => (
               <CharacterItem
-                key={index}
+                key={char.id}
                 ref={(el) => {
                   characterRefs.current[index] = el;
                 }}
@@ -338,7 +344,7 @@ export default function CameraScreen() {
           </CharacterMenu>
         </CharacterMenuContainer>
 
-        <CaptureButton onClick={handleCapture} active={isCapturing} />
+        <CaptureButton onClick={handleCapture} $active={isCapturing} />
         <SwitchButton onClick={toggleCamera}>
           <MdFlipCameraIos size={24} />
         </SwitchButton>
@@ -346,8 +352,6 @@ export default function CameraScreen() {
     </Container>
   );
 }
-
-// Styled Components
 
 const Container = styled.div`
   width: 100%;
@@ -365,13 +369,13 @@ const VideoWrapper = styled.div`
   position: relative;
 `;
 
-const Video = styled.video<{ flipped: boolean }>`
+const Video = styled.video<{ $flipped: boolean }>`
   width: calc(100% - 24px);
   height: calc(100% - 24px);
   margin: 12px;
   border-radius: 24px;
   object-fit: cover;
-  transform: ${({ flipped }) => (flipped ? "scaleX(-1)" : "none")};
+  transform: ${({ $flipped }) => ($flipped ? "scaleX(-1)" : "none")};
 `;
 
 const OverlayCharacter = styled.div`
@@ -382,11 +386,11 @@ const OverlayCharacter = styled.div`
   touch-action: none;
 `;
 
-const CaptureButton = styled.div<{ active?: boolean }>`
+const CaptureButton = styled.div<{ $active?: boolean }>`
   position: absolute;
   bottom: 30px;
   left: 50%;
-  transform: translateX(-50%) scale(${({ active }) => (active ? 0.92 : 1)});
+  transform: translateX(-50%) scale(${({ $active }) => ($active ? 0.92 : 1)});
   width: 70px;
   height: 70px;
   background-color: #e0e0e0;

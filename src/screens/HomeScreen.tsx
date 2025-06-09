@@ -16,7 +16,7 @@ import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
 
 import Header from "../components/Header";
-import OnboardingRecommendForm from "../components/onboardingRecommendForm";
+import OnboardingRecommendForm from "../components/OnboardingRecommendForm";
 import LocationBox from "../components/LocationBox";
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";

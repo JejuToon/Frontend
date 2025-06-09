@@ -10,22 +10,7 @@ export interface TalePage {
   choices?: { text: string; next: string }[]; // 분기 선택지
 }
 
-// 타입을 명확히 하기 위한 키 타입
-export type PageKey =
-  | "1"
-  | "2"
-  | "3"
-  | "4-1"
-  | "4-2"
-  | "4-3"
-  | "5"
-  | "6"
-  | "7-1"
-  | "7-2"
-  | "7-3"
-  | "8";
-
-export const seolmun: Record<PageKey, TalePage> = {
+export const seolmun: Record<string, TalePage> = {
   "1": {
     imageUrl: "/assets/stories/seolmun/seolmun1.png",
     text:

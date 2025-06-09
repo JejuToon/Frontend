@@ -1,25 +1,39 @@
+import { ViewTransitionBuilder } from "framer-motion";
 import React from "react";
 import styled from "styled-components";
 
 interface CharacterCardProps {
   name: string;
-  data?: string;
   avatarUrl: string;
+  onClick?: () => void;
+  icon?: React.ReactNode;
+  onClickIcon?: () => void;
 }
 
 export default function CharacterCard({
   name,
-  data,
   avatarUrl,
+  onClick,
+  icon,
+  onClickIcon,
 }: CharacterCardProps) {
   return (
-    <Card>
+    <Card onClick={onClick}>
       <ImageBox>
         <Avatar src={avatarUrl} alt={name} />
+        {icon && (
+          <IconWrapper
+            onClick={(e) => {
+              e.stopPropagation(); // 카드 클릭과 분리
+              onClickIcon?.();
+            }}
+          >
+            {icon}
+          </IconWrapper>
+        )}
       </ImageBox>
       <Info>
         <Name>{name}</Name>
-        {data && <Data>{data}</Data>}
       </Info>
     </Card>
   );
@@ -38,6 +52,8 @@ const Card = styled.div`
 `;
 
 const ImageBox = styled.div`
+  flex: 1 1 auto;
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   background-color: #f8f8f8;
@@ -53,6 +69,25 @@ const Avatar = styled.img`
   object-fit: contain;
 `;
 
+const IconWrapper = styled.div`
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: pointer;
+
+  svg {
+    font-size: 16px;
+    color: #333;
+  }
+`;
+
 const Info = styled.div`
   padding: 8px 4px;
   display: flex;
@@ -65,15 +100,6 @@ const Name = styled.div`
   font-weight: 600;
   color: #333;
   margin-bottom: 2px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const Data = styled.div`
-  font-size: 12px;
-  color: #888;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;

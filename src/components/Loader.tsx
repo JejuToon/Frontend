@@ -1,6 +1,6 @@
 import React from "react";
 import Lottie from "lottie-react";
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import loadingAnimation from "../assets/loading.json";
 
 interface LoaderProps {
@@ -23,20 +23,34 @@ export default function Loader({ type = "full" }: LoaderProps) {
   );
 }
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
 const Wrapper = styled.div<{ $type: "full" | "inline" }>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   ${(props) =>
     props.$type === "full"
       ? css`
           position: fixed;
           inset: 0;
-          background: rgba(255, 255, 255, 0.7);
+          background: ${props.theme.background};
           z-index: 9999;
+          animation: ${fadeIn} 0.4s ease forwards;
         `
       : css`
           position: relative;
           background: transparent;
+          transition: opacity 0.3s ease;
         `}
-  display: flex;
-  justify-content: center;
-  align-items: center;
 `;

@@ -15,7 +15,7 @@ export default function CustomOverlayAbove({
   onClick,
 }: CustomOverlayProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [, forceRender] = useState(0); // ⚠️ 강제 리렌더링을 위한 상태
+  const [, forceRender] = useState(0); // 강제 리렌더링을 위한 상태
 
   useEffect(() => {
     const overlay = new google.maps.OverlayView();
@@ -30,10 +30,10 @@ export default function CustomOverlayAbove({
       const panes = overlay.getPanes();
       if (panes) {
         panes.overlayMouseTarget.appendChild(div);
-        forceRender((v) => v + 1); // ✅ DOM이 연결된 후 강제 리렌더
+        forceRender((v) => v + 1); // DOM이 연결된 후 강제 리렌더
       }
 
-      // ✅ 클릭 이벤트 연결
+      // 클릭 이벤트 연결
       if (onClick) {
         div.addEventListener("click", onClick);
       }
@@ -55,7 +55,7 @@ export default function CustomOverlayAbove({
 
     overlay.onRemove = () => {
       if (containerRef.current) {
-        // ✅ 이벤트 제거
+        // 이벤트 제거
         if (onClick) {
           containerRef.current.removeEventListener("click", onClick);
         }

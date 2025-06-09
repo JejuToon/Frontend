@@ -1,8 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import { FaTimes, FaRegCompass } from "react-icons/fa"; // 예시 아이콘
-import CustomButton from "./CustomButton";
-import { colors } from "../constants/colors";
 
 interface TaleCardProps {
   id: number;
@@ -10,7 +7,8 @@ interface TaleCardProps {
   description?: string;
   thumbnailUrl?: string;
   onClick: () => void;
-  onCloseClick?: () => void;
+  onIconClick?: () => void;
+  icon?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -20,20 +18,21 @@ export default function TaleCard({
   description,
   thumbnailUrl,
   onClick,
-  onCloseClick,
+  onIconClick,
+  icon,
   children,
 }: TaleCardProps) {
   return (
     <Section>
-      {onCloseClick && (
-        <CloseButton
+      {onIconClick && icon && (
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
-            onCloseClick();
+            onIconClick();
           }}
         >
-          <FaTimes />
-        </CloseButton>
+          {icon}
+        </IconButton>
       )}
 
       <CardBody onClick={onClick}>
@@ -78,7 +77,7 @@ const CardBody = styled.div`
   flex-direction: row;
 `;
 
-const CloseButton = styled.button`
+const IconButton = styled.button`
   position: absolute;
   top: 6px;
   right: 6px;

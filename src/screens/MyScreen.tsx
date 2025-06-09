@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaAngleRight } from "react-icons/fa6";
 import styled from "styled-components";
 import Header from "../components/Header";
+import TooltipOverlay from "../components/ToolTipOverlay";
 import TTSSettings from "../components/TTSSettings";
 import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
@@ -43,6 +44,10 @@ export default function MyScreen() {
           </MyListItem>
 
           <MyListItem2>
+            {/*<TooltipOverlay
+              message="다양한 TTS를 들어보려면 눌러보세요!"
+              topOffset="-40px;"
+            />*/}
             <TTSSettings type="detail" expanded={false} />
           </MyListItem2>
 
@@ -161,6 +166,7 @@ const MyListItem = styled.div`
 `;
 
 const MyListItem2 = styled.div`
+  position: relative;
   padding: 16px;
 `;
 

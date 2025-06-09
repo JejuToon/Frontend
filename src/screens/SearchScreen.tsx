@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaTimes } from "react-icons/fa";
 import {
   FaBars,
   FaScroll,
@@ -28,7 +29,7 @@ import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 
 import CategorySection from "../components/CategorySection";
-import OnboardingRecommendForm from "../components/onboardingRecommendForm";
+import OnboardingRecommendForm from "../components/OnboardingRecommendForm";
 import Chip from "../components/Chip";
 import LocationBox from "../components/LocationBox";
 import BottomSheet from "../components/BottomSheet";
@@ -359,7 +360,8 @@ export default function SearchScreen() {
                   description={selectedMarker.description ?? "설명 없음"}
                   thumbnailUrl={selectedMarker.thumbnail ?? ""}
                   onClick={() => handleTaleClick(selectedMarker.id)}
-                  onCloseClick={() => handleCloseClick()}
+                  icon={<FaTimes />}
+                  onIconClick={() => handleCloseClick()}
                 >
                   <CustomButton
                     label="위치 보기"

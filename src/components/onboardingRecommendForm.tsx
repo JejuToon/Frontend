@@ -4,7 +4,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 import Loader from "../components/Loader";
 import { useUserInfoStore } from "../stores/useUserInfoStore";
 
-const interestsOptions = ["설화", "모험", "로맨스", "공포", "신화"];
+const interestsOptions = ["개척담", "인물담", "연애담", "신앙담"];
 const options1 = ["옵션1", "옵션2", "옵션3"];
 const options2 = ["옵션4", "옵션5", "옵션6", "옵션7"];
 const onboardingSteps = ["age", "interests", "options1", "options2", "result"];

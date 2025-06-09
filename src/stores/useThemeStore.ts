@@ -23,7 +23,7 @@ const getInitialTheme = (): ThemeMode => {
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
-      mode: "dark", // getInitalTheme();
+      mode: "light", // getInitalTheme();
       toggleTheme: () => {
         const newMode = get().mode === "light" ? "dark" : "light";
         set({ mode: newMode });
