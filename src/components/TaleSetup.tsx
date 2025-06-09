@@ -33,7 +33,7 @@ export default function TaleSetup({ onClose }: TaleSetupProps) {
   const [skipNextTime, setSkipNextTime] = useState(false);
   const [selectedFontName, setSelectedFontName] = useState(fontConfig.fontName);
 
-  // Escape 키 눌렀을 때 닫기
+  // Escape 키 눌렀을 때 닫기 /
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
