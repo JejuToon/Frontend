@@ -86,8 +86,12 @@ export default function LibScreen() {
   };
 
   const handleTaleClick = (userTale: userTaleContent) => {
-    localStorage.setItem("replayTale", JSON.stringify({ userTale }));
-    navigate(`/tale/replay`);
+    try {
+      localStorage.setItem("replayTale", JSON.stringify(userTale));
+      navigate("/tale/replay");
+    } catch (error) {
+      console.error("리플레이 설정 실패:", error);
+    }
   };
 
   const handleCharacterClick = (taleId: number) => {

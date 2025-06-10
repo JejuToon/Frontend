@@ -74,16 +74,20 @@ export default function TaleReplayScreen() {
     if (replayData) {
       try {
         const parsed = JSON.parse(replayData);
-        const pages = getTaleReplayPages(parsed.userTale.storyId);
+        const pages = getTaleReplayPages(parsed.storyId);
         setTalePages(pages);
 
         // storyId의 첫 번째 값을 초기 키로 설정
-        const firstKey = parsed.userTale.storyId?.[0];
+        const firstKey = parsed.storyId?.[0];
         if (firstKey) {
           setInitialPageKey(firstKey);
         }
       } catch (e) {
         console.error("replayTale 파싱 실패:", e);
+        alert(
+          "저장된 설화 데이터를 불러오는 데 실패했습니다. 다시 시도해주세요."
+        );
+        navigate("/lib");
       }
     }
 
