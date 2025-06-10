@@ -39,7 +39,7 @@ const ChipButton = styled.button<{
       ? css`
           background: ${$selected ? "#7f3dff" : "#f2ecff"};
           color: ${$selected ? "white" : "black"};
-          border-color: ${$selected ? "#7f3dff" : "#ccc"};
+          border-color: ${$selected ? "#7f3dff" : "#dcd0f7"};
         `
       : css`
           background: ${$selected ? "#ff8a3d" : "#fff4e6"};

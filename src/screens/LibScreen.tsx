@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBars, FaEllipsisVertical } from "react-icons/fa6";
-import styled from "styled-components";
+import {
+  FaBars,
+  FaEllipsisVertical,
+  FaPersonHiking,
+  FaUser,
+  FaHeart,
+  FaCross,
+} from "react-icons/fa6";
+import { GrMapLocation } from "react-icons/gr";
+
+import { useSwipeTabs } from "../hooks/useSwipeTabs";
+
+import styled, { keyframes, css } from "styled-components";
 import Header from "../components/Header";
 import TaleCard from "../components/TaleCard";
+import CustomButton from "../components/CustomButton";
 import CharacterCard from "../components/CharacterCard";
 import ConfirmModal from "../components/ConfirmModal";
+import Chip from "../components/Chip";
 import Tabs, { TabItem } from "../components/Tabs";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
 import { RiLoginBoxLine } from "react-icons/ri";
+import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useCharacterStore } from "../stores/useCharacterStore";
 import { useAuthStore } from "../stores/useAuthStore";
 
@@ -24,13 +38,22 @@ interface userTaleContent {
 const TAB_ITEMS: TabItem[] = [
   { label: "설화", value: "tale" },
   { label: "캐릭터", value: "character" },
-];
+] as const;
+
+type TabType = (typeof TAB_ITEMS)[number]["value"]; // "tale" | "character"
+
+const allCategories = ["개척담", "인물담", "연애담", "신앙담"];
+const categoriesIcons = [FaPersonHiking, FaUser, FaHeart, FaCross];
 
 export default function LibScreen() {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
-  const [tab, setTab] = useState<"tale" | "character">("tale");
+  const [tab, setTab] = useState<TabType>("tale");
+  const [prevTab, setPrevTab] = useState<TabType>("tale"); // 이전 탭 추적
+  const tabValues = TAB_ITEMS.map((item) => item.value); // ["tale", "character"]
+  const { onTouchStart, onTouchEnd } = useSwipeTabs(tab, setTab, tabValues);
+
   const navigate = useNavigate();
   const [myTales, setMyTales] = useState<userTaleContent[]>([]);
   const [myChars, setMyChars] = useState<any>([]);
@@ -42,7 +65,32 @@ export default function LibScreen() {
   const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(
     null
   );
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { characters, setSelectedCharacterId } = useCharacterStore();
+
+  const {
+    selectedMarker,
+    setSelectedMarker,
+    sheetPos,
+    setSheetPos,
+    handleSheetToggle,
+    onMarkerClick,
+  } = useSelectedMarkerStore();
+
+  // 방향 계산
+  const animationDirection: "left" | "right" =
+    prevTab === "tale" && tab === "character"
+      ? "right"
+      : prevTab === "character" && tab === "tale"
+      ? "left"
+      : "right";
+
+  const handleTabChange = (nextTab: TabType) => {
+    if (nextTab !== tab) {
+      setPrevTab(tab); // 현재 tab을 prevTab에 저장
+      setTab(nextTab); // 다음 탭으로 이동
+    }
+  };
 
   const handleTaleClick = (userTale: userTaleContent) => {
     localStorage.setItem("replayTale", JSON.stringify({ userTale }));
@@ -81,14 +129,41 @@ export default function LibScreen() {
     const target = characters[index];
     if (!target) return;
 
-    useCharacterStore.getState().removeCharacter(target.taleId);
+    useCharacterStore.getState().removeCharacter(target.tale.id);
 
     setShowDeleteCharModal(false);
   };
 
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory((prev) => (prev === category ? null : category));
+  };
+
+  const filteredTales = selectedCategory
+    ? myTales.filter((t) => t.tale.categories?.includes(selectedCategory))
+    : myTales;
+
+  const filteredCharacters = selectedCategory
+    ? characters.filter((c) => c.tale.categories?.includes(selectedCategory))
+    : characters;
+
+  const handleViewMap = (tale: TaleContent) => {
+    const marker = {
+      id: tale.id,
+      title: tale.title,
+      location: tale.location[0], // 첫 번쨰 좌표 사용
+      categories: tale.categories,
+      description: tale.description,
+      score: tale.score,
+      thumbnail: tale.thumbnail,
+    };
+
+    setSelectedMarker(marker);
+    navigate("/search");
+  };
+
   return (
-    <LibScreenContainer>
-      <Header left={<h1>설화</h1>} center={null} right={null} />
+    <LibScreenContainer onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <Header left={<h1>내 설화</h1>} center={null} right={null} />
 
       {!isLoggedIn || !user ? (
         <EmptyStateGrid>
@@ -102,52 +177,82 @@ export default function LibScreen() {
         </EmptyStateGrid>
       ) : (
         <>
-          <LibTabs>
-            {TAB_ITEMS.map((item) => (
-              <LibTab
-                key={item.value}
-                $active={tab === item.value}
-                onClick={() => setTab(item.value as any)}
-              >
-                {item.label}
-              </LibTab>
-            ))}
-          </LibTabs>
-
+          <Tabs<TabType>
+            items={TAB_ITEMS}
+            active={tab}
+            onChange={handleTabChange}
+          />
           {tab === "tale" ? (
             myTales.length > 0 ? (
-              <TaleList>
-                {myTales.map((t, index) => (
-                  <TaleCard
-                    key={t.tale.id}
-                    id={t.tale.id}
-                    title={t.tale.title}
-                    description={t.tale.description}
-                    thumbnailUrl={t.tale.thumbnail}
-                    onClick={() => handleTaleClick(t)}
-                    icon={<FaBars />}
-                    onIconClick={() => {
-                      setShowDeleteTaleModal(true);
-                      setSelectedTaleIndex(index);
-                    }}
-                  />
-                ))}
-                {showDeleteTaleModal && (
-                  <ConfirmModal
-                    mainTitle="설화를 삭제할까요?"
-                    subTitle="삭제 시 되돌릴 수 없어요"
-                    onClose={() => {
-                      setShowDeleteTaleModal(false);
-                      setSelectedTaleIndex(null);
-                    }}
-                    onConfirm={() => {
-                      if (selectedTaleIndex !== null) {
-                        handleRemoveTale(selectedTaleIndex);
-                      }
-                    }}
-                  />
-                )}
-              </TaleList>
+              <>
+                <ChipContainer>
+                  {allCategories.map((cat, index) => {
+                    const Icon = categoriesIcons[index];
+                    return (
+                      <Chip
+                        key={cat}
+                        selected={selectedCategory === cat}
+                        onToggle={() => handleCategorySelect(cat)}
+                        variant="category"
+                      >
+                        <ChipContent>
+                          <Icon style={{ marginRight: 2 }} />
+                          {cat}
+                        </ChipContent>
+                      </Chip>
+                    );
+                  })}
+                </ChipContainer>
+
+                <AnimatedTabContent key={tab} direction={animationDirection}>
+                  <TaleList>
+                    {filteredTales.map((t) => {
+                      const originalIndex = myTales.findIndex(
+                        (mt) => mt.tale.id === t.tale.id
+                      );
+                      return (
+                        <TaleCard
+                          key={t.tale.id}
+                          id={t.tale.id}
+                          title={t.tale.title}
+                          description={t.tale.description}
+                          thumbnailUrl={t.tale.thumbnail}
+                          onClick={() => handleTaleClick(t)}
+                          icon={<FaBars />}
+                          onIconClick={() => {
+                            setShowDeleteTaleModal(true);
+                            setSelectedTaleIndex(originalIndex);
+                          }}
+                        >
+                          <CustomButton
+                            label="지도"
+                            icon={<GrMapLocation />}
+                            size="small"
+                            variant="filled"
+                            onClick={() => handleViewMap(t.tale)}
+                          />
+                        </TaleCard>
+                      );
+                    })}
+
+                    {showDeleteTaleModal && (
+                      <ConfirmModal
+                        mainTitle="설화를 삭제할까요?"
+                        subTitle="삭제 시 되돌릴 수 없어요"
+                        onClose={() => {
+                          setShowDeleteTaleModal(false);
+                          setSelectedTaleIndex(null);
+                        }}
+                        onConfirm={() => {
+                          if (selectedTaleIndex !== null) {
+                            handleRemoveTale(selectedTaleIndex);
+                          }
+                        }}
+                      />
+                    )}
+                  </TaleList>
+                </AnimatedTabContent>
+              </>
             ) : (
               <EmptyStateGrid>
                 <EmptyState
@@ -160,36 +265,65 @@ export default function LibScreen() {
               </EmptyStateGrid>
             )
           ) : characters.length > 0 ? (
-            <CharacterGrid>
-              {characters.map((c, idx) => (
-                <CharacterCard
-                  key={idx}
-                  name={c.title || "이름 없음"}
-                  avatarUrl={c.imageUrl || ""}
-                  icon={<FaBars />}
-                  onClickIcon={() => {
-                    setShowDeleteCharModal(true);
-                    setSelectedCharIndex(idx);
-                  }}
-                  onClick={() => handleCharacterClick(c.taleId)}
-                />
-              ))}
-              {showDeleteCharModal && (
-                <ConfirmModal
-                  mainTitle="캐릭터를 삭제할까요?"
-                  subTitle="삭제 시 되돌릴 수 없어요"
-                  onClose={() => {
-                    setShowDeleteCharModal(false);
-                    setSelectedCharIndex(null);
-                  }}
-                  onConfirm={() => {
-                    if (selectedCharIndex !== null) {
-                      handleRemoveCharacter(selectedCharIndex);
-                    }
-                  }}
-                />
-              )}
-            </CharacterGrid>
+            <>
+              <ChipContainer>
+                {allCategories.map((cat, index) => {
+                  const Icon = categoriesIcons[index];
+                  return (
+                    <Chip
+                      key={cat}
+                      selected={selectedCategory === cat}
+                      onToggle={() => handleCategorySelect(cat)}
+                      variant="category"
+                    >
+                      <ChipContent>
+                        <Icon style={{ marginRight: 2 }} />
+                        {cat}
+                      </ChipContent>
+                    </Chip>
+                  );
+                })}
+              </ChipContainer>
+
+              <AnimatedTabContent key={tab} direction={animationDirection}>
+                <CharacterGrid>
+                  {filteredCharacters.map((c) => {
+                    const originalIndex = characters.findIndex(
+                      (char) => char.characterId === c.characterId
+                    );
+                    return (
+                      <CharacterCard
+                        key={c.characterId}
+                        name={c.tale.title || "이름 없음"}
+                        avatarUrl={c.imageUrl || ""}
+                        icon={<FaBars />}
+                        onClickIcon={() => {
+                          setShowDeleteCharModal(true);
+                          setSelectedCharIndex(originalIndex);
+                        }}
+                        onClick={() => handleCharacterClick(c.tale.id)}
+                      />
+                    );
+                  })}
+
+                  {showDeleteCharModal && (
+                    <ConfirmModal
+                      mainTitle="캐릭터를 삭제할까요?"
+                      subTitle="삭제 시 되돌릴 수 없어요"
+                      onClose={() => {
+                        setShowDeleteCharModal(false);
+                        setSelectedCharIndex(null);
+                      }}
+                      onConfirm={() => {
+                        if (selectedCharIndex !== null) {
+                          handleRemoveCharacter(selectedCharIndex);
+                        }
+                      }}
+                    />
+                  )}
+                </CharacterGrid>
+              </AnimatedTabContent>
+            </>
           ) : (
             <EmptyStateGrid>
               <EmptyState
@@ -208,12 +342,22 @@ export default function LibScreen() {
 }
 
 const LibScreenContainer = styled.main`
+  position: relative;
+  width: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
   padding-bottom: 60px;
   background-color: ${({ theme }) => theme.background};
+
+  /* 스크롤바 숨김 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 `;
 
 const LoginButton = styled.button`
@@ -247,6 +391,20 @@ const LibTab = styled.button<{ $active: boolean }>`
     $active ? `2px solid ${theme.text}` : "none"};
 `;
 
+const ChipContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+`;
+
+const ChipContent = styled.span`
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  white-space: nowrap; /* 아이콘 + 텍스트 한 줄 유지 */
+`;
+
 const TaleList = styled.div`
   display: flex;
   flex-direction: column;
@@ -270,4 +428,20 @@ const EmptyStateGrid = styled.div`
   flex-direction: column;
   padding: 100px;
   background-color: ${({ theme }) => theme.background};
+`;
+
+const slideFromRight = keyframes`
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+`;
+
+const slideFromLeft = keyframes`
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+`;
+
+const AnimatedTabContent = styled.div<{ direction: "left" | "right" }>`
+  animation: ${({ direction }) =>
+      direction === "right" ? slideFromRight : slideFromLeft}
+    0.3s ease;
 `;

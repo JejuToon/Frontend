@@ -11,6 +11,12 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
 
   html, body {

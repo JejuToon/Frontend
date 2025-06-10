@@ -179,18 +179,17 @@ export function useTalePlay({
       });
 
       localStorage.setItem("myTale-storage", JSON.stringify(parsedTale));
+
+      const { hasCharacter, addCharacter } = useCharacterStore.getState();
+      if (tale.id && !hasCharacter(tale.id)) {
+        addCharacter({
+          characterId: Date.now(), // 실제 구현 시 고유 숫자 ID로 생성
+          tale,
+          imageUrl: "/assets/images/ar-char1.png",
+        });
+      }
     }
 
-    const taleId = selectedTaleDetail?.id;
-    const { hasCharacter, addCharacter } = useCharacterStore.getState();
-
-    if (taleId && !hasCharacter(taleId)) {
-      addCharacter({
-        taleId,
-        title: selectedTaleDetail?.title || "",
-        imageUrl: "/assets/images/ar-char1.png",
-      });
-    }
     setShowCompleteModal(false);
   };
 

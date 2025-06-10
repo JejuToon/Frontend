@@ -1,41 +1,72 @@
 import React from "react";
-import Tab from "./Tab";
 import styled from "styled-components";
 
-export interface TabItem {
-  /** 탭에 표시할 이름 */
+export interface TabItem<T extends string = string> {
   label: string;
-  /** 내부 식별자 */
-  value: string;
+  value: T;
 }
 
-interface TabsProps {
-  /** 탭 항목 리스트 */
-  items: TabItem[];
-  /** 현재 선택된 탭의 value */
-  current: string;
-  /** 탭이 변경될 때 호출됨 */
-  onChange: (value: string) => void;
+interface TabsProps<T extends string> {
+  items: TabItem<T>[];
+  active: T;
+  onChange: (value: T) => void;
 }
 
-export default function Tabs({ items, current, onChange }: TabsProps) {
+export default function Tabs<T extends string>({
+  items,
+  active,
+  onChange,
+}: TabsProps<T>) {
+  const activeIndex = items.findIndex((item) => item.value === active);
+
   return (
-    <Nav>
+    <TabsContainer>
       {items.map((item) => (
-        <Tab
+        <TabButton
           key={item.value}
-          isActive={item.value === current}
+          $active={active === item.value}
           onClick={() => onChange(item.value)}
         >
           {item.label}
-        </Tab>
+        </TabButton>
       ))}
-    </Nav>
+      <ActiveBar $index={activeIndex} $count={items.length} />
+    </TabsContainer>
   );
 }
 
-const Nav = styled.nav`
+const TabsContainer = styled.div`
   display: flex;
-  border-bottom: 1px solid #ddd;
+  position: relative;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   margin: 0 16px;
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ $active, theme }) =>
+    $active ? theme.text : theme.textSecondary};
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease;
+`;
+
+const ActiveBar = styled.div<{
+  $index: number;
+  $count: number;
+}>`
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  width: ${({ $count }) => 100 / $count}%;
+  background: ${({ theme }) => theme.text};
+  transition: transform 0.3s ease;
+  transform: translateX(${({ $index, $count }) => (100 / $count) * $index}%);
+  z-index: 0;
 `;
