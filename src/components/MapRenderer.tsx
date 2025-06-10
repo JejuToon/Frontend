@@ -30,6 +30,8 @@ const CATEGORY_MARKER_ICON =
   "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
 const EXTRA_MARKER_ICON =
   "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+const SELECTED_MARKER_ICON =
+  "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
 
 const MapRenderer: React.FC<MapRendererProps> = ({
   allMarkers,
@@ -161,7 +163,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
 
         // 선택된 마커면 icon을 지정하지 않아 기본 아이콘 사용
         const icon = isSelected
-          ? undefined
+          ? SELECTED_MARKER_ICON
           : {
               url: useExtraIcon ? EXTRA_MARKER_ICON : CATEGORY_MARKER_ICON,
               scaledSize: new google.maps.Size(32, 32),
@@ -197,7 +199,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
             lng: selectedMarker.location.longitude,
           }}
           title={selectedMarker.title}
-          icon={undefined} // 기본 빨간 마커 사용
+          icon={SELECTED_MARKER_ICON} // 기본 빨간 마커 사용
           zIndex={999}
           onClick={() => onMarkerClick(selectedMarker, mapRef)}
         />

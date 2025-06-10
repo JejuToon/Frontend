@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -15,8 +16,10 @@ import CameraScreen from "./screens/CameraScreen";
 import BottomTabs from "./components/BottomTabs";
 import { AccessControlProvider } from "./components/AccessControlProvider";
 import { usePreviousLocation } from "./hooks/usePreviousLocation";
+import { useAuthCheck } from "./hooks/useAuthCheck";
 
 export default function App() {
+  useAuthCheck();
   const location = useLocation();
   const prevLocation = usePreviousLocation();
   const isAuthRoute = location.pathname === "/auth";

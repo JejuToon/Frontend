@@ -418,14 +418,6 @@ const RecommendButtonWrapper = styled.div`
   display: inline-block;
 `;
 
-const SeeAllBtn = styled.button`
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: ${({ theme }) => theme.text};
-`;
-
 const CategoryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);

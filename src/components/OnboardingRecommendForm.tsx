@@ -232,7 +232,11 @@ export default function OnboardingRecommendForm({
         )}
 
         {onboardingSteps[step] === "result" && (
-          <LoadArea>{loading && <Loader type="inline" />}</LoadArea>
+          <LoadArea>
+            {loading && (
+              <Loader type="inline" description="맞춤형 설화를 찾고 있어요" />
+            )}
+          </LoadArea>
         )}
       </StepBox>
 
