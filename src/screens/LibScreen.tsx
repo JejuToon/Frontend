@@ -25,6 +25,7 @@ import { TbMapSearch } from "react-icons/tb";
 import { RiLoginBoxLine } from "react-icons/ri";
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useCharacterStore } from "../stores/useCharacterStore";
+import { useReplayTaleStore } from "../stores/useReplayTaleStore";
 import { useAuthStore } from "../stores/useAuthStore";
 
 import { TaleContent } from "../types/tale";
@@ -86,12 +87,8 @@ export default function LibScreen() {
   };
 
   const handleTaleClick = (userTale: userTaleContent) => {
-    try {
-      localStorage.setItem("replayTale", JSON.stringify(userTale));
-      navigate("/tale/replay");
-    } catch (error) {
-      console.error("리플레이 설정 실패:", error);
-    }
+    useReplayTaleStore.getState().setReplayTale(userTale);
+    navigate("/tale/replay");
   };
 
   const handleCharacterClick = (taleId: number) => {

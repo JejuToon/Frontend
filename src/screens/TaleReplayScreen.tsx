@@ -6,6 +6,7 @@ import styled, { keyframes } from "styled-components";
 import { useTalePlay } from "../hooks/useTalePlay";
 
 import { useStoryStore } from "../stores/useStoryStore";
+import { useReplayTaleStore } from "../stores/useReplayTaleStore";
 
 import TalePlayBottomNav from "../components/TalePlayBottomNav";
 import Loader from "../components/Loader";
@@ -70,26 +71,17 @@ export default function TaleReplayScreen() {
       setTimeout(() => setIsVisible(true), 100);
     }, 1000);
 
-    const replayData = localStorage.getItem("replayTale");
-    if (replayData) {
-      try {
-        const parsed = JSON.parse(replayData);
-        const pages = getTaleReplayPages(parsed.storyId);
-        setTalePages(pages);
+    const { replayTale } = useReplayTaleStore.getState();
 
-        // storyId의 첫 번째 값을 초기 키로 설정
-        const firstKey = parsed.storyId?.[0];
-        if (firstKey) {
-          setInitialPageKey(firstKey);
-        }
-      } catch (e) {
-        console.error("replayTale 파싱 실패:", e);
-        alert(
-          "저장된 설화 데이터를 불러오는 데 실패했습니다. 다시 시도해주세요."
-        );
-        navigate("/lib");
-      }
+    if (!replayTale) {
+      alert("설화 데이터를 찾을 수 없습니다.");
+      navigate("/lib");
+      return;
     }
+
+    const pages = getTaleReplayPages(replayTale.storyId);
+    setTalePages(pages);
+    setInitialPageKey(replayTale.storyId?.[0] ?? "1");
 
     return () => clearTimeout(timeout);
   }, []);
