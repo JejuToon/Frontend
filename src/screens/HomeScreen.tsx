@@ -170,12 +170,6 @@ export default function HomeScreen() {
 
   return (
     <>
-      {isLoading && (
-        <LoaderOverlay>
-          <Loader />
-        </LoaderOverlay>
-      )}
-
       <Container $isVisible={isVisible}>
         <Header
           left={
