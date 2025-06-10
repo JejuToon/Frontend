@@ -93,7 +93,7 @@ export default function CameraScreen() {
 
   // 1. 마운트 시 첫 카메라 시작
   useEffect(() => {
-    console.log("카메라 호출 시작");
+    //console.log("카메라 호출 시작");
     startCamera("environment");
     return () => stopCamera();
   }, []);
@@ -121,7 +121,7 @@ export default function CameraScreen() {
       try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (err) {
-        console.warn("기본 카메라 접근 실패. user로 fallback...");
+        //console.warn("기본 카메라 접근 실패. user로 fallback...");
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
           audio: false,
@@ -135,20 +135,20 @@ export default function CameraScreen() {
 
       streamRef.current = stream;
       setCameraActive(true);
-      console.log("[startCamera] 성공");
+      //console.log("[startCamera] 성공");
     } catch (err) {
-      console.error("카메라 접근 실패 (최종):", err);
+      //console.error("카메라 접근 실패 (최종):", err);
     } finally {
       isStarting.current = false;
     }
   };
 
   const stopCamera = () => {
-    console.log("[stopCamera] 호출됨");
+    //console.log("[stopCamera] 호출됨");
 
     if (videoRef.current?.srcObject instanceof MediaStream) {
       videoRef.current.srcObject.getTracks().forEach((track) => {
-        console.log(`[stopCamera] video 트랙 중지: ${track.kind}`);
+        //console.log(`[stopCamera] video 트랙 중지: ${track.kind}`);
         if (track.readyState === "live") {
           track.stop();
         }
@@ -157,7 +157,7 @@ export default function CameraScreen() {
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
-        console.log(`[stopCamera] streamRef 트랙 중지: ${track.kind}`);
+        //console.log(`[stopCamera] streamRef 트랙 중지: ${track.kind}`);
         if (track.readyState === "live") {
           track.stop();
         }
@@ -173,7 +173,7 @@ export default function CameraScreen() {
     }
 
     setCameraActive(false);
-    console.log("[stopCamera] 완료, cameraActive = false");
+    //console.log("[stopCamera] 완료, cameraActive = false");
   };
 
   const toggleCamera = () => {

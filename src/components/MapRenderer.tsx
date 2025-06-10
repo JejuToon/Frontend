@@ -6,6 +6,7 @@ import CustomOverlayAbove from "./CustomOverlayAbove";
 import NowLocation from "./NowLocation";
 import { useTheme } from "styled-components";
 import { useStoryStore } from "../stores/useStoryStore";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
 import type { TaleContent, TaleMarker } from "../types/tale";
 
 interface MapRendererProps {
@@ -45,6 +46,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
 }) => {
   const navigate = useNavigate();
   const { setTaleId } = useStoryStore();
+  const { onboardingInput } = useRecommendationStore();
 
   const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -90,7 +92,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
   // 2-2) recommendedTales → TaleMarker 배열로 변환
   const recommendedMarkers = useMemo<TaleMarker[]>(
     () =>
-      selectedExtras.includes("맞춤 추천")
+      selectedExtras.includes("맞춤 추천") && onboardingInput
         ? recommendedTales.flatMap((tale) =>
             tale.location.map((loc) => ({
               id: tale.id,

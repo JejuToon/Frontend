@@ -11,11 +11,6 @@ import { useAuthStore } from "../stores/useAuthStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
 import { useUserInfoStore } from "../stores/useUserInfoStore";
 import { useRecommendationStore } from "../stores/useRecommendationStore";
-import { computeUserPreferenceWeights } from "../utils/computeWeights";
-import {
-  computePersonalizedScore,
-  getRecommendedTales,
-} from "../utils/computeScore";
 
 export default function MyScreen() {
   const navigate = useNavigate();

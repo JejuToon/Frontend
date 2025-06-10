@@ -8,8 +8,9 @@ export const lightTheme = {
   sheetBackground: colors.BEIGE_500,
   taleBackground: " #fff",
   bottomTabsBackground: "rgb(245, 233, 206)",
-
   taleTextBackground: " #fff",
+  iconBackground: " #e0dcf8",
+  buttonBackground: " #fff4e6",
 
   taleText: " #222222",
 
@@ -25,12 +26,10 @@ export const lightTheme = {
   primaryDisabled: "rgba(228,121,63,0.3)",
   border: " #b1a78f",
 
-  iconBackground: " #e0dcf8",
   iconSecondary: " #d3d3d3",
   iconHover: " #aaa",
   linkHover: " #0056b3",
 
-  buttonBackground: " #fff4e6",
   buttonSelectedBackground: " #ff8a3d",
   buttonText: " #000000",
 
@@ -47,8 +46,10 @@ export const darkTheme = {
   sheetBackground: "#2e2e2e",
   taleBackground: "#1e1e1e",
   bottomTabsBackground: "#3e3e3e",
-
   taleTextBackground: "#121212",
+  iconBackground: "#3f3562",
+  buttonBackground: "#3b3b3b",
+
   card: "#1e1e1e",
 
   taleText: "#f1f1f1",
@@ -59,16 +60,15 @@ export const darkTheme = {
   textSecondary: "#888",
 
   primary: "#e4793f",
+  primaryLight: "#eb9064",
   primaryHover: "#5c5c5c",
   primaryDark: "#b89cff",
   border: "#444444",
 
-  iconBackground: "#3f3562",
   iconSecondary: "#555",
   iconHover: "#bbb",
   linkHover: "#66aaff",
 
-  buttonBackground: "#3b3b3b",
   buttonText: "#ffffff",
 
   sheetHandleColor: "#555",

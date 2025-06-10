@@ -17,6 +17,7 @@ import { useAllTalesStore } from "../stores/useAllTalesStore";
 import { useRecommendationStore } from "../stores/useRecommendationStore";
 
 import Header from "../components/Header";
+import TooltipOverlay from "../components/ToolTipOverlay";
 import OnboardingRecommendForm from "../components/OnboardingRecommendForm";
 import LocationBox from "../components/LocationBox";
 import Loader from "../components/Loader";
@@ -210,10 +211,22 @@ export default function HomeScreen() {
         <Section>
           <SectionHeader>
             <h3>추천 설화</h3>
-            <FaPlus
-              title="맞춤형 설화 추천 받기"
-              onClick={recommendButtonClick}
-            />
+
+            <RecommendButtonWrapper>
+              <FaPlus
+                title="맞춤형 설화 추천 받기"
+                onClick={recommendButtonClick}
+              />
+              {!onboardingInput && (
+                <TooltipOverlay
+                  message="맞춤형 설화 추천을 받아보세요"
+                  containerTopOffset="-15px"
+                  containerLeftOffset="-120px"
+                  tailDirection="right"
+                  tailLeftOffset="110px"
+                />
+              )}
+            </RecommendButtonWrapper>
           </SectionHeader>
 
           {isApplying ? (
@@ -404,6 +417,11 @@ const SectionHeader = styled.div`
     font-weight: 500;
     color: ${({ theme }) => theme.text};
   }
+`;
+
+const RecommendButtonWrapper = styled.div`
+  position: relative;
+  display: inline-block;
 `;
 
 const SeeAllBtn = styled.button`
