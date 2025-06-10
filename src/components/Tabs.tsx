@@ -67,6 +67,6 @@ const ActiveBar = styled.div<{
   width: ${({ $count }) => 100 / $count}%;
   background: ${({ theme }) => theme.text};
   transition: transform 0.3s ease;
-  transform: translateX(${({ $index, $count }) => (100 / $count) * $index}%);
+  transform: translateX(${({ $index }) => $index * 100}%);
   z-index: 0;
 `;

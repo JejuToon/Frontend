@@ -68,14 +68,7 @@ export default function LibScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { characters, setSelectedCharacterId } = useCharacterStore();
 
-  const {
-    selectedMarker,
-    setSelectedMarker,
-    sheetPos,
-    setSheetPos,
-    handleSheetToggle,
-    onMarkerClick,
-  } = useSelectedMarkerStore();
+  const { setSelectedMarker } = useSelectedMarkerStore();
 
   // 방향 계산
   const animationDirection: "left" | "right" =
