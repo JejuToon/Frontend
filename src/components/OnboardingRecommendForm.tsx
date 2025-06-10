@@ -1,31 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa6";
 import Loader from "../components/Loader";
-import { useUserInfoStore } from "../stores/useUserInfoStore";
+import { useAllTalesStore } from "../stores/useAllTalesStore";
+import { useRecommendation } from "../hooks/useRecommendation";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
+import { OnboardingInput } from "../types/recommendation";
 
-const interestsOptions = ["개척담", "인물담", "연애담", "신앙담"];
-const options1 = ["옵션1", "옵션2", "옵션3"];
-const options2 = ["옵션4", "옵션5", "옵션6", "옵션7"];
-const onboardingSteps = ["age", "interests", "options1", "options2", "result"];
+const gender = ["남성", "여성"];
+const categoriesOptions = ["개척담", "인물담", "연애담", "신앙담"];
+const keywords = [
+  "제주도",
+  "창조",
+  "섬",
+  "신화",
+  "탐라",
+  "서사무가",
+  "산방산",
+  "고종달",
+  "할망",
+  "영등",
+  "용머리",
+  "전설",
+  "신하",
+  "불로초",
+  "폭포",
+  "바위",
+  "차귀도",
+  "제단",
+  "오름",
+  "장군",
+  "여인",
+  "백록",
+  "한라산",
+];
+const onboardingSteps = [
+  "age",
+  "gender",
+  "categoriesOptions",
+  "keywords",
+  "result",
+];
+
+type FormData = {
+  age: string;
+  gender: string;
+  categories: string[];
+  keywords: string[];
+};
 
 export default function OnboardingRecommendForm({
   onClose,
 }: {
   onClose: () => void;
 }) {
-  const { hasCompletedRecommendForm, setHasCompletedRecommendForm } =
-    useUserInfoStore();
+  const { onboardingInput, setOnboardingInput, recommendedTales } =
+    useRecommendationStore();
+  const { allTales } = useAllTalesStore();
+  const { applyRecommendation } = useRecommendation(allTales);
 
   const [step, setStep] = useState(0);
   const [stepDirection, setStepDirection] = useState<"forward" | "backward">(
     "forward"
   );
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     age: "",
-    interests: [] as string[],
-    options1: "",
-    options2: "",
+    gender: "",
+    categories: [],
+    keywords: [],
   });
   const [loading, setLoading] = useState(false);
   const [showProgressStep, setShowProgressStep] = useState(true);
@@ -45,18 +87,35 @@ export default function OnboardingRecommendForm({
 
   const toggleInterest = (interest: string) => {
     update(
-      "interests",
-      formData.interests.includes(interest)
-        ? formData.interests.filter((i) => i !== interest)
-        : [...formData.interests, interest]
+      "categories",
+      formData.categories.includes(interest)
+        ? formData.categories.filter((i) => i !== interest)
+        : [...formData.categories, interest]
     );
   };
 
   const handleSubmit = () => {
     setShowProgressStep(false);
     setLoading(true);
-    setHasCompletedRecommendForm(true);
     setStep(4);
+
+    const onboardingInput: OnboardingInput = {
+      ageGroup:
+        Number(formData.age) < 20
+          ? "10대"
+          : Number(formData.age) < 30
+          ? "20대"
+          : Number(formData.age) < 40
+          ? "30대"
+          : "40대 이상",
+      gender: formData.gender,
+      categories: formData.categories,
+      keywords: formData.keywords,
+    };
+
+    setOnboardingInput(onboardingInput);
+    applyRecommendation();
+
     setTimeout(() => {
       setLoading(false);
       onClose();
@@ -66,6 +125,12 @@ export default function OnboardingRecommendForm({
   const handleSkip = () => {
     setStep(step + 1);
   };
+
+  useEffect(() => {
+    if (onboardingInput && allTales && recommendedTales.length === 0) {
+      applyRecommendation();
+    }
+  }, [allTales, onboardingInput]);
 
   return (
     <Container>
@@ -82,7 +147,7 @@ export default function OnboardingRecommendForm({
 
       {showProgressStep && (
         <ProgressBar>
-          {onboardingSteps.slice(0, 4).map((_, i) => (
+          {onboardingSteps.slice(0, onboardingSteps.length - 1).map((_, i) => (
             <ProgressStep key={i} active={i <= step} />
           ))}
         </ProgressBar>
@@ -91,7 +156,7 @@ export default function OnboardingRecommendForm({
       <StepBox>
         {onboardingSteps[step] === "age" && (
           <SlideWrapper direction={stepDirection}>
-            <Label>나이를 입력해주세요</Label>
+            <Label>나이를 입력해 주세요</Label>
             <Input
               type="number"
               value={formData.age}
@@ -100,14 +165,31 @@ export default function OnboardingRecommendForm({
           </SlideWrapper>
         )}
 
-        {onboardingSteps[step] === "interests" && (
+        {onboardingSteps[step] === "gender" && (
           <SlideWrapper direction={stepDirection}>
-            <Label>관심 있는 주제를 골라주세요</Label>
+            <Label>성별을 선택해 주세요</Label>
             <ButtonGroup>
-              {interestsOptions.map((option) => (
+              {gender.map((option) => (
                 <OptionButton
                   key={option}
-                  selected={formData.interests.includes(option)}
+                  selected={formData.gender === option}
+                  onClick={() => update("gender", option)}
+                >
+                  {option}
+                </OptionButton>
+              ))}
+            </ButtonGroup>
+          </SlideWrapper>
+        )}
+
+        {onboardingSteps[step] === "categoriesOptions" && (
+          <SlideWrapper direction={stepDirection}>
+            <Label>관심 있는 카테고리를 선택해 주세요</Label>
+            <ButtonGroup>
+              {categoriesOptions.map((option) => (
+                <OptionButton
+                  key={option}
+                  selected={formData.categories.includes(option)}
                   onClick={() => toggleInterest(option)}
                 >
                   {option}
@@ -117,32 +199,30 @@ export default function OnboardingRecommendForm({
           </SlideWrapper>
         )}
 
-        {onboardingSteps[step] === "options1" && (
+        {onboardingSteps[step] === "keywords" && (
           <SlideWrapper direction={stepDirection}>
-            <Label>선택지</Label>
+            <Label>흥미로운 키워드를 선택해 주세요</Label>
+            <SubLabel>최대 5개</SubLabel>
             <ButtonGroup>
-              {options1.map((option) => (
+              {keywords.map((option) => (
                 <OptionButton
                   key={option}
-                  selected={formData.options1 === option}
-                  onClick={() => update("options1", option)}
-                >
-                  {option}
-                </OptionButton>
-              ))}
-            </ButtonGroup>
-          </SlideWrapper>
-        )}
+                  selected={formData.keywords.includes(option)}
+                  onClick={() => {
+                    const isSelected = formData.keywords.includes(option);
 
-        {onboardingSteps[step] === "options2" && (
-          <SlideWrapper direction={stepDirection}>
-            <Label>선택지~~</Label>
-            <ButtonGroup>
-              {options2.map((option) => (
-                <OptionButton
-                  key={option}
-                  selected={formData.options2 === option}
-                  onClick={() => update("options2", option)}
+                    if (isSelected) {
+                      // 이미 선택된 경우 → 제거
+                      update(
+                        "keywords",
+                        formData.keywords.filter((i) => i !== option)
+                      );
+                    } else {
+                      // 새로 선택하려는 경우: 5개 초과 방지
+                      if (formData.keywords.length >= 5) return;
+                      update("keywords", [...formData.keywords, option]);
+                    }
+                  }}
                 >
                   {option}
                 </OptionButton>
@@ -168,16 +248,25 @@ export default function OnboardingRecommendForm({
             </NavButton>
           )}
           {step === 1 && (
+            <NavButton onClick={next} disabled={!formData.gender}>
+              다음
+            </NavButton>
+          )}
+          {step === 2 && (
             <NavButton
               onClick={next}
-              disabled={formData.interests.length === 0}
+              disabled={formData.categories.length === 0}
             >
               다음
             </NavButton>
           )}
-          {step === 2 && <NavButton onClick={next}>다음</NavButton>}
           {step === 3 && (
-            <NavButton onClick={handleSubmit}>추천 받기</NavButton>
+            <NavButton
+              onClick={handleSubmit}
+              disabled={formData.keywords.length === 0} // 또는 항상 false 로 활성화할 수도 있음
+            >
+              추천 받기
+            </NavButton>
           )}
         </NavFooter>
       )}
@@ -280,6 +369,11 @@ const ProgressStep = styled.div.withConfig({
 const Label = styled.label`
   font-weight: bold;
   font-size: 1.2rem;
+`;
+
+const SubLabel = styled.label`
+  font-weight: bold;
+  font-size: 1rem;
 `;
 
 const Input = styled.input`

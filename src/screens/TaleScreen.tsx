@@ -174,7 +174,7 @@ export default function TaleScreen() {
                   <Star
                     key={n}
                     onClick={() => setRating(n)}
-                    $active={n <= rating}
+                    $active={rating !== null && n <= rating}
                   >
                     ★
                   </Star>

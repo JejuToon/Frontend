@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaAngleRight } from "react-icons/fa6";
 import styled from "styled-components";
@@ -8,17 +8,37 @@ import TTSSettings from "../components/TTSSettings";
 import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuthStore } from "../stores/useAuthStore";
+import { useAllTalesStore } from "../stores/useAllTalesStore";
 import { useUserInfoStore } from "../stores/useUserInfoStore";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
+import { computeUserPreferenceWeights } from "../utils/computeWeights";
+import {
+  computePersonalizedScore,
+  getRecommendedTales,
+} from "../utils/computeScore";
 
 export default function MyScreen() {
   const navigate = useNavigate();
   const { user, isLoggedIn, logout } = useAuthStore();
 
-  const { resetHasCompletedRecommendForm, resetSkipTaleSetup } =
-    useUserInfoStore();
+  const { resetSkipTaleSetup } = useUserInfoStore();
+
+  const { allTales, fetchAllTalesData } = useAllTalesStore();
+  const {
+    onboardingInput,
+    clearOnboardingInput,
+    setRecommendedTales,
+    setWeights,
+  } = useRecommendationStore();
 
   const [showRecModal, setShowRecModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
+
+  useEffect(() => {
+    if (allTales.length === 0) {
+      fetchAllTalesData(); // 전체 설화 목록 불러오기
+    }
+  }, []);
 
   return (
     <MyScreenContainer>
@@ -61,13 +81,42 @@ export default function MyScreen() {
             <FaAngleRight />
           </MyListItem>
 
+          {/* 테스트 용 
+          <MyListItem
+            onClick={() => {
+              const stored = JSON.parse(
+                localStorage.getItem("myTale-storage") || "[]"
+              );
+
+              if (onboardingInput) {
+                const weights = computeUserPreferenceWeights(
+                  onboardingInput,
+                  stored
+                );
+
+                console.log(weights);
+
+                const top5Tales = getRecommendedTales(allTales, weights, 5);
+
+                setWeights(weights);
+                setRecommendedTales(top5Tales);
+
+                console.log(top5Tales);
+              }
+            }}
+          >
+            <ItemText>맞춤 설화 추천 테스트</ItemText>
+            <FaAngleRight />
+          </MyListItem>
+          */}
+
           {showRecModal && (
             <ConfirmModal
               mainTitle="정말 초기화할까요?"
               subTitle="초기화 시 추천 설정 정보가 사라집니다."
               onClose={() => setShowRecModal(false)}
               onConfirm={() => {
-                resetHasCompletedRecommendForm();
+                clearOnboardingInput();
                 setShowRecModal(false);
               }}
             />

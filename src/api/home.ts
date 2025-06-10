@@ -5,12 +5,13 @@ import { fetchAllTales } from "./tale";
 import { TaleContent } from "../types/tale";
 
 import { getRandomSlice } from "../utils/shuffleArray";
+import { resize } from "framer-motion";
 
 export const fetchHomeData = async () => {
   try {
-    const res0 = await fetchAllTales(0);
-    const res1 = await fetchAllTales(1);
-    const allTales: TaleContent[] = [...res0.contents, ...res1.contents];
+    // 임시
+    const res = await fetchAllTales();
+    const allTales: TaleContent[] = res;
 
     return {
       allTales,

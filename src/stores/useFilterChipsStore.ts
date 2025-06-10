@@ -75,11 +75,9 @@ export const useFilterChipsStore = create<FilterStore>((set, get) => ({
 
   toggleExtra: (extra) => {
     const { selectedCategories, selectedExtras } = get();
-    const alreadySelected = selectedExtras.includes(extra);
 
-    const newExtras = alreadySelected
-      ? selectedExtras.filter((e) => e !== extra)
-      : [...selectedExtras, extra];
+    const isAlreadySelected = selectedExtras.includes(extra);
+    const newExtras = isAlreadySelected ? [] : [extra];
 
     set({
       selectedExtras: newExtras,

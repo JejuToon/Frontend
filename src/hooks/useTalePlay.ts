@@ -34,7 +34,7 @@ export function useTalePlay({
   const [pageNum, setPageNum] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState<number | null>(null);
   const [showControlBar, setShowControlBar] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -109,6 +109,10 @@ export function useTalePlay({
     }
   }, [pageKey]);
 
+  useEffect(() => {
+    console.log(`rating: ${rating}`);
+  }, [rating]);
+
   const goToNextPage = (nextKey: string) => {
     if (nextKey === "end") {
       setShowCompleteModal(true);
@@ -170,6 +174,8 @@ export function useTalePlay({
         userId: user.id,
         tale: tale,
         storyId: finalStoryId,
+        userRating: rating,
+        completedAt: new Date().toISOString(),
       });
 
       localStorage.setItem("myTale-storage", JSON.stringify(parsedTale));

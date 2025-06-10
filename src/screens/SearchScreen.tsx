@@ -18,7 +18,7 @@ import { TbPlayerPlayFilled } from "react-icons/tb";
 import styled, { keyframes } from "styled-components";
 
 import { useMapLoader } from "../hooks/useMapLoader";
-import { useRecommendForm } from "../hooks/useRecommendForm";
+import { useRecommendation } from "../hooks/useRecommendation";
 
 import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useStoryStore } from "../stores/useStoryStore";
@@ -27,6 +27,7 @@ import { useCategoryTalesStore } from "../stores/useCategoryTalesStore";
 import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
 
 import CategorySection from "../components/CategorySection";
 import OnboardingRecommendForm from "../components/OnboardingRecommendForm";
@@ -51,6 +52,8 @@ export default function SearchScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromHomeNearby = (location.state as any)?.fromHomeNearby;
+
+  const [isApplying, setIsApplying] = useState(false);
 
   const DEFAULT_CENTER = useMemo(() => ({ lat: 33.4996, lng: 126.5312 }), []);
 
@@ -77,7 +80,8 @@ export default function SearchScreen() {
     useCategoryTalesStore();
   const { nearbyTales, fetchNearbyTalesData } = useNearbyTalesStore();
   const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
-
+  const { onboardingInput, recommendedTales, setRecommendedTales } =
+    useRecommendationStore();
   const {
     selectedCategories,
     selectedExtras,
@@ -95,7 +99,8 @@ export default function SearchScreen() {
     animateOut,
     openRecommendForm,
     closeRecommendForm,
-  } = useRecommendForm();
+    applyRecommendation,
+  } = useRecommendation(allTales);
 
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {
@@ -232,6 +237,24 @@ export default function SearchScreen() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [showSearchOverlay]);
 
+  const recommendButtonClick = async () => {
+    if (!onboardingInput) {
+      openRecommendForm();
+    } else {
+      //console.log("맞춤형 추천정보로 채우기");
+      setIsApplying(true);
+      await applyRecommendationAsync(); // await 가능
+      setIsApplying(false);
+    }
+  };
+
+  const applyRecommendationAsync = () => {
+    return new Promise<void>((resolve) => {
+      applyRecommendation(); // 기존 동기 함수
+      setTimeout(resolve, 3000);
+    });
+  };
+
   if (loadError) return <div>Map load failed…</div>;
   if (!isLoaded || isLoading) return <Loader type="full" />;
 
@@ -267,6 +290,7 @@ export default function SearchScreen() {
         <MapRenderer
           allMarkers={allMarkers}
           nearbyTales={nearbyTales}
+          recommendedTales={recommendedTales}
           selectedMarker={selectedMarker}
           selectedExtras={selectedExtras}
           selectedCategories={selectedCategories}
@@ -440,16 +464,48 @@ export default function SearchScreen() {
             </>
           )}
 
+          {/* 맞춤 추천 */}
           {selectedExtras.includes("맞춤 추천") && (
             <Section>
-              <SectionHeader></SectionHeader>
-              <EmptyState
-                icon={<RiSparkling2Fill />}
-                title="맞춤형 추천 정보가 없어요"
-                description="맞춤형 추천 받기"
-                onIconClick={openRecommendForm}
-                onDescriptionClick={openRecommendForm}
-              />
+              <SectionHeader>
+                <span>맞춤 추천 설화</span>
+              </SectionHeader>
+
+              {isApplying ? (
+                <Loader
+                  type="inline"
+                  description={"맞춤형 설화를 찾고 있어요"}
+                />
+              ) : onboardingInput && recommendedTales.length > 0 ? (
+                <TaleList>
+                  {recommendedTales.map((t) => (
+                    <TaleCard
+                      key={t.id}
+                      id={t.id}
+                      title={t.title}
+                      description={t.description}
+                      thumbnailUrl={t.thumbnail}
+                      onClick={() => handleTaleClick(t.id)}
+                    >
+                      <CustomButton
+                        label="위치 보기"
+                        icon={<IoLocationSharp />}
+                        size="small"
+                        variant="filled"
+                        onClick={() => handleViewLocation(t)}
+                      />
+                    </TaleCard>
+                  ))}
+                </TaleList>
+              ) : (
+                <EmptyState
+                  icon={<RiSparkling2Fill />}
+                  title="맞춤형 추천 정보가 없어요"
+                  description="맞춤형 추천 받기"
+                  onIconClick={recommendButtonClick}
+                  onDescriptionClick={recommendButtonClick}
+                />
+              )}
             </Section>
           )}
         </SheetScrollWrapper>

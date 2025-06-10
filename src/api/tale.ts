@@ -16,7 +16,7 @@ const api = axios.create({
  * 전체 설화 목록을 페이징 처리 조회
  * @param page 페이지 번호 (0부터 시작)
  */
-export const fetchAllTales = async (
+export const fetchAllTalesPage = async (
   page: number
 ): Promise<TaleListResponse> => {
   try {
@@ -26,6 +26,28 @@ export const fetchAllTales = async (
     return response.data;
   } catch (error) {
     console.error("전체 설화 목록 조회 실패:", error);
+    throw error;
+  }
+};
+
+/**
+ * 전체 설화 목록 (전체 페이지) – 누적
+ * @returns 모든 설화 리스트
+ */
+export const fetchAllTales = async (): Promise<TaleContent[]> => {
+  try {
+    const firstPage = await fetchAllTalesPage(0);
+    const totalPages = firstPage.meta.totalPage;
+    let allTales: TaleContent[] = [...firstPage.contents];
+
+    for (let page = 1; page < totalPages; page++) {
+      const pageData = await fetchAllTalesPage(page);
+      allTales = allTales.concat(pageData.contents);
+    }
+
+    return allTales;
+  } catch (error) {
+    console.error("전체 설화 전체 페이지 불러오기 실패:", error);
     throw error;
   }
 };

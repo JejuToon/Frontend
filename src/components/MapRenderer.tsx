@@ -11,6 +11,7 @@ import type { TaleContent, TaleMarker } from "../types/tale";
 interface MapRendererProps {
   allMarkers: TaleMarker[];
   nearbyTales: TaleContent[];
+  recommendedTales: TaleContent[];
   selectedMarker: TaleMarker | null;
   selectedExtras: string[]; // ["근처"] or ["맞춤 추천"] or []
   selectedCategories: string[]; // 카테고리 배열 or []
@@ -32,6 +33,7 @@ const EXTRA_MARKER_ICON =
 const MapRenderer: React.FC<MapRendererProps> = ({
   allMarkers,
   nearbyTales,
+  recommendedTales,
   selectedMarker,
   selectedExtras,
   selectedCategories,
@@ -69,7 +71,7 @@ const MapRenderer: React.FC<MapRendererProps> = ({
   // 2) nearbyTales → TaleMarker 배열로 변환
   const nearbyMarkers = useMemo<TaleMarker[]>(
     () =>
-      selectedExtras.includes("근처")
+      selectedExtras.includes("근처") && currentLocation
         ? nearbyTales.flatMap((tale) =>
             tale.location.map((loc) => ({
               id: tale.id,
@@ -82,18 +84,46 @@ const MapRenderer: React.FC<MapRendererProps> = ({
             }))
           )
         : [],
-    [nearbyTales, selectedExtras]
+    [nearbyTales, selectedExtras, currentLocation]
+  );
+
+  // 2-2) recommendedTales → TaleMarker 배열로 변환
+  const recommendedMarkers = useMemo<TaleMarker[]>(
+    () =>
+      selectedExtras.includes("맞춤 추천")
+        ? recommendedTales.flatMap((tale) =>
+            tale.location.map((loc) => ({
+              id: tale.id,
+              title: tale.title,
+              location: loc,
+              categories: tale.categories,
+              description: tale.description,
+              score: tale.score,
+              thumbnail: tale.thumbnail,
+            }))
+          )
+        : [],
+    [recommendedTales, selectedExtras]
   );
 
   // 3) 실제 렌더링할 마커 & 아이콘 선택
   const { markersToShow, useExtraIcon } = useMemo(() => {
-    if (selectedExtras.length > 0) {
-      // "근처" 혹은 "맞춤 추천" 모드
+    if (selectedExtras.includes("근처")) {
+      // "근처" 모드
       return {
-        markersToShow: nearbyMarkers, // "맞춤 추천"도 아직 구현이 없다면 []으로
+        markersToShow: nearbyMarkers,
         useExtraIcon: true, // orange-dot
       };
     }
+
+    // "맞춤 추천" 모드
+    if (selectedExtras.includes("맞춤 추천")) {
+      return {
+        markersToShow: recommendedMarkers,
+        useExtraIcon: true,
+      };
+    }
+
     if (selectedCategories.length > 0) {
       // 카테고리 모드
       return {

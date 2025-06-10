@@ -6,7 +6,7 @@ import styled, { keyframes } from "styled-components";
 
 import { fetchHomeData } from "../api/home";
 
-import { useRecommendForm } from "../hooks/useRecommendForm";
+import { useRecommendation } from "../hooks/useRecommendation";
 
 import { useAuthStore } from "../stores/useAuthStore";
 import { useCurrentLocationStore } from "../stores/useCurrentLocationStore";
@@ -14,6 +14,7 @@ import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
 import { useFilterChipsStore } from "../stores/useFilterChipsStore";
 import { useNearbyTalesStore } from "../stores/useNearbyTalesStore";
 import { useAllTalesStore } from "../stores/useAllTalesStore";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
 
 import Header from "../components/Header";
 import OnboardingRecommendForm from "../components/OnboardingRecommendForm";
@@ -37,6 +38,7 @@ export default function HomeScreen() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuthStore();
 
+  const { onboardingInput, setRecommendedTales } = useRecommendationStore();
   const { currentLocation, fetchCurrentLocation } = useCurrentLocationStore();
   const { nearbyTales, nearbyTalesLoading, fetchNearbyTalesData } =
     useNearbyTalesStore();
@@ -54,23 +56,32 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [carouselTales, setCarouselTales] = useState<TaleContent[]>([]);
-  const [recommendedTales, setrecommendTales] = useState<TaleContent[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [homeData, sethomeData] = useState(false);
+  const [defaultRecommended, setDefaultRecommended] = useState<TaleContent[]>(
+    []
+  );
+
+  const [isApplying, setIsApplying] = useState(false);
 
   const {
     showRecommendForm,
     animateOut,
     openRecommendForm,
     closeRecommendForm,
-  } = useRecommendForm();
+    applyRecommendation,
+    recommendedTales,
+  } = useRecommendation(allTales);
 
   useEffect(() => {
     const loadHomeData = async () => {
       setIsLoading(true);
       const homeData = await fetchHomeData();
       setCarouselTales(getRandomSlice(homeData.allTales, 5));
-      setrecommendTales(getRandomSlice(homeData.allTales, 4));
+      if (!onboardingInput) {
+        const randomRecommended = getRandomSlice(homeData.allTales, 4);
+        setDefaultRecommended(randomRecommended);
+      }
       setIsLoading(false);
       setAllTales(homeData.allTales);
     };
@@ -138,6 +149,24 @@ export default function HomeScreen() {
     navigate("/search");
   };
 
+  const recommendButtonClick = async () => {
+    if (!onboardingInput) {
+      openRecommendForm();
+    } else {
+      //console.log("맞춤형 추천정보로 채우기");
+      setIsApplying(true);
+      await applyRecommendationAsync(); // await 가능
+      setIsApplying(false);
+    }
+  };
+
+  const applyRecommendationAsync = () => {
+    return new Promise<void>((resolve) => {
+      applyRecommendation(); // 기존 동기 함수
+      setTimeout(resolve, 3000);
+    });
+  };
+
   return (
     <>
       {isLoading && (
@@ -181,13 +210,27 @@ export default function HomeScreen() {
         <Section>
           <SectionHeader>
             <h3>추천 설화</h3>
-            <FaPlus title="맞춤형 설화 추천 받기" onClick={openRecommendForm} />
+            <FaPlus
+              title="맞춤형 설화 추천 받기"
+              onClick={recommendButtonClick}
+            />
           </SectionHeader>
-          <EmblaCarouselDragFree
-            slides={recommendedTales}
-            options={{ dragFree: true, containScroll: "trimSnaps" }}
-            onTaleClick={(t) => handleTaleClick(t)}
-          />
+
+          {isApplying ? (
+            <Loader type="inline" description="맞춤형 설화를 찾고 있어요" />
+          ) : onboardingInput ? (
+            <EmblaCarouselDragFree
+              slides={recommendedTales}
+              options={{ dragFree: true, containScroll: "trimSnaps" }}
+              onTaleClick={(t) => handleTaleClick(t)}
+            />
+          ) : (
+            <EmblaCarouselDragFree
+              slides={defaultRecommended}
+              options={{ dragFree: true, containScroll: "trimSnaps" }}
+              onTaleClick={(t) => handleTaleClick(t)}
+            />
+          )}
         </Section>
 
         <Section>

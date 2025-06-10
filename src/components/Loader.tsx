@@ -5,9 +5,10 @@ import loadingAnimation from "../assets/loading.json";
 
 interface LoaderProps {
   type?: "full" | "inline";
+  description?: string;
 }
 
-export default function Loader({ type = "full" }: LoaderProps) {
+export default function Loader({ type = "full", description }: LoaderProps) {
   return (
     <Wrapper $type={type}>
       <Lottie
@@ -19,6 +20,7 @@ export default function Loader({ type = "full" }: LoaderProps) {
           height: type === "inline" ? 60 : 120,
         }}
       />
+      {description && <Description>{description}</Description>}
     </Wrapper>
   );
 }
@@ -36,6 +38,7 @@ const fadeIn = keyframes`
 
 const Wrapper = styled.div<{ $type: "full" | "inline" }>`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 
@@ -53,4 +56,12 @@ const Wrapper = styled.div<{ $type: "full" | "inline" }>`
           background: transparent;
           transition: opacity 0.3s ease;
         `}
+`;
+
+const Description = styled.p`
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.textPrimary};
+  text-align: center;
+  white-space: pre-line;
 `;
