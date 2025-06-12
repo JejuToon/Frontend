@@ -177,7 +177,7 @@ export default function SearchOverlay({
             </HistorySection>
           )
         ) : searchedKeyword !== "" ? (
-          // 🔹 검색어 입력 + 검색 완료된 상태
+          // 검색어 입력, 검색 완료된 상태
           <div>
             <h4>"{searchedKeyword}"에 대한 검색 결과</h4>
             {searchLoading ? (
