@@ -29,14 +29,6 @@ export default function App() {
     location.pathname.startsWith(p)
   );
 
-  useEffect(() => {
-    console.log("VITE_KAKAO_CLIENT_ID:", import.meta.env.VITE_KAKAO_CLIENT_ID);
-    console.log(
-      "VITE_KAKAO_REDIRECT_URI:",
-      import.meta.env.VITE_KAKAO_REDIRECT_URI
-    );
-  }, []);
-
   return (
     <div>
       <AccessControlProvider>
