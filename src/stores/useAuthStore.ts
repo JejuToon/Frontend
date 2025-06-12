@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ user: null, token: null, isLoggedIn: false }),
     }),
     {
-      name: "auth-storage", // localStorage key
+      name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
         token: state.token,

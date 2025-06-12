@@ -17,6 +17,6 @@
     "typeRoots": ["./node_modules/@types", "./src"], // 추가해도 문제없지만...
     "types": ["styled-components"] // 이건 없어도 styled.d.ts가 있으면 인식 가능
   },
-  "include": ["src"],
+  "include": ["src", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

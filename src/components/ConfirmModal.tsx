@@ -72,7 +72,9 @@ const ButtonGroup = styled.div`
 
 const CancelButton = styled.button`
   padding: 8px 16px;
-  background: #ccc;
+  background-color: ${({ theme }) =>
+    theme.mode === "dark" ? "#3e3e3e" : "#ffffff"};
+  color: ${({ theme }) => theme.text};
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -85,8 +87,8 @@ const CancelButton = styled.button`
 
 const ConfirmButton = styled.button`
   padding: 8px 16px;
-  background: ${({ theme }) => theme.buttonBackground || "#e4793f"};
-  color: ${({ theme }) => theme.buttonText || "#fff"};
+  background: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.buttonText};
   border: none;
   border-radius: 6px;
   font-size: 14px;

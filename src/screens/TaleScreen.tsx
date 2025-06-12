@@ -4,6 +4,7 @@ import { IoChevronUp } from "react-icons/io5";
 import styled, { keyframes } from "styled-components";
 
 import { useTalePlay } from "../hooks/useTalePlay";
+import { useSwipeTalePlay } from "../hooks/useSwipeTalePlay";
 
 import { useStoryStore } from "../stores/useStoryStore";
 
@@ -57,12 +58,20 @@ export default function TaleScreen() {
     isParentLoading: isTaleScreenLoading,
   });
 
+  const { handlePointerDown, handlePointerUp } = useSwipeTalePlay({
+    onNext: handleNext,
+    onPrev: handlePrev,
+    onShowNav: () => setShowNav(true),
+    pageNum,
+    totalPageNum,
+    hasChoices,
+    disabled: showControlBar,
+  });
+
   const font = fontOptions.find((f) => f.name === fontConfig.fontName);
 
   // 스와이프 감지
   const [showNav, setShowNav] = useState(true);
-  const pointerStart = useRef({ x: 0, y: 0 });
-  const SWIPE_THRESHOLD = 50;
 
   const [pageTransition, setPageTransition] = useState<string | null>(null);
 
@@ -81,23 +90,6 @@ export default function TaleScreen() {
     const timer = setTimeout(() => setShowNav(false), 5000); // 5초 후 숨김
     return () => clearTimeout(timer);
   }, [showNav, showControlBar]);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    pointerStart.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (showControlBar) return;
-    const dx = e.clientX - pointerStart.current.x;
-    const dy = e.clientY - pointerStart.current.y;
-
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-      if (dx > 0 && pageNum > 0) handlePrev();
-      else if (dx < 0 && pageNum < totalPageNum && !hasChoices) handleNext();
-    } else if (dy < -SWIPE_THRESHOLD) {
-      setShowNav(true);
-    }
-  };
 
   if (isTaleScreenLoading) return <Loader />;
 

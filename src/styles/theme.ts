@@ -12,6 +12,12 @@ export const lightTheme = {
   iconBackground: " #e0dcf8",
   buttonBackground: " #fff4e6",
 
+  button: {
+    primary: {
+      background: " #ff8a3d",
+    },
+  },
+
   taleText: " #222222",
 
   text: " #3e3e3e",
@@ -59,7 +65,7 @@ export const darkTheme = {
   textPrimary: "#ddd",
   textSecondary: "#888",
 
-  primary: "#e4793f",
+  primary: " #e4793f",
   primaryLight: "#eb9064",
   primaryHover: "#5c5c5c",
   primaryDark: "#b89cff",

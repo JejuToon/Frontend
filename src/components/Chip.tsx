@@ -25,12 +25,18 @@ const ChipButton = styled.button<{
   $selected: boolean;
   $variant: "category" | "extra";
 }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   padding: 6px 12px;
   border-radius: 16px;
   border: 1px solid;
   cursor: pointer;
   white-space: nowrap;
   margin: 0 2px;
+  font-size: 14px;
+
   transition: all 0.2s ease;
   box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px 0px;
 

@@ -114,3 +114,69 @@ export const fetchNearbyTales = async (
     throw error;
   }
 };
+
+/**
+ * 설화 제목으로 설화 리스트를 검색
+ * @param title 검색할 설화 제목
+ * @param page 페이지 번호 (0부터 시작)
+ * @returns TaleListResponse
+ */
+export async function searchTalesByTitle(
+  title: string,
+  page: number
+): Promise<TaleListResponse> {
+  const response = await api.get<TaleListResponse>("/folktale", {
+    params: {
+      title,
+      page,
+    },
+  });
+  return response.data;
+}
+
+// 저장 타입 정의
+export interface UserTaleData {
+  userId: number;
+  tale: TaleContent;
+  storyId: string[];
+  userRating: number | null;
+  completedAt: string;
+}
+
+/**
+ * 사용자 설화 저장
+ * @param userTale 사용자 ID와 설화 정보, 완료한 페이지, 평점 등
+ */
+export const saveUserTale = async (userTale: UserTaleData): Promise<void> => {
+  const raw = localStorage.getItem("myTale-storage");
+  const parsed: UserTaleData[] = raw ? JSON.parse(raw) : [];
+
+  parsed.push(userTale);
+  localStorage.setItem("myTale-storage", JSON.stringify(parsed));
+
+  return Promise.resolve();
+
+  /*
+  try {
+    const response = await api.post("", userTale);
+    return response.data;
+  } catch (error) {
+    console.error("사용자 설화 저장 실패:", error);
+    throw error;
+  }
+  */
+};
+
+/**
+ * 사용자 설화 요청
+ * 사용자 설화 불러오기 (userId 기준 필터링)
+ */
+export const fetchUserTales = async (
+  userId: number
+): Promise<UserTaleData[]> => {
+  const raw = localStorage.getItem("myTale-storage");
+  const parsed: UserTaleData[] = raw ? JSON.parse(raw) : [];
+
+  const userTales = parsed.filter((item) => item.userId === userId);
+  return Promise.resolve(userTales);
+};

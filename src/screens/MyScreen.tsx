@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { FaAngleRight } from "react-icons/fa6";
 import styled from "styled-components";
 import Header from "../components/Header";
-import TooltipOverlay from "../components/ToolTipOverlay";
 import TTSSettings from "../components/TTSSettings";
 import ConfirmModal from "../components/ConfirmModal";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuthStore } from "../stores/useAuthStore";
-import { useAllTalesStore } from "../stores/useAllTalesStore";
 import { useUserInfoStore } from "../stores/useUserInfoStore";
 import { useRecommendationStore } from "../stores/useRecommendationStore";
 
@@ -17,23 +15,12 @@ export default function MyScreen() {
   const { user, isLoggedIn, logout } = useAuthStore();
 
   const { resetSkipTaleSetup } = useUserInfoStore();
-
-  const { allTales, fetchAllTalesData } = useAllTalesStore();
-  const {
-    onboardingInput,
-    clearOnboardingInput,
-    setRecommendedTales,
-    setWeights,
-  } = useRecommendationStore();
+  const { clearOnboardingInput } = useRecommendationStore();
 
   const [showRecModal, setShowRecModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
 
-  useEffect(() => {
-    if (allTales.length === 0) {
-      fetchAllTalesData(); // 전체 설화 목록 불러오기
-    }
-  }, []);
+  useEffect(() => {}, [user]);
 
   return (
     <MyScreenContainer>
@@ -59,10 +46,6 @@ export default function MyScreen() {
           </MyListItem>
 
           <MyListItem2>
-            {/*<TooltipOverlay
-              message="다양한 TTS를 들어보려면 눌러보세요!"
-              topOffset="-40px;"
-            />*/}
             <TTSSettings type="detail" expanded={false} />
           </MyListItem2>
 
@@ -75,35 +58,6 @@ export default function MyScreen() {
             <ItemText>설화 설정 초기화</ItemText>
             <FaAngleRight />
           </MyListItem>
-
-          {/* 테스트 용 
-          <MyListItem
-            onClick={() => {
-              const stored = JSON.parse(
-                localStorage.getItem("myTale-storage") || "[]"
-              );
-
-              if (onboardingInput) {
-                const weights = computeUserPreferenceWeights(
-                  onboardingInput,
-                  stored
-                );
-
-                console.log(weights);
-
-                const top5Tales = getRecommendedTales(allTales, weights, 5);
-
-                setWeights(weights);
-                setRecommendedTales(top5Tales);
-
-                console.log(top5Tales);
-              }
-            }}
-          >
-            <ItemText>맞춤 설화 추천 테스트</ItemText>
-            <FaAngleRight />
-          </MyListItem>
-          */}
 
           {showRecModal && (
             <ConfirmModal
@@ -184,13 +138,15 @@ const LoginButton = styled.button`
   }
 `;
 
-const Section = styled.section``;
+const Section = styled.section`
+  display: flex;
+  flex-direction: column;
+`;
 
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
   h3 {
     font-weight: 500;
     color: ${({ theme }) => theme.text};

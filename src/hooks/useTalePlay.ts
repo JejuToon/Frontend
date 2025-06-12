@@ -6,6 +6,8 @@ import { useStoryStore } from "../stores/useStoryStore";
 import { parseAudioPath } from "../utils/parseAudioPath";
 import { useAuthStore } from "../stores/useAuthStore";
 import seolmun from "../mocks/scriptInfo";
+import { saveUserTale } from "../api/tale";
+import { saveUserCharacter } from "../api/character";
 
 import { TaleContent, TalePage } from "../types/tale";
 
@@ -153,12 +155,9 @@ export function useTalePlay({
     navigate("/lib");
   };
 
-  const handleCompleteTale = () => {
+  const handleCompleteTale = async () => {
     if (user && selectedTaleDetail) {
       const finalStoryId = [...history, pageKey];
-
-      const storedTale = localStorage.getItem("myTale-storage");
-      const parsedTale = storedTale ? JSON.parse(storedTale) : [];
 
       const tale: TaleContent = {
         id: selectedTaleDetail.id,
@@ -170,24 +169,22 @@ export function useTalePlay({
         thumbnail: selectedTaleDetail.thumbnail,
       };
 
-      parsedTale.push({
+      await saveUserTale({
         userId: user.id,
-        tale: tale,
+        tale,
         storyId: finalStoryId,
         userRating: rating,
         completedAt: new Date().toISOString(),
       });
 
-      localStorage.setItem("myTale-storage", JSON.stringify(parsedTale));
+      const newCharacter = {
+        userId: user.id,
+        characterId: 1, // 임시 실제 구현시 고유 id
+        tale,
+        imageUrl: "/assets/images/ar-char1.png", // 임시
+      };
 
-      const { hasCharacter, addCharacter } = useCharacterStore.getState();
-      if (tale.id && !hasCharacter(tale.id)) {
-        addCharacter({
-          characterId: Date.now(), // 실제 구현 시 고유 숫자 ID로 생성
-          tale,
-          imageUrl: "/assets/images/ar-char1.png",
-        });
-      }
+      await saveUserCharacter(newCharacter);
     }
 
     setShowCompleteModal(false);

@@ -1,7 +1,17 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { FaChevronLeft, FaXmark } from "react-icons/fa6";
+import { IoLocationSharp } from "react-icons/io5";
+import TaleCard from "./TaleCard";
+import CustomButton from "../components/CustomButton";
 import { useSearchHistoryStore } from "../stores/useSearchHistoryStore";
+import { useSelectedMarkerStore } from "../stores/useSelectedMarkerStore";
+import { useStoryStore } from "../stores/useStoryStore";
+import { searchTalesByTitle } from "../api/tale";
+import { TaleContent } from "../types/tale";
+
+import Loader from "./Loader";
 
 interface SearchOverlayProps {
   keyword: string;
@@ -14,11 +24,17 @@ export default function SearchOverlay({
   onKeywordChange,
   onClose,
 }: SearchOverlayProps) {
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<TaleContent[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchedKeyword, setSearchedKeyword] = useState<string>("");
 
+  const { setTaleId } = useStoryStore();
   const { history, addKeyword, removeKeyword, clearHistory } =
     useSearchHistoryStore();
+  const { setSelectedMarker } = useSelectedMarkerStore();
 
   // 애니메이션 시작
   useEffect(() => {
@@ -39,6 +55,47 @@ export default function SearchOverlay({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  /* 디바운스 검색 
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (!keyword) {
+        setSearchResults([]);
+        return;
+      }
+
+      setSearchLoading(true);
+      try {
+        const res = await searchTalesByTitle(keyword, 0);
+        setSearchResults(res.contents);
+      } catch (err) {
+        console.error("검색 실패:", err);
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchSearchResults, 300);
+    return () => clearTimeout(debounce);
+  }, [keyword]);
+  */
+
+  const fetchSearchResults = async (inputKeyword = keyword) => {
+    if (!inputKeyword) return;
+
+    setSearchLoading(true);
+    setSearchedKeyword(inputKeyword);
+    try {
+      const res = await searchTalesByTitle(inputKeyword, 0);
+      setSearchResults(res.contents);
+    } catch (err) {
+      console.error("검색 실패:", err);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   const handleClose = useCallback(() => {
     inputRef.current?.blur();
     if (document.activeElement instanceof HTMLElement) {
@@ -49,13 +106,35 @@ export default function SearchOverlay({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      fetchSearchResults();
       addKeyword(keyword);
     }
+  };
+
+  const handleTaleClick = (id: number) => {
+    setTaleId(id);
+    navigate("/tale");
   };
 
   const handleSelect = (item: string) => {
     onKeywordChange(item);
     inputRef.current?.focus();
+    fetchSearchResults(item);
+  };
+
+  const handleViewMap = (tale: TaleContent) => {
+    const marker = {
+      id: tale.id,
+      title: tale.title,
+      location: tale.location[0], // 첫 번쨰 좌표 사용
+      categories: tale.categories,
+      description: tale.description,
+      score: tale.score,
+      thumbnail: tale.thumbnail,
+    };
+
+    setSelectedMarker(marker);
+    onClose();
   };
 
   return (
@@ -79,13 +158,7 @@ export default function SearchOverlay({
         </SearchBox>
       </SearchHeader>
       <Results>
-        {keyword !== "" ? (
-          <div>
-            <h4>검색 결과</h4>
-            {/* TODO: 검색 결과 리스트 */}
-            <p>“{keyword}”에 대한 결과</p>
-          </div>
-        ) : (
+        {keyword.trim() === "" ? (
           history.length > 0 && (
             <HistorySection>
               <h4>최근 검색어</h4>
@@ -103,7 +176,42 @@ export default function SearchOverlay({
               </ul>
             </HistorySection>
           )
-        )}
+        ) : searchedKeyword !== "" ? (
+          // 🔹 검색어 입력 + 검색 완료된 상태
+          <div>
+            <h4>"{searchedKeyword}"에 대한 검색 결과</h4>
+            {searchLoading ? (
+              <Loader type="inline" description="설화를 찾는중..." />
+            ) : searchResults.length > 0 ? (
+              <div>
+                {searchResults.map((t) => (
+                  <li
+                    key={t.id}
+                    style={{ marginBottom: "12px", listStyle: "none" }}
+                  >
+                    <TaleCard
+                      id={t.id}
+                      title={t.title}
+                      description={t.description || "설명이 없습니다"}
+                      thumbnailUrl={t.thumbnail || ""}
+                      onClick={() => handleTaleClick(t.id)}
+                    >
+                      <CustomButton
+                        label="위치 보기"
+                        icon={<IoLocationSharp />}
+                        size="small"
+                        variant="filled"
+                        onClick={() => handleViewMap(t)}
+                      />
+                    </TaleCard>
+                  </li>
+                ))}
+              </div>
+            ) : (
+              <p>“{searchedKeyword}”에 대한 결과가 없습니다.</p>
+            )}
+          </div>
+        ) : null}
       </Results>
     </Overlay>
   );

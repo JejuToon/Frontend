@@ -3,7 +3,7 @@ import styled from "styled-components";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa6";
-import { getKakaoLoginUrl } from "../components/KakaoLogin";
+import { getKakaoLoginUrl } from "../utils/kakaoLogin";
 
 export default function AuthScreen() {
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBars,
@@ -18,7 +18,7 @@ import TaleCard from "../components/TaleCard";
 import CustomButton from "../components/CustomButton";
 import CharacterCard from "../components/CharacterCard";
 import ConfirmModal from "../components/ConfirmModal";
-import Chip from "../components/Chip";
+import ChipGroup from "../components/ChipGroup";
 import Tabs, { TabItem } from "../components/Tabs";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
@@ -30,10 +30,20 @@ import { useAuthStore } from "../stores/useAuthStore";
 
 import { TaleContent } from "../types/tale";
 
-interface userTaleContent {
+import { fetchUserTales } from "../api/tale";
+import { fetchUserCharacters, deleteUserCharacter } from "../api/character";
+
+interface UserTaleContent {
   storyId: string[];
   userId: number;
   tale: TaleContent;
+}
+
+interface UserCharacter {
+  userId: number;
+  characterId: number;
+  tale: TaleContent;
+  imageUrl: string;
 }
 
 const TAB_ITEMS: TabItem[] = [
@@ -56,18 +66,17 @@ export default function LibScreen() {
   const { onTouchStart, onTouchEnd } = useSwipeTabs(tab, setTab, tabValues);
 
   const navigate = useNavigate();
-  const [myTales, setMyTales] = useState<userTaleContent[]>([]);
-  const [myChars, setMyChars] = useState<any>([]);
+  const [myTales, setMyTales] = useState<UserTaleContent[]>([]);
+  const [myCharacters, setMyCharacters] = useState<UserCharacter[]>([]);
   const [showDeleteTaleModal, setShowDeleteTaleModal] = useState(false);
   const [showDeleteCharModal, setShowDeleteCharModal] = useState(false);
   const [selectedTaleIndex, setSelectedTaleIndex] = useState<number | null>(
     null
   );
-  const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(
-    null
-  );
+  const [selectedCharacterIndex, setSelectedCharacterIndex] = useState<
+    number | null
+  >(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { characters, setSelectedCharacterId } = useCharacterStore();
 
   const { setSelectedMarker } = useSelectedMarkerStore();
 
@@ -79,38 +88,31 @@ export default function LibScreen() {
       ? "left"
       : "right";
 
-  const handleTabChange = (nextTab: TabType) => {
-    if (nextTab !== tab) {
-      setPrevTab(tab); // 현재 tab을 prevTab에 저장
-      setTab(nextTab); // 다음 탭으로 이동
-    }
-  };
-
-  const handleTaleClick = (userTale: userTaleContent) => {
+  const handleTaleClick = (userTale: UserTaleContent) => {
     useReplayTaleStore.getState().setReplayTale(userTale);
     navigate("/tale/replay");
   };
 
   const handleCharacterClick = (taleId: number) => {
-    setSelectedCharacterId(taleId);
+    setSelectedCharacterIndex(taleId);
     navigate("/camera", { state: { selectedCharacterId: taleId } });
   };
 
   useEffect(() => {
-    try {
-      const storedTale = localStorage.getItem("myTale-storage");
-      const parsedTale = storedTale ? JSON.parse(storedTale) : [];
-      setMyTales(parsedTale);
+    const fetchData = async () => {
+      if (!user) return;
+      try {
+        const tales = await fetchUserTales(user.id);
+        const chars = await fetchUserCharacters(user.id);
+        setMyTales(tales);
+        setMyCharacters(chars);
+      } catch (e) {
+        console.error("사용자 데이터 불러오기 실패:", e);
+      }
+    };
 
-      const storedChar = localStorage.getItem("charcter-storage");
-      const parsedChar = storedChar ? JSON.parse(storedChar) : [];
-      setMyChars(parsedChar);
-    } catch (e) {
-      console.error("JSON 파싱 실패:", e);
-      setMyTales([]);
-      setMyChars([]);
-    }
-  }, []);
+    fetchData();
+  }, [user]);
 
   const handleRemoveTale = (index: number) => {
     const updatedTales = myTales.filter((_, i) => i !== index);
@@ -119,11 +121,13 @@ export default function LibScreen() {
     setShowDeleteTaleModal(false);
   };
 
-  const handleRemoveCharacter = (index: number) => {
-    const target = characters[index];
+  const handleRemoveCharacter = async (index: number) => {
+    const target = myCharacters[index];
     if (!target) return;
 
-    useCharacterStore.getState().removeCharacter(target.tale.id);
+    await deleteUserCharacter(target.userId, target.characterId);
+    const updated = myCharacters.filter((_, i) => i !== index);
+    setMyCharacters(updated);
 
     setShowDeleteCharModal(false);
   };
@@ -132,13 +136,23 @@ export default function LibScreen() {
     setSelectedCategory((prev) => (prev === category ? null : category));
   };
 
-  const filteredTales = selectedCategory
-    ? myTales.filter((t) => t.tale.categories?.includes(selectedCategory))
-    : myTales;
+  const filteredTales = useMemo(
+    () =>
+      selectedCategory
+        ? myTales.filter((t) => t.tale.categories?.includes(selectedCategory))
+        : myTales,
+    [myTales, selectedCategory]
+  );
 
-  const filteredCharacters = selectedCategory
-    ? characters.filter((c) => c.tale.categories?.includes(selectedCategory))
-    : characters;
+  const filteredCharacters = useMemo(
+    () =>
+      selectedCategory
+        ? myCharacters.filter((c) =>
+            c.tale.categories?.includes(selectedCategory)
+          )
+        : myCharacters,
+    [myCharacters, selectedCategory]
+  );
 
   const handleViewMap = (tale: TaleContent) => {
     const marker = {
@@ -158,6 +172,20 @@ export default function LibScreen() {
   return (
     <LibScreenContainer onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <Header left={<h1>내 설화</h1>} center={null} right={null} />
+      <Tabs<TabType>
+        items={TAB_ITEMS}
+        active={tab}
+        onChange={(next) => {
+          setPrevTab(tab);
+          setTab(next);
+        }}
+      />
+      {user && (
+        <ChipGroup
+          selected={selectedCategory}
+          setSelected={setSelectedCategory}
+        />
+      )}
 
       {!isLoggedIn || !user ? (
         <EmptyStateGrid>
@@ -171,33 +199,9 @@ export default function LibScreen() {
         </EmptyStateGrid>
       ) : (
         <>
-          <Tabs<TabType>
-            items={TAB_ITEMS}
-            active={tab}
-            onChange={handleTabChange}
-          />
           {tab === "tale" ? (
             myTales.length > 0 ? (
               <>
-                <ChipContainer>
-                  {allCategories.map((cat, index) => {
-                    const Icon = categoriesIcons[index];
-                    return (
-                      <Chip
-                        key={cat}
-                        selected={selectedCategory === cat}
-                        onToggle={() => handleCategorySelect(cat)}
-                        variant="category"
-                      >
-                        <ChipContent>
-                          <Icon style={{ marginRight: 2 }} />
-                          {cat}
-                        </ChipContent>
-                      </Chip>
-                    );
-                  })}
-                </ChipContainer>
-
                 <AnimatedTabContent key={tab} direction={animationDirection}>
                   <TaleList>
                     {filteredTales.map((t) => {
@@ -258,31 +262,12 @@ export default function LibScreen() {
                 />
               </EmptyStateGrid>
             )
-          ) : characters.length > 0 ? (
+          ) : myCharacters.length > 0 ? (
             <>
-              <ChipContainer>
-                {allCategories.map((cat, index) => {
-                  const Icon = categoriesIcons[index];
-                  return (
-                    <Chip
-                      key={cat}
-                      selected={selectedCategory === cat}
-                      onToggle={() => handleCategorySelect(cat)}
-                      variant="category"
-                    >
-                      <ChipContent>
-                        <Icon style={{ marginRight: 2 }} />
-                        {cat}
-                      </ChipContent>
-                    </Chip>
-                  );
-                })}
-              </ChipContainer>
-
               <AnimatedTabContent key={tab} direction={animationDirection}>
                 <CharacterGrid>
                   {filteredCharacters.map((c) => {
-                    const originalIndex = characters.findIndex(
+                    const originalIndex = myCharacters.findIndex(
                       (char) => char.characterId === c.characterId
                     );
                     return (
@@ -293,7 +278,7 @@ export default function LibScreen() {
                         icon={<FaBars />}
                         onClickIcon={() => {
                           setShowDeleteCharModal(true);
-                          setSelectedCharIndex(originalIndex);
+                          setSelectedCharacterIndex(originalIndex);
                         }}
                         onClick={() => handleCharacterClick(c.tale.id)}
                       />
@@ -306,11 +291,11 @@ export default function LibScreen() {
                       subTitle="삭제 시 되돌릴 수 없어요"
                       onClose={() => {
                         setShowDeleteCharModal(false);
-                        setSelectedCharIndex(null);
+                        setSelectedCharacterIndex(null);
                       }}
                       onConfirm={() => {
-                        if (selectedCharIndex !== null) {
-                          handleRemoveCharacter(selectedCharIndex);
+                        if (selectedCharacterIndex !== null) {
+                          handleRemoveCharacter(selectedCharacterIndex);
                         }
                       }}
                     />
@@ -365,24 +350,10 @@ const LoginButton = styled.button`
   cursor: pointer;
 `;
 
-const LibTabs = styled.div`
+const IconWrapper = styled.span`
   display: flex;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  margin: 0 16px;
-`;
-
-const LibTab = styled.button<{ $active: boolean }>`
-  flex: 1;
-  padding: 12px 0;
-  text-align: center;
-  font-weight: 500;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: ${({ $active, theme }) =>
-    $active ? theme.text : theme.textSecondary || "#666"};
-  border-bottom: ${({ $active, theme }) =>
-    $active ? `2px solid ${theme.text}` : "none"};
+  align-items: center;
+  justify-content: center;
 `;
 
 const ChipContainer = styled.div`
