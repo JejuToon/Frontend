@@ -7,7 +7,6 @@ import { lightTheme, darkTheme } from "./styles/theme";
 import GlobalStyle from "./styles/GlobalStyle";
 import { useThemeStore } from "./stores/useThemeStore";
 
-// 커스텀 Hook처럼 한 번 theme을 가져와서 적용
 function ThemedApp() {
   const mode = useThemeStore((state) => state.mode);
   const theme = mode === "dark" ? darkTheme : lightTheme;
