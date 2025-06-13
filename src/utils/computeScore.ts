@@ -25,6 +25,8 @@ export function computePersonalizedScore(
     keywordScore += w;
   }
 
+  //console.log(`${tale.title} : `, keywords);
+
   const totalScore = categoryScore + keywordScore;
 
   /*

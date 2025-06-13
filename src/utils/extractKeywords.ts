@@ -11,7 +11,6 @@ const stopWords = new Set([
   "제주",
   "지역",
   "장소",
-  "입니다",
   "했다",
   "있다",
   "되었다",
@@ -32,10 +31,37 @@ const stopWords = new Set([
   "때문에",
   "위해",
   "대한",
+]);
+
+const particles = new Set([
+  "은",
+  "는",
+  "이",
+  "가",
+  "을",
+  "를",
+  "에",
+  "게",
+  "한",
   "에서",
   "에게",
   "으로",
+  "로",
+  "까지",
   "부터",
+  "와",
+  "과",
+  "하고",
+  "랑",
+  "도",
+  "만",
+  "보다",
+  "처럼",
+  "이다",
+  "입니다",
+  "인데",
+  "있다",
+  "되었다",
 ]);
 
 /**
@@ -43,10 +69,12 @@ const stopWords = new Set([
  * 예: "할망이" → "할망", "돌하르방은" → "돌하르방"
  */
 function normalizeWord(word: string): string {
-  return word.replace(
-    /(은|는|이|가|을|를|와|과|의|에|에서|에게|도|만|까지|부터)$/g,
-    ""
-  );
+  for (const particle of particles) {
+    if (word.endsWith(particle)) {
+      return word.slice(0, -particle.length);
+    }
+  }
+  return word;
 }
 
 /**

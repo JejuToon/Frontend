@@ -15,7 +15,8 @@ export default function MyScreen() {
   const { user, isLoggedIn, logout } = useAuthStore();
 
   const { resetSkipTaleSetup } = useUserInfoStore();
-  const { clearOnboardingInput } = useRecommendationStore();
+  const { clearOnboardingInput, clearRecommendations } =
+    useRecommendationStore();
 
   const [showRecModal, setShowRecModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
@@ -66,6 +67,7 @@ export default function MyScreen() {
               onClose={() => setShowRecModal(false)}
               onConfirm={() => {
                 clearOnboardingInput();
+                clearRecommendations();
                 setShowRecModal(false);
               }}
             />
