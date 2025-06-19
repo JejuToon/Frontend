@@ -29,22 +29,15 @@ import { useCharacterStore } from "../stores/useCharacterStore";
 import { useReplayTaleStore } from "../stores/useReplayTaleStore";
 import { useAuthStore } from "../stores/useAuthStore";
 
-import { TaleContent } from "../types/tale";
+import { TaleContent, UserTaleResponse } from "../types/tale";
 
 import { fetchUserTales } from "../api/tale";
-import { fetchUserCharacters, deleteUserCharacter } from "../api/character";
+import { fetchAllUserCharacters } from "../api/character";
 
 interface UserTaleContent {
   storyId: string[];
   userId: number;
   tale: TaleContent;
-}
-
-interface UserCharacter {
-  userId: number;
-  characterId: number;
-  tale: TaleContent;
-  imageUrl: string;
 }
 
 const TAB_ITEMS: TabItem[] = [
@@ -68,7 +61,7 @@ export default function LibScreen() {
 
   const navigate = useNavigate();
   const [myTales, setMyTales] = useState<UserTaleContent[]>([]);
-  const [myCharacters, setMyCharacters] = useState<UserCharacter[]>([]);
+  const [myCharacters, setMyCharacters] = useState<UserTaleResponse[]>([]);
   const [showDeleteTaleModal, setShowDeleteTaleModal] = useState(false);
   const [showDeleteCharModal, setShowDeleteCharModal] = useState(false);
   const [selectedTaleIndex, setSelectedTaleIndex] = useState<number | null>(
@@ -108,7 +101,7 @@ export default function LibScreen() {
       if (!user) return;
       try {
         const tales = await fetchUserTales(user.id);
-        const chars = await fetchUserCharacters(user.id);
+        const chars = await fetchAllUserCharacters();
         setMyTales(tales);
         setMyCharacters(chars);
       } catch (e) {
@@ -130,7 +123,7 @@ export default function LibScreen() {
     const target = myCharacters[index];
     if (!target) return;
 
-    await deleteUserCharacter(target.userId, target.characterId);
+    //await deleteUserCharacter(target.userId, target.characterId);
     const updated = myCharacters.filter((_, i) => i !== index);
     setMyCharacters(updated);
 
@@ -147,16 +140,6 @@ export default function LibScreen() {
         ? myTales.filter((t) => t.tale.categories?.includes(selectedCategory))
         : myTales,
     [myTales, selectedCategory]
-  );
-
-  const filteredCharacters = useMemo(
-    () =>
-      selectedCategory
-        ? myCharacters.filter((c) =>
-            c.tale.categories?.includes(selectedCategory)
-          )
-        : myCharacters,
-    [myCharacters, selectedCategory]
   );
 
   const handleViewMap = (tale: TaleContent) => {
@@ -185,7 +168,7 @@ export default function LibScreen() {
           setTab(next);
         }}
       />
-      {user && (
+      {user && tab === "tale" && (
         <ChipGroup
           selected={selectedCategory}
           setSelected={setSelectedCategory}
@@ -271,21 +254,21 @@ export default function LibScreen() {
             <>
               <AnimatedTabContent key={tab} direction={animationDirection}>
                 <CharacterGrid>
-                  {filteredCharacters.map((c) => {
+                  {myCharacters.map((c) => {
                     const originalIndex = myCharacters.findIndex(
-                      (char) => char.characterId === c.characterId
+                      (char) => char.userTaleId === c.userTaleId
                     );
                     return (
                       <CharacterCard
-                        key={c.characterId}
-                        name={c.tale.title || "이름 없음"}
-                        avatarUrl={c.imageUrl || ""}
+                        key={c.userTaleId}
+                        name={c.title || "이름 없음"}
+                        avatarUrl={c.characterImageUrl || ""}
                         icon={<FaBars />}
                         onClickIcon={() => {
                           setShowDeleteCharModal(true);
                           setSelectedCharacterIndex(originalIndex);
                         }}
-                        onClick={() => handleCharacterClick(c.tale.id)}
+                        onClick={() => handleCharacterClick(c.userTaleId)}
                       />
                     );
                   })}

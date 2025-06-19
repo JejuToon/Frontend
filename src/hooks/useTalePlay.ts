@@ -12,6 +12,8 @@ import { saveUserCharacter } from "../api/character";
 
 import { TaleContent, TalePage } from "../types/tale";
 
+import { extractChoiceIdsFromHistory } from "../utils/extractChoiceIdsFromHistory";
+
 interface TalePlayOptions {
   talePages: Record<string, TalePage>;
   totalPageNum: number;
@@ -28,8 +30,15 @@ export function useTalePlay({
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  const { ttsConfig, selectedTaleDetail, fontConfig, ttsEnabled } =
-    useStoryStore();
+  const {
+    ttsConfig,
+    selectedTaleDetail,
+    fontConfig,
+    ttsEnabled,
+    memberFolktaleId,
+    addChoiceId,
+    removeLastChoiceId,
+  } = useStoryStore();
 
   // 잘못된 초기화 방지
   const isReady = Object.keys(talePages).length > 0 && totalPageNum > 0;
@@ -40,6 +49,8 @@ export function useTalePlay({
   const [rating, setRating] = useState<number | null>(null);
   const [showControlBar, setShowControlBar] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isSaving, setIsSaving] = useState(false);
 
   const currentPage = talePages[pageKey ?? "1"];
   const hasChoices = !!currentPage?.choices?.length;
@@ -130,7 +141,8 @@ export function useTalePlay({
     }
   };
 
-  const handleChoice = (nextKey: string) => {
+  const handleChoice = (nextKey: string, choiceId: number) => {
+    addChoiceId(choiceId);
     goToNextPage(nextKey);
   };
 
@@ -153,6 +165,9 @@ export function useTalePlay({
   };
 
   const handleCompleteTale = async () => {
+    if (isSaving) return; //중복 호출 방지
+    setIsSaving(true);
+
     if (user && selectedTaleDetail) {
       const finalStoryId = [...history, pageKey];
       const allVisitedKeys = finalStoryId;
@@ -178,18 +193,25 @@ export function useTalePlay({
         completedAt: new Date().toISOString(),
       });
 
-      const newCharacter = {
-        userId: user.id,
-        characterId: 1, // 임시 실제 구현시 고유 id
-        tale,
-        imageUrl: "/assets/images/ar-char1.png", // 임시
-      };
+      if (memberFolktaleId === null) {
+        console.error("memberFolktaleId: null");
+        return;
+      }
 
-      await saveUserCharacter(newCharacter);
-      useGeneratedCharacterStore.getState().setGenerating(1);
+      const choiceIds = extractChoiceIdsFromHistory(seolmun, history);
+      //console.log("선택된 choice id들:", choiceIds);
+
+      await saveUserCharacter({
+        memberFolktaleId: memberFolktaleId,
+        score: rating,
+        choiceIds: choiceIds,
+      });
+      console.log("이미지 생성 api 호출");
+      useGeneratedCharacterStore.getState().setGenerating(memberFolktaleId);
     }
 
     setShowCompleteModal(false);
+    setIsSaving(false);
   };
 
   return {

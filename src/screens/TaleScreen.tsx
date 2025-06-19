@@ -16,6 +16,8 @@ import { fontOptions } from "../constants/fonts";
 
 import seolmun from "../mocks/scriptInfo";
 
+import { createMemberFolktale } from "../api/tale";
+
 const seolmunCharacter = {
   taleId: 1,
   title: "설문대할망",
@@ -76,6 +78,19 @@ export default function TaleScreen() {
   const [pageTransition, setPageTransition] = useState<string | null>(null);
 
   useEffect(() => {
+    const initialize = async () => {
+      try {
+        if (!selectedTaleDetail?.id) return;
+
+        const id = await createMemberFolktale(selectedTaleDetail.id);
+        useStoryStore.getState().setMemberFolktaleId(id);
+      } catch (error) {
+        console.error("설화 사용자 매핑 생성 실패:", error);
+      }
+    };
+
+    initialize();
+
     // 로딩 테스트
     const timeout = setTimeout(() => {
       setIsTaleScreenLoading(false);
@@ -119,7 +134,10 @@ export default function TaleScreen() {
         {currentPage.choices && (
           <SelectContainer>
             {currentPage.choices.map((c, idx) => (
-              <ChoiceButton key={idx} onClick={() => handleChoice(c.next)}>
+              <ChoiceButton
+                key={idx}
+                onClick={() => handleChoice(c.next, c.id)}
+              >
                 {c.text}
               </ChoiceButton>
             ))}

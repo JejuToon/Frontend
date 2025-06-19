@@ -6,6 +6,7 @@ import {
   TaleDetailResponse,
   TaleResponse,
 } from "../types/tale";
+import { useAuthStore } from "../stores/useAuthStore";
 
 // 백엔드 baseURL
 const api = axios.create({
@@ -133,6 +134,20 @@ export async function searchTalesByTitle(
   });
   return response.data;
 }
+
+export const createMemberFolktale = async (
+  folktaleId: number
+): Promise<number> => {
+  const token = useAuthStore.getState().token?.accessToken;
+  if (!token) throw new Error("Access token이 없습니다.");
+
+  const response = await api.post(`/folktale/${folktaleId}`, null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data.id; // memberFolktaleId
+};
 
 // 저장 타입 정의
 export interface UserTaleData {

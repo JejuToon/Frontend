@@ -17,6 +17,9 @@ interface StoryState {
   selectedTale: TaleContent | null;
   selectedTaleDetail: TaleDetailResponse | null;
 
+  memberFolktaleId: number | null;
+  setMemberFolktaleId: (id: number | null) => void;
+
   ttsConfig: TTSConfig;
   setTTSConfig: (config: Partial<TTSConfig>) => void;
 
@@ -33,6 +36,11 @@ interface StoryState {
   setTaleId: (id: number) => void;
   addViewedTale: (tale: TaleContent) => void;
 
+  selectedChoiceIds: number[];
+  addChoiceId: (id: number) => void;
+  removeLastChoiceId: () => void;
+  resetChoiceIds: () => void;
+
   reset: () => void;
 }
 
@@ -43,6 +51,9 @@ export const useStoryStore = create(
       selectedCharacter: null,
       selectedTaleId: null,
       selectedTaleDetail: null,
+
+      memberFolktaleId: null,
+      setMemberFolktaleId: (id) => set({ memberFolktaleId: id }),
 
       ttsConfig: {
         voiceIndex: 0,
@@ -82,9 +93,23 @@ export const useStoryStore = create(
           viewedTales: [...state.viewedTales, tale],
         })),
 
+      selectedChoiceIds: [],
+      addChoiceId: (id) =>
+        set((state) => ({
+          selectedChoiceIds: [...state.selectedChoiceIds, id],
+        })),
+      removeLastChoiceId: () =>
+        set((state) => ({
+          selectedChoiceIds: state.selectedChoiceIds.slice(0, -1),
+        })),
+      resetChoiceIds: () => set({ selectedChoiceIds: [] }),
+
       reset: () =>
         set({
           selectedTale: null,
+          selectedTaleId: null,
+          selectedTaleDetail: null,
+          memberFolktaleId: null,
           ttsConfig: {
             voiceIndex: 0,
             rate: 1,

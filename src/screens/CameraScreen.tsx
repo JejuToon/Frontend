@@ -17,9 +17,11 @@ import {
 } from "react-icons/gi";
 
 import { useCharacterStore } from "../stores/useCharacterStore";
-
+import { fetchAllUserCharacters } from "../api/character";
 import { UserCharacter, fetchUserCharacters } from "../api/character";
 import { useAuthStore } from "../stores/useAuthStore";
+
+import { UserTaleResponse } from "../types/tale";
 
 type CharacterItem =
   | {
@@ -47,11 +49,11 @@ const charactersDummy: CharacterItem[] = [
 export default function CameraScreen() {
   const { user } = useAuthStore();
 
-  const [myCharacters, setMyCharacters] = useState<UserCharacter[]>([]);
+  const [myCharacters, setMyCharacters] = useState<UserTaleResponse[]>([]);
   const storedItems: CharacterItem[] = myCharacters.map((char) => ({
-    id: char.characterId,
+    id: char.userTaleId,
     type: "image",
-    src: char.imageUrl,
+    src: char.characterImageUrl,
   }));
   const characters: CharacterItem[] = [
     charactersDummy[0],
@@ -65,7 +67,7 @@ export default function CameraScreen() {
     const fetchData = async () => {
       if (!user) return;
       try {
-        const chars = await fetchUserCharacters(user.id);
+        const chars = await fetchAllUserCharacters();
         setMyCharacters(chars);
       } catch (e) {
         console.error("사용자 데이터 불러오기 실패:", e);

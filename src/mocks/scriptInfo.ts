@@ -7,7 +7,7 @@ export interface TalePage {
   text: string;
   audioUrl: string;
   next?: string; // 단일 다음 페이지
-  choices?: { text: string; next: string }[]; // 분기 선택지
+  choices?: { id: number; text: string; next: string }[]; // 분기 선택지
 }
 
 export const seolmun: Record<string, TalePage> = {
@@ -43,12 +43,12 @@ export const seolmun: Record<string, TalePage> = {
       '"이 많은 흙을 무엇으로 옮기는 게 좋을까...?"',
     audioUrl: "",
     choices: [
-      { text: "치마폭", next: "4-1" },
-      { text: "포크레인", next: "4-2" },
-      { text: "삽", next: "4-3" },
+      { id: 1, text: "치마폭", next: "4" },
+      { id: 2, text: "포크레인", next: "10" },
+      { id: 3, text: "삽", next: "9" },
     ],
   },
-  "4-1": {
+  "4": {
     imageUrl: "/assets/stories/seolmun/seolmun4-1.png",
     text:
       "설문대할망은 자신의 치마폭을 활짝 펼쳐 " +
@@ -60,7 +60,7 @@ export const seolmun: Record<string, TalePage> = {
     audioUrl: "",
     next: "5",
   },
-  "4-2": {
+  "10": {
     imageUrl: "/assets/stories/seolmun/seolmun4-2.png",
     text:
       "설문대할망은 포크레인의 시동을 켜고 삽을 움직이며 흙을 퍼 담기 시작했습니다. " +
@@ -71,7 +71,7 @@ export const seolmun: Record<string, TalePage> = {
     audioUrl: "",
     next: "5",
   },
-  "4-3": {
+  "9": {
     imageUrl: "/assets/stories/seolmun/seolmun4-3.png",
     text:
       "설문대할망은 평범한 쇠삽 하나를 들었습니다. " +
@@ -103,12 +103,12 @@ export const seolmun: Record<string, TalePage> = {
       '사람들은 고개를 끄덕이며 물었습니다. "무엇을 만들어드릴까요 할망?"',
     audioUrl: "",
     choices: [
-      { text: "속옷", next: "7-1" },
-      { text: "명품 가방", next: "7-2" },
-      { text: "고급 스포츠카", next: "7-3" },
+      { id: 4, text: "속옷", next: "7" },
+      { id: 5, text: "명품 가방", next: "11" },
+      { id: 6, text: "고급 스포츠카", next: "12" },
     ],
   },
-  "7-1": {
+  "7": {
     imageUrl: "/assets/stories/seolmun/seolmun7-1.png",
     text:
       "사람들은 설문대할망에게 속옷 한 벌을 만들어 주기로 했습니다. " +
@@ -117,9 +117,9 @@ export const seolmun: Record<string, TalePage> = {
       "속옷은 완성되지 않았고, 설문대할망은 결국 다리 놓기를 그만두었습니다. " +
       "그렇게 탐라, 제주는 육지에서 떨어진 외로운 섬으로 남게 되었습니다.",
     audioUrl: "",
-    next: "8",
+    next: "13",
   },
-  "7-2": {
+  "11": {
     imageUrl: "/assets/stories/seolmun/seolmun7-2.png",
     text:
       "사람들은 설문대할망이 말한 대로, 명품 가방을 만들기 시작했습니다. " +
@@ -131,9 +131,9 @@ export const seolmun: Record<string, TalePage> = {
       "설문대할망은 결국 다리 놓기를 그만두었습니다. " +
       "그렇게 탐라, 제주는 육지에서 떨어진 외로운 섬으로 남게 되었습니다.",
     audioUrl: "",
-    next: "8",
+    next: "13",
   },
-  "7-3": {
+  "12": {
     imageUrl: "/assets/stories/seolmun/seolmun7-3.png",
     text:
       "사람들은 설문대할망이 말한 대로, 고급 스포츠카를 만들기로 했습니다. " +
@@ -145,9 +145,9 @@ export const seolmun: Record<string, TalePage> = {
       "설문대할망은 결국 다리 놓기를 그만두었습니다. " +
       "그렇게 탐라, 제주는 육지에서 떨어진 외로운 섬으로 남게 되었습니다.",
     audioUrl: "",
-    next: "8",
+    next: "13",
   },
-  "8": {
+  "13": {
     imageUrl: "/assets/stories/seolmun/seolmun8.png",
     text:
       "세상은 어느 정도 자리를 잡아가고 있었습니다. " +

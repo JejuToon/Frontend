@@ -20,9 +20,7 @@ function ThemedApp() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ThemedApp />
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <ThemedApp />
+  </BrowserRouter>
 );
