@@ -19,6 +19,7 @@ import CustomButton from "../components/CustomButton";
 import CharacterCard from "../components/CharacterCard";
 import ConfirmModal from "../components/ConfirmModal";
 import ChipGroup from "../components/ChipGroup";
+import FloatingMenu from "../components/FloatingMenu";
 import Tabs, { TabItem } from "../components/Tabs";
 import EmptyState from "../components/EmptyState";
 import { TbMapSearch } from "react-icons/tb";
@@ -77,6 +78,10 @@ export default function LibScreen() {
     number | null
   >(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [floatingMenuPos, setFloatingMenuPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const { setSelectedMarker } = useSelectedMarkerStore();
 

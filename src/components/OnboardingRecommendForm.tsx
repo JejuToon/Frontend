@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa6";
 import Loader from "../components/Loader";
@@ -59,6 +59,8 @@ export default function OnboardingRecommendForm({
   const { allTales } = useAllTalesStore();
   const { applyRecommendation } = useRecommendation(allTales);
 
+  const ageInputRef = useRef<HTMLInputElement>(null);
+
   const [step, setStep] = useState(0);
   const [stepDirection, setStepDirection] = useState<"forward" | "backward">(
     "forward"
@@ -71,6 +73,12 @@ export default function OnboardingRecommendForm({
   });
   const [loading, setLoading] = useState(false);
   const [showProgressStep, setShowProgressStep] = useState(true);
+
+  useEffect(() => {
+    if (onboardingSteps[step] === "age" && ageInputRef.current) {
+      ageInputRef.current.focus();
+    }
+  }, [step]);
 
   const next = () => {
     setStepDirection("forward");
@@ -158,6 +166,7 @@ export default function OnboardingRecommendForm({
           <SlideWrapper direction={stepDirection}>
             <Label>나이를 입력해 주세요</Label>
             <Input
+              ref={ageInputRef}
               type="number"
               value={formData.age}
               onChange={(e) => update("age", e.target.value)}

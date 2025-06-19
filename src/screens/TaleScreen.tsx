@@ -178,12 +178,19 @@ export default function TaleScreen() {
             <ButtonContainer>
               <CloseButton
                 onClick={() => {
+                  setShowCompleteModal(false);
+                }}
+              >
+                닫기
+              </CloseButton>
+              <LibButton
+                onClick={() => {
                   handleCompleteTale();
                   navigate("/home");
                 }}
               >
                 홈으로
-              </CloseButton>
+              </LibButton>
 
               <LibButton
                 onClick={() => {
@@ -191,16 +198,8 @@ export default function TaleScreen() {
                   navigate("/lib");
                 }}
               >
-                내 설화 보러가기
+                내 설화
               </LibButton>
-              <ARButton
-                onClick={() => {
-                  handleCompleteTale();
-                  navigate("/camera");
-                }}
-              >
-                캐릭터와 사진 찍기
-              </ARButton>
             </ButtonContainer>
           </ModalContent>
         </ModalOverlay>

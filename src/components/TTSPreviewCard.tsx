@@ -57,8 +57,8 @@ export default function TTSPreviewCard({
 const Card = styled.div`
   display: flex;
   align-items: center;
-  background-color: ${({ theme }) => theme.cardBackground || "#f5f4fa"};
-  color: ${({ theme }) => theme.text || "#333"};
+  background-color: ${({ theme }) => theme.cardBackground};
+  color: ${({ theme }) => theme.text};
   border-radius: 50px;
   padding: 8px 12px;
   width: 100%;

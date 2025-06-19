@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useCharacterStore } from "../stores/useCharacterStore";
 import { useStoryStore } from "../stores/useStoryStore";
+import { useGeneratedCharacterStore } from "../stores/useGeneratedCharacterStore";
 import { parseAudioPath } from "../utils/parseAudioPath";
 import { useAuthStore } from "../stores/useAuthStore";
 import seolmun from "../mocks/scriptInfo";
@@ -111,10 +112,6 @@ export function useTalePlay({
     }
   }, [pageKey]);
 
-  useEffect(() => {
-    console.log(`rating: ${rating}`);
-  }, [rating]);
-
   const goToNextPage = (nextKey: string) => {
     if (nextKey === "end") {
       setShowCompleteModal(true);
@@ -128,7 +125,7 @@ export function useTalePlay({
   const handleNext = () => {
     if (currentPage.next && currentPage.next !== "end") {
       goToNextPage(currentPage.next);
-    } else if (currentPage.next === "end") {
+    } else if (totalPageNum >= totalPageNum) {
       setShowCompleteModal(true);
     }
   };
@@ -158,6 +155,10 @@ export function useTalePlay({
   const handleCompleteTale = async () => {
     if (user && selectedTaleDetail) {
       const finalStoryId = [...history, pageKey];
+      const allVisitedKeys = finalStoryId;
+      const randomKey =
+        allVisitedKeys[Math.floor(Math.random() * allVisitedKeys.length)];
+      const randomImage = talePages[randomKey]?.imageUrl;
 
       const tale: TaleContent = {
         id: selectedTaleDetail.id,
@@ -166,7 +167,7 @@ export function useTalePlay({
         categories: selectedTaleDetail.categories,
         description: selectedTaleDetail.description,
         score: selectedTaleDetail.score,
-        thumbnail: selectedTaleDetail.thumbnail,
+        thumbnail: randomImage,
       };
 
       await saveUserTale({
@@ -185,6 +186,7 @@ export function useTalePlay({
       };
 
       await saveUserCharacter(newCharacter);
+      useGeneratedCharacterStore.getState().setGenerating(1);
     }
 
     setShowCompleteModal(false);

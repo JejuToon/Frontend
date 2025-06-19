@@ -30,6 +30,9 @@ interface TalePlayBottomNavProps {
   onToggleAudio: () => void;
   onReplay: () => void;
 
+  isAutoPlaying?: boolean;
+  onToggleAutoPlay?: () => void;
+
   title: string;
   onGoBack: () => void;
   onGoHome: () => void;
@@ -52,6 +55,9 @@ export default function TalePlayBottomNav({
   audio,
   onToggleAudio,
   onReplay,
+
+  isAutoPlaying,
+  onToggleAutoPlay,
 
   title,
   onGoBack,
@@ -106,27 +112,26 @@ export default function TalePlayBottomNav({
                 <IconButton onClick={onGoBack}>
                   <FaArrowLeft />
                 </IconButton>
-                <IconButton onClick={onGoHome}>
-                  <TbHome />
-                </IconButton>
                 <TitleText>{title}</TitleText>
               </LeftGroup>
-
-              {ttsEnabled && (
-                <CenterGroup>
-                  <IconButton onClick={onToggleAudio}>
-                    {audio && !audio.paused ? <FaPause /> : <FaPlay />}
-                  </IconButton>
-                  <IconButton onClick={onReplay}>
-                    <FaRotate />
-                  </IconButton>
-                </CenterGroup>
-              )}
-
-              <RightGroup>
-                <ThemeToggle variant="small" />
-              </RightGroup>
             </Group>
+
+            {ttsEnabled && (
+              <CenterGroup>
+                <IconButton onClick={onToggleAudio} title="음성 재생/일시정지">
+                  {audio && !audio.paused ? <FaPause /> : <FaPlay />}
+                </IconButton>
+                <IconButton onClick={onReplay} title="다시 듣기">
+                  <FaRotate />
+                </IconButton>
+                <ThemeToggle variant="small" />
+                {onToggleAutoPlay && (
+                  <IconButton onClick={onToggleAutoPlay} title="자동재생 토글">
+                    {isAutoPlaying ? <FaPause /> : <FaPlay />}
+                  </IconButton>
+                )}
+              </CenterGroup>
+            )}
 
             <TTSSettings type="simple" expanded={ttsEnabled} />
           </ControlBar>
@@ -157,7 +162,7 @@ const NavButtons = styled.div`
   width: 100%;
   align-items: center;
   padding: 5px 16px;
-  background: ${({ theme }) => theme.bottomTabsBackground};
+  background: ${({ theme }) => theme.sheetBackground};
 `;
 
 const IconButton = styled.button`
@@ -208,7 +213,7 @@ const UpButton = styled.button`
   position: absolute;
   bottom: 8px;
   right: 12px;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${({ theme }) => theme.sheetBackground};
   border: none;
   border-radius: 50%;
   padding: 4px;
@@ -237,7 +242,7 @@ const ControlBar = styled.div`
   bottom: 40px;
   left: 0;
   width: 100%;
-  background: ${({ theme }) => theme.bottomTabsBackground};
+  background: ${({ theme }) => theme.sheetBackground};
   padding: 12px 16px 0px 16px;
   display: flex;
   flex-direction: column;

@@ -40,8 +40,10 @@ export function useSwipeTalePlay({
     if (isHorizontalSwipe) {
       if (dx > 0 && pageNum > 0) {
         onPrev();
-      } else if (dx < 0 && pageNum < totalPageNum && !hasChoices) {
+        console.log("이전 페이지 이동");
+      } else if (dx < 0 && pageNum <= totalPageNum && !hasChoices) {
         onNext();
+        console.log("다음 페이지 이동");
       }
     } else if (isSwipeUp) {
       onShowNav();

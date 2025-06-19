@@ -13,13 +13,21 @@ import TaleScreen from "./screens/TaleScreen";
 import TaleReplayScreen from "./screens/TaleReplayScreen";
 import TaleDetailScreen from "./screens/TaleDetailScreen";
 import CameraScreen from "./screens/CameraScreen";
+
 import BottomTabs from "./components/BottomTabs";
+import GlobalModal from "./components/GlobalModal";
 import { AccessControlProvider } from "./components/AccessControlProvider";
+
 import { usePreviousLocation } from "./hooks/usePreviousLocation";
 import { useAuthCheck } from "./hooks/useAuthCheck";
 
+import { useGlobalModalStore } from "./stores/useGlobalModalStore";
+import { useWatchCharacterImage } from "./hooks/useWatchCharacterImage";
+
 export default function App() {
+  useWatchCharacterImage();
   useAuthCheck();
+
   const location = useLocation();
   const prevLocation = usePreviousLocation();
   const isAuthRoute = location.pathname === "/auth";
@@ -47,6 +55,8 @@ export default function App() {
           <Route path="/tale/replay" element={<TaleReplayScreen />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
+
+        <GlobalModal />
 
         {/* Auth 화면만 오버레이처럼 위에 애니메이션으로 렌더링 */}
         <AnimatePresence>

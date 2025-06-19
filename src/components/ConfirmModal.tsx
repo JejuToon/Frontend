@@ -5,25 +5,34 @@ import styled from "styled-components";
 interface ConfirmModalProps {
   mainTitle: string;
   subTitle?: string;
+  imageUrl?: string;
   onClose: () => void;
   onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 export default function ConfirmModal({
   mainTitle,
   subTitle,
+  imageUrl,
   onClose,
   onConfirm,
+  confirmText,
+  cancelText,
 }: ConfirmModalProps) {
   return (
     <Overlay>
       <ModalContainer>
         <Title>{mainTitle}</Title>
         {subTitle && <SubTitle>{subTitle}</SubTitle>}
+        {imageUrl && <PreviewImage src={imageUrl} alt="생성된 캐릭터" />}
 
         <ButtonGroup>
-          <CancelButton onClick={onClose}>닫기</CancelButton>
-          <ConfirmButton onClick={onConfirm}>확인</ConfirmButton>
+          <CancelButton onClick={onClose}>{cancelText || "닫기"}</CancelButton>
+          <ConfirmButton onClick={onConfirm}>
+            {confirmText || "확인"}
+          </ConfirmButton>
         </ButtonGroup>
       </ModalContainer>
     </Overlay>
@@ -62,6 +71,13 @@ const SubTitle = styled.p`
   font-size: 14px;
   margin-bottom: 20px;
   color: ${({ theme }) => theme.textSecondary || "#777"};
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 16px;
 `;
 
 const ButtonGroup = styled.div`

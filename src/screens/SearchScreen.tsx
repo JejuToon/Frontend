@@ -466,47 +466,49 @@ export default function SearchScreen() {
 
           {/* 맞춤 추천 */}
           {selectedExtras.includes("맞춤 추천") && (
-            <Section>
-              <SectionHeader>
-                <span>맞춤 추천 설화</span>
-              </SectionHeader>
+            <>
+              <Section>
+                <SectionHeader>
+                  <span>맞춤 추천 설화</span>
+                </SectionHeader>
 
-              {isApplying ? (
-                <Loader
-                  type="inline"
-                  description={"맞춤형 설화를 찾고 있어요"}
-                />
-              ) : onboardingInput && recommendedTales.length > 0 ? (
-                <TaleList>
-                  {recommendedTales.map((t) => (
-                    <TaleCard
-                      key={t.id}
-                      id={t.id}
-                      title={t.title}
-                      description={t.description}
-                      thumbnailUrl={t.thumbnail}
-                      onClick={() => handleTaleClick(t.id)}
-                    >
-                      <CustomButton
-                        label="위치 보기"
-                        icon={<IoLocationSharp />}
-                        size="small"
-                        variant="filled"
-                        onClick={() => handleViewLocation(t)}
-                      />
-                    </TaleCard>
-                  ))}
-                </TaleList>
-              ) : (
-                <EmptyState
-                  icon={<RiSparkling2Fill />}
-                  title="맞춤형 추천 정보가 없어요"
-                  description="맞춤형 추천 받기"
-                  onIconClick={recommendButtonClick}
-                  onDescriptionClick={recommendButtonClick}
-                />
-              )}
-            </Section>
+                {isApplying ? (
+                  <Loader
+                    type="inline"
+                    description={"맞춤형 설화를 찾고 있어요"}
+                  />
+                ) : onboardingInput && recommendedTales.length > 0 ? (
+                  <TaleList>
+                    {recommendedTales.map((t) => (
+                      <TaleCard
+                        key={t.id}
+                        id={t.id}
+                        title={t.title}
+                        description={t.description}
+                        thumbnailUrl={t.thumbnail}
+                        onClick={() => handleTaleClick(t.id)}
+                      >
+                        <CustomButton
+                          label="위치 보기"
+                          icon={<IoLocationSharp />}
+                          size="small"
+                          variant="filled"
+                          onClick={() => handleViewLocation(t)}
+                        />
+                      </TaleCard>
+                    ))}
+                  </TaleList>
+                ) : (
+                  <EmptyState
+                    icon={<RiSparkling2Fill />}
+                    title="맞춤형 추천 정보가 없어요"
+                    description="맞춤형 추천 받기"
+                    onIconClick={recommendButtonClick}
+                    onDescriptionClick={recommendButtonClick}
+                  />
+                )}
+              </Section>
+            </>
           )}
         </SheetScrollWrapper>
       </BottomSheet>

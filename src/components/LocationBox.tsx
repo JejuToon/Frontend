@@ -54,8 +54,13 @@ export default function LocationBox({ onClick }: LocationBoxProps) {
     fetchAddress();
   }, [currentLocation]);
 
+  const handleClick = () => {
+    fetchCurrentLocation(null); // 클릭 시 위치 갱신
+    onClick?.();
+  };
+
   return (
-    <Button onClick={onClick}>
+    <Button onClick={handleClick}>
       <IoLocationSharp />
       <Label>{resolvedLabel}</Label>
     </Button>
@@ -67,12 +72,9 @@ const Button = styled.button`
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border: 1px solid ${({ theme }) => "rgba(209, 163, 94, 0.8)"};
+  border: 1px solid ${({ theme }) => theme.buttonBackground};
   border-radius: 20px;
-  background: ${({ theme }) =>
-    theme.mode === "dark"
-      ? "rgba(226, 195, 147, 0.8)"
-      : "rgba(209, 163, 94, 0.8)"};
+  background: ${({ theme }) => theme.buttonBackground};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
 `;

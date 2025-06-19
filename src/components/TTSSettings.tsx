@@ -40,7 +40,7 @@ export default function TTSSettings({
   return (
     <>
       <ToggleContainer onClick={() => setSettingExpanded(!settingExpanded)}>
-        <ToggleLabel>TTS</ToggleLabel>
+        <ToggleLabel>음성</ToggleLabel>
         <ToggleSwitch checked={ttsEnabled} onChange={handleToggleTts} />
       </ToggleContainer>
 

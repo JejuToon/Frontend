@@ -18,6 +18,9 @@ import {
 
 import { useCharacterStore } from "../stores/useCharacterStore";
 
+import { UserCharacter, fetchUserCharacters } from "../api/character";
+import { useAuthStore } from "../stores/useAuthStore";
+
 type CharacterItem =
   | {
       id: number;
@@ -42,11 +45,11 @@ const charactersDummy: CharacterItem[] = [
 ];
 
 export default function CameraScreen() {
-  //
-  const { characters: storedCharacters, selectedCharacterId } =
-    useCharacterStore();
-  const storedItems: CharacterItem[] = storedCharacters.map((char) => ({
-    id: char.taleId,
+  const { user } = useAuthStore();
+
+  const [myCharacters, setMyCharacters] = useState<UserCharacter[]>([]);
+  const storedItems: CharacterItem[] = myCharacters.map((char) => ({
+    id: char.characterId,
     type: "image",
     src: char.imageUrl,
   }));
@@ -59,8 +62,20 @@ export default function CameraScreen() {
   const shutterAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      try {
+        const chars = await fetchUserCharacters(user.id);
+        setMyCharacters(chars);
+      } catch (e) {
+        console.error("사용자 데이터 불러오기 실패:", e);
+      }
+    };
+
+    fetchData();
     shutterAudio.current = new Audio("/assets/audios/shutter.mp3");
-  }, []);
+  }, [user]);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const mountedRef = useRef(false);
@@ -231,7 +246,7 @@ export default function CameraScreen() {
       // 아이콘일 경우: 비디오 프레임만 캡처
       const dataUrl = canvas.toDataURL("image/png");
       console.log("Captured PNG (no overlay):", dataUrl);
-      // downloadImage(dataUrl);
+      //downloadImage(dataUrl);
 
       setTimeout(() => setIsCapturing(false), 100);
     }
